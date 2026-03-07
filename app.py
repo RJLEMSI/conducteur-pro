@@ -187,7 +187,7 @@ with st.sidebar:
     st.page_link("app.py", label="🏠 Accueil")
     st.page_link("pages/1_Metres.py", label="📐 Métrés automatiques")
     st.page_link("pages/2_DCE.py", label="📋 Synthèse DCE")
-    st.page_link("pages/3_Etudes.py", label="🐬 Études techniques")
+    st.page_link("pages/3_Etudes.py", label="😬 Études techniques")
     st.page_link("pages/4_Planning.py", label="📅 Aide au planning")
     st.page_link("pages/5_PLU.py", label="🗺️ Analyse PLU")
     st.page_link("pages/6_Synthese.py", label="🧠 Synthèse Globale ★")
@@ -252,7 +252,7 @@ with c4:
     if st.button("Générer un planning", key="go_planning"):
         st.switch_page("pages/4_Planning.py")
 
-# ─── Ligne 2 : PLU + Synthèse Globale ────────────────────────────────────────
+# ─── Ligne 2 : PLU + Synthèse Globale ─────────────────────────────────────────
 st.markdown("<br>", unsafe_allow_html=True)
 c5, c6, _ = st.columns([1, 1, 2])
 
