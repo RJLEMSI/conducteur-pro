@@ -74,14 +74,14 @@ def _default_chantiers():
         {"nom": "École Pasteur — Ravalement", "client": "Mairie de Meyzieu",
          "statut": "Terminé",  "date_debut": "2024-09-01", "date_fin": "2024-12-20",
          "budget_ht": 52000, "facture_ht": 52000, "encaisse_ht": 52000,
-         "avancement_pct": 100, "localisation": "Meyzieu (69)", "metier": "🎨 Peintre", "notes": "Solde reçu"},
+         "avancement_pct": 100, "localisation": "Meyzieu (69)", "metier": "🎨 Peintre", "notes": "Solde recu"},
     ])
 
 def _default_etapes():
     return pd.DataFrame([
         {"chantier": "Résidence Les Pins", "etape": "Livraison armatures HA",
          "responsable": "Chef chantier Dupont", "date_echeance": (TODAY + timedelta(days=2)).strftime("%Y-%m-%d"),
-         "statut": "À faire", "priorite": "Haute"},
+          "statut": "À faire", "priorite": "Haute"},
         {"chantier": "Résidence Les Pins", "etape": "Coulage dalle R+1",
          "responsable": "Équipe maçonnerie",   "date_echeance": (TODAY + timedelta(days=9)).strftime("%Y-%m-%d"),
          "statut": "À faire", "priorite": "Haute"},
@@ -112,7 +112,7 @@ for col in ["date_debut", "date_fin"]:
     df_c[col + "_dt"] = pd.to_datetime(df_c[col], errors="coerce")
 df_e["date_dt"] = pd.to_datetime(df_e["date_echeance"], errors="coerce")
 
-# ────────────────────────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────────
 # EN-TÊTE
 # ─────────────────────────────────────────────────────────────────────────────────
 st.markdown(f"""
@@ -278,11 +278,10 @@ with st.expander("🤖 Assistant ConducteurPro — Demande rapide", expanded=Tru
 
 st.markdown("<div style='margin-top:.8rem;'></div>", unsafe_allow_html=True)
 
-# ────────────────────────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────────
 # CORPS PRINCIPAL — 3 colonnes
-# ────────────────────────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────────
 col_left, col_mid, col_right = st.columns([2, 2, 1.3])
-2, 1.3])
 
 # ══════════════════════ COLONNE GAUCHE — Planning Gantt ══════════════════════════
 with col_left:
@@ -296,7 +295,7 @@ with col_left:
         span  = max((max_d - min_d).days, 1)
 
         STATUS_COLOR = {
-            "En cours":   "#1B6CA8",
+            "En cours":  "#1B6CA8",
             "Planifié":   "#6366F1",
             "Terminé":    "#9CA3AF",
             "En retard":  "#DC2626",
@@ -323,8 +322,8 @@ with col_left:
             <div style="margin-bottom:.7rem;">
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.25rem;gap:.5rem;">
                 <span style="font-size:.8rem;font-weight:700;color:#0D3B6E;flex:1;
-                             white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"
-                      title="{row['nom']}">{str(ro7W'nom'])[:42]}</span>
+                             white-space:nowrap;overflow7:hidden;text-overflow:ellipsis;"
+                      title="{row['nom']}">{str(row['nom'])[:42]}</span>
                 <span style="display:flex;gap:.4rem;align-items:center;flex-shrink:0;">
                   <span class="badge {badge_cls}">{row.get('statut','')}</span>
                   <span style="font-size:.7rem;color:#9CA3AF;">{debut_str}→{fin_str}</span>
