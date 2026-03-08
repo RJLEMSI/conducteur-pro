@@ -205,10 +205,10 @@ with k1:
         for _, r in df_c[df_c["statut"] == "En cours"].iterrows():
             av = float(r.get("avancement_pct", 0) or 0)
             st.markdown(f"- **{r['nom']}** — {r.get('client','')}\n  📍 {r.get('localisation','')} · Avancement {av:.0f}%")
+        st.page_link("pages/4_Planning.py", label="➡️ Voir le Planning", icon="📅")
+        st.page_link("pages/11_Documents.py", label="➡️ Voir les Documents", icon="📂")
     st.markdown(f'<div style="text-align:center;font-size:.72rem;color:#6B7280;margin-top:-.5rem;">{nb_planifies} planifié · {nb_termines} terminé</div>', unsafe_allow_html=True)
 
-            st.page_link("pages/4_Planning.py", label="📅 Voir le Planning", icon="📅")
-            st.page_link("pages/11_Documents.py", label="📂 Voir les Documents", icon="📂")
 with k2:
     with st.popover(f"**{fmt_k(ca_total)}** 💼 CA total", use_container_width=True):
         st.markdown("#### Budget par chantier")
@@ -217,10 +217,10 @@ with k2:
             st.markdown(f"- **{r['nom'][:30]}** — {fmt_k(b)}")
         st.divider()
         st.metric("CA total HT", f"{ca_total:,.0f} €".replace(",", " "))
+        st.page_link("pages/10_Facturation.py", label="➡️ Voir la Facturation", icon="🧲")
+        st.page_link("pages/11_Documents.py", label="➡️ Voir les Documents", icon="📂")
     st.markdown(f'<div style="text-align:center;font-size:.72rem;color:#6B7280;margin-top:-.5rem;">{len(df_c)} chantier(s)</div>', unsafe_allow_html=True)
 
-            st.page_link("pages/10_Facturation.py", label="🧾 Voir la Facturation", icon="🧾")
-            st.page_link("pages/11_Documents.py", label="📂 Voir les Documents", icon="📂")
 with k3:
     with st.popover(f"**{fmt_k(facture_tot)}** 📄 Facturé", use_container_width=True):
         st.markdown("#### Détail facturation par chantier")
@@ -232,10 +232,10 @@ with k3:
             st.progress(min(pct / 100, 1.0), text=f"{fmt_k(f_ht)} / {fmt_k(b)} ({pct:.0f}%)")
         st.divider()
         st.metric("Taux de facturation", f"{pct_fact:.0f}%")
+        st.page_link("pages/10_Facturation.py", label="➡️ Détails Facturation", icon="🧲")
+        st.page_link("pages/11_Documents.py", label="➡️ Documents associés", icon="📂")
     st.markdown(f'<div style="text-align:center;font-size:.72rem;color:#059669;margin-top:-.5rem;">{pct_fact:.0f}% du CA</div>', unsafe_allow_html=True)
 
-            st.page_link("pages/10_Facturation.py", label="🧾 Détails Facturation", icon="🧾")
-            st.page_link("pages/11_Documents.py", label="📂 Documents associés", icon="📂")
 with k4:
     with st.popover(f"**{fmt_k(encaisse_tot)}** ✅ Encaissé", use_container_width=True):
         st.markdown("#### Encaissement par chantier")
@@ -247,9 +247,9 @@ with k4:
             col_a, col_b = st.columns(2)
             col_a.metric("Encaissé", fmt_k(e_ht))
             col_b.metric("Reste", fmt_k(reste_e), delta=f"-{fmt_k(reste_e)}" if reste_e > 0 else "OK")
+        st.page_link("pages/10_Facturation.py", label="➡️ Suivi Encaissements", icon="🧲")
     st.markdown(f'<div style="text-align:center;font-size:.72rem;color:#059669;margin-top:-.5rem;">{pct_enc:.0f}% du facturé</div>', unsafe_allow_html=True)
 
-            st.page_link("pages/10_Facturation.py", label="🧾 Suivi Encaissements", icon="🧾")
 with k5:
     with st.popover(f"**{fmt_k(reste_fact)}** ⏳ Reste", use_container_width=True):
         st.markdown("#### Reste à facturer par chantier")
@@ -261,9 +261,9 @@ with k5:
                 st.markdown(f"- **{r['nom'][:28]}** — **{fmt_k(reste)}** à facturer")
         st.divider()
         st.metric("Total reste à facturer", f"{reste_fact:,.0f} €".replace(",", " "))
+        st.page_link("pages/10_Facturation.py", label="➡️ Gérer les Impayés", icon="🧲")
     st.markdown(f'<div style="text-align:center;font-size:.72rem;color:{color_r};margin-top:-.5rem;">À encaisser</div>', unsafe_allow_html=True)
 
-            st.page_link("pages/10_Facturation.py", label="🧾 Gérer les Impayés", icon="🧾")
 with k6:
     with st.popover(f"**{nb_urgent}** {icon_u} Urgent 7j", use_container_width=True):
         st.markdown("#### Tâches urgentes (prochains 7 jours)")
@@ -275,12 +275,12 @@ with k6:
         for _, t in taches_urgentes[~taches_urgentes.index.isin(taches_retard.index)].iterrows():
             jours = int((t["date_dt"] - TODAY).days)
             st.warning(f"⚠️ **{t.get('etape','')}** — {t.get('chantier','')}\nDans {jours}j · {t.get('responsable','')}")
+        st.page_link("pages/10_Facturation.py", label="➡️ Facturation urgente", icon="🧲")
+        st.page_link("pages/4_Planning.py", label="➡️ Planning urgent", icon="📅")
     st.markdown(f'<div style="text-align:center;font-size:.72rem;color:#DC2626;margin-top:-.5rem;">{nb_retard} en retard !</div>', unsafe_allow_html=True)
 
 st.markdown("<div style='margin-top:1.3rem;'></div>", unsafe_allow_html=True)
 
-            st.page_link("pages/10_Facturation.py", label="🧾 Facturation urgente", icon="🧾")
-            st.page_link("pages/4_Planning.py", label="📅 Planning urgent", icon="📅")
 # ─────────────────────────────────────────────────────────────────────────────────
 # 🤖 ASSISTANT / DEMANDE RAPIDE
 # ─────────────────────────────────────────────────────────────────────────────────
