@@ -7,6 +7,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import streamlit as st
 import pandas as pd
+import plotly.express as px
 import json
 from datetime import datetime, timedelta
 from utils import GLOBAL_CSS, render_sidebar
@@ -353,179 +354,225 @@ with st.expander("🤖 Assistant ConducteurPro — Demande rapide", expanded=Tru
 st.markdown("<div style='margin-top:.8rem;'></div>", unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────────────────────────────────────────
-# CORPS PRINCIPAL — 3 colonnes
-# ─────────────────────────────────────────────────────────────────────────────────
-col_left, col_mid, col_right = st.columns([2, 2, 1.3])
+# ─────────────────────────────────── PLANNING INTERACTIF ──────────────────
 
-# ══════════════════════ COLONNE GAUCHE — Planning Gantt ══════════════════════════
-with col_left:
-    st.markdown("### 📅 Planning global — tous chantiers")
-    df_gantt = df_c[df_c["date_debut_dt"].notna() & df_c["date_fin_dt"].notna()].copy()
-    if df_gantt.empty:
-        st.info("Aucun chantier avec dates renseignées.")
-    else:
-        min_d = min(df_gantt["date_debut_dt"].min(), TODAY - timedelta(days=7))
-        max_d = max(df_gantt["date_fin_dt"].max(),   TODAY + timedelta(days=30))
-        span  = max((max_d - min_d).days, 1)
+st.markdown("""---""")
+st.markdown("## 📅 Planning Global — Vue Interactive")
+st.markdown('<p style="font-size:0.92rem;color:#666;">Visualisez l\'avancement de tous vos chantiers. Cliquez sur un chantier pour voir les détails.</p>', unsafe_allow_html=True)
 
-        STATUS_COLOR = {
-            "En cours":   "#1B6CA8",
-            "Planifié":   "#6366F1",
-            "Terminé":    "#9CA3AF",
-            "En retard":  "#DC2626",
-            "En attente": "#F59E0B",
-        }
-        today_pct = max(0, min(100, (TODAY - min_d).days / span * 100))
+# ── Gantt Chart Plotly ──────────────────────────────────────────────
+df_c = st.session_state.tdb_chantiers.copy()
+df_e_all = st.session_state.tdb_etapes.copy()
 
-        for _, row in df_gantt.sort_values("date_debut_dt").iterrows():
-            s_pct = max(0, (row["date_debut_dt"] - min_d).days / span * 100)
-            d_pct = max(1, min(100 - s_pct, (row["date_fin_dt"] - row["date_debut_dt"]).days / span * 100))
-            av    = float(row.get("avancement_pct", 0) or 0)
-            color = STATUS_COLOR.get(str(row.get("statut", "")), "#1B6CA8")
-            badge_cls = {
-                "En cours": "badge-actif", "Planifié": "badge-planifie",
-                "Terminé": "badge-termine", "En retard": "badge-retard",
-                "En attente": "badge-attente",
-            }.get(str(row.get("statut", "")), "badge-planifie")
-            debut_str = row["date_debut_dt"].strftime("%d/%m")
-            fin_str   = row["date_fin_dt"].strftime("%d/%m/%y")
-            prog_full = d_pct
-            prog_done = d_pct * av / 100
+color_map_statut = {
+    "En cours": "#2196F3",
+    "Planifié": "#FF9800",
+    "Terminé": "#4CAF50",
+}
 
-            st.markdown(f"""
-            <div style="margin-bottom:.7rem;">
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.25rem;gap:.5rem;">
-                <span style="font-size:.8rem;font-weight:700;color:#0D3B6E;flex:1;
-                             white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"
-                      title="{row['nom']}">{str(row['nom'])[:42]}</span>
-                <span style="display:flex;gap:.4rem;align-items:center;flex-shrink:0;">
-                  <span class="badge {badge_cls}">{row.get('statut','')}</span>
-                  <span style="font-size:.7rem;color:#9CA3AF;">{debut_str}→{fin_str}</span>
-                </span>
-              </div>
-              <div style="background:#F1F5F9;border-radius:6px;height:18px;position:relative;overflow:visible;">
-                <div style="position:absolute;left:{s_pct:.1f}%;width:{prog_full:.1f}%;height:100%;
-                            background:{color};opacity:.2;border-radius:6px;"></div>
-                <div style="position:absolute;left:{s_pct:.1f}%;width:{prog_done:.1f}%;height:100%;
-                            background:{color};border-radius:6px;"></div>
-                <div style="position:absolute;left:{today_pct:.1f}%;top:-3px;bottom:-3px;
-                            width:2px;background:#EF4444;z-index:10;border-radius:2px;"></div>
-                <div style="position:absolute;right:4px;top:0;bottom:0;display:flex;align-items:center;">
-                  <span style="font-size:.67rem;font-weight:700;color:{color};">{av:.0f}%</span>
+gantt_data = []
+for _, row in df_c.iterrows():
+    gantt_data.append({
+        "Chantier": row["nom"].split("—")[0].strip() if "—" in row["nom"] else row["nom"],
+        "Début": row["date_debut"],
+        "Fin": row["date_fin"],
+        "Statut": row["statut"],
+        "Avancement": f'{row["avancement_pct"]}%',
+        "Client": row.get("client", ""),
+    })
+
+df_gantt = pd.DataFrame(gantt_data)
+df_gantt["Début"] = pd.to_datetime(df_gantt["Début"])
+df_gantt["Fin"] = pd.to_datetime(df_gantt["Fin"])
+
+fig = px.timeline(
+    df_gantt,
+    x_start="Début",
+    x_end="Fin",
+    y="Chantier",
+    color="Statut",
+    color_discrete_map=color_map_statut,
+    hover_data=["Client", "Avancement"],
+    title="",
+)
+fig.update_yaxes(autorange="reversed")
+fig.update_layout(
+    height=55 * len(df_gantt) + 80,
+    margin=dict(l=10, r=10, t=10, b=30),
+    font=dict(size=13),
+    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5, title_text=""),
+    xaxis=dict(
+        title="",
+        showgrid=True,
+        gridcolor="#eee",
+    ),
+    yaxis=dict(title=""),
+    plot_bgcolor="white",
+)
+# Ligne rouge pour aujourd'hui
+fig.add_vline(x=pd.Timestamp.now(), line_width=2, line_dash="dash", line_color="red",
+              annotation_text="Aujourd'hui", annotation_position="top right",
+              annotation_font_color="red", annotation_font_size=11)
+
+# Afficher le pourcentage sur les barres
+for i, row in df_gantt.iterrows():
+    mid_date = row["Début"] + (row["Fin"] - row["Début"]) / 2
+    fig.add_annotation(
+        x=mid_date, y=row["Chantier"],
+        text=f'<b>{row["Avancement"]}</b>',
+        showarrow=False,
+        font=dict(color="white", size=12),
+    )
+
+st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+
+# ── Détail par chantier (cartes cliquables) ────────────────────────
+st.markdown("### 🔍 Détail par chantier")
+st.markdown('<p style="font-size:0.88rem;color:#888;margin-top:-8px;">Cliquez sur un chantier pour voir budget, avancement et tâches associées.</p>', unsafe_allow_html=True)
+
+# Calculer nombre de colonnes selon le nombre de chantiers
+n_chantiers = len(df_c)
+cols_per_row = min(n_chantiers, 3)
+
+rows_needed = (n_chantiers + cols_per_row - 1) // cols_per_row
+idx = 0
+for r in range(rows_needed):
+    cols = st.columns(cols_per_row, gap="medium")
+    for c_idx in range(cols_per_row):
+        if idx >= n_chantiers:
+            break
+        ch = df_c.iloc[idx]
+        nom_court = ch["nom"].split("—")[0].strip() if "—" in ch["nom"] else ch["nom"]
+        statut = ch["statut"]
+        avance = ch["avancement_pct"]
+        budget = ch["budget_ht"]
+        facture = ch.get("facture_ht", 0)
+        encaisse_val = ch.get("encaisse", 0)
+        reste = budget - facture
+        localisation = ch.get("localisation", "")
+        client_name = ch.get("client", "")
+
+        badge_color = {"En cours": "#2196F3", "Planifié": "#FF9800", "Terminé": "#4CAF50"}.get(statut, "#999")
+
+        with cols[c_idx]:
+            # Card with popover
+            st.markdown(f"""<div style="background:#fff;border-radius:12px;padding:16px;border:1px solid #e0e0e0;
+                box-shadow:0 2px 8px rgba(0,0,0,0.06);margin-bottom:4px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                    <span style="font-weight:700;font-size:0.95rem;">{nom_court}</span>
+                    <span style="background:{badge_color};color:#fff;padding:3px 10px;border-radius:20px;font-size:0.75rem;">{statut}</span>
                 </div>
-              </div>
+                <div style="font-size:0.82rem;color:#666;margin-bottom:6px;">📍 {localisation} · {client_name}</div>
+                <div style="background:#eee;border-radius:8px;height:10px;overflow:hidden;margin-bottom:4px;">
+                    <div style="background:{badge_color};height:100%;width:{avance}%;border-radius:8px;"></div>
+                </div>
+                <div style="font-size:0.78rem;color:#888;text-align:right;">{avance}% avancement</div>
+            </div>""", unsafe_allow_html=True)
+
+            with st.popover(f"📋 Détails {nom_court}", use_container_width=True):
+                st.markdown(f"#### {ch['nom']}")
+                st.markdown(f"**Client :** {client_name}")
+                st.markdown(f"**Localisation :** {localisation}")
+                st.markdown(f"**Période :** {ch['date_debut']} → {ch['date_fin']}")
+                st.markdown("---")
+
+                # Budget
+                met1, met2, met3, met4 = st.columns(4)
+                met1.metric("Budget HT", fmt_k(budget))
+                met2.metric("Facturé", fmt_k(facture))
+                met3.metric("Encaissé", fmt_k(encaisse_val))
+                met4.metric("Reste", fmt_k(reste))
+
+                # Progress bars
+                pct_f = int(facture / budget * 100) if budget > 0 else 0
+                st.markdown(f"""
+                <div style="margin:8px 0;">
+                  <div style="font-size:0.8rem;color:#555;">Facturation : {pct_f}%</div>
+                  <div style="background:#eee;border-radius:6px;height:8px;overflow:hidden;">
+                    <div style="background:#2196F3;height:100%;width:{pct_f}%;border-radius:6px;"></div>
+                  </div>
+                </div>
+                <div style="margin:8px 0;">
+                  <div style="font-size:0.8rem;color:#555;">Avancement : {avance}%</div>
+                  <div style="background:#eee;border-radius:6px;height:8px;overflow:hidden;">
+                    <div style="background:#4CAF50;height:100%;width:{avance}%;border-radius:6px;"></div>
+                  </div>
+                </div>""", unsafe_allow_html=True)
+
+                # Tâches liées
+                nom_base = nom_court.split("—")[0].strip() if "—" in nom_court else nom_court
+                # Match tasks by partial name
+                taches_ch = df_e_all[df_e_all["chantier"].str.contains(nom_base.split()[0], case=False, na=False)]
+                if not taches_ch.empty:
+                    st.markdown("**Prochaines tâches :**")
+                    for _, t in taches_ch.iterrows():
+                        prio_icon = "🔴" if t.get("priorite") == "Haute" else "🟡" if t.get("priorite") == "Moyenne" else "🟢"
+                        st.markdown(f"- {prio_icon} **{t['etape']}** — {t.get('responsable', '')} · {t.get('date_echeance', '')}")
+                else:
+                    st.markdown("_Aucune tâche planifiée_")
+
+                # Documents liés
+                docs_ch = st.session_state.tdb_documents[
+                    st.session_state.tdb_documents["chantier"].str.contains(nom_base.split()[0], case=False, na=False)
+                ]
+                if not docs_ch.empty:
+                    st.markdown("**Documents associés :**")
+                    for _, d in docs_ch.iterrows():
+                        st.markdown(f"- 📄 {d['titre']} ({d.get('statut', '')})")
+
+        idx += 1
+
+# ── Tâches urgentes (section compacte) ─────────────────────────────
+st.markdown("---")
+col_taches_l, col_taches_r = st.columns([2, 1])
+
+with col_taches_l:
+    st.markdown("### ⚡ Tâches à venir")
+    today = pd.Timestamp.now().normalize()
+    df_etapes = st.session_state.tdb_etapes.copy()
+    df_etapes["date_dt"] = pd.to_datetime(df_etapes["date_echeance"], errors="coerce")
+    df_etapes_sorted = df_etapes.sort_values("date_dt")
+
+    for _, t in df_etapes_sorted.iterrows():
+        delta = (t["date_dt"] - today).days if pd.notna(t["date_dt"]) else 999
+        if delta < 0:
+            time_label = f"⚠️ {abs(delta)}j retard"
+            time_color = "#e53935"
+        elif delta == 0:
+            time_label = "📌 Aujourd'hui"
+            time_color = "#FF9800"
+        elif delta <= 7:
+            time_label = f"⏰ Dans {delta}j"
+            time_color = "#FF9800"
+        else:
+            time_label = f"📅 {t.get('date_echeance', '')}"
+            time_color = "#666"
+
+        prio = t.get("priorite", "Normale")
+        prio_dot = "🔴" if prio == "Haute" else "🟡" if prio == "Moyenne" else "🟢"
+
+        st.markdown(f"""<div style="background:#fff;border-radius:10px;padding:10px 14px;margin-bottom:6px;
+            border-left:4px solid {time_color};box-shadow:0 1px 4px rgba(0,0,0,0.05);">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span style="font-weight:600;font-size:0.9rem;">{prio_dot} {t['etape']}</span>
+                <span style="font-size:0.78rem;color:{time_color};font-weight:600;">{time_label} · {prio_dot} {prio}</span>
             </div>
-            """, unsafe_allow_html=True)
+            <div style="font-size:0.8rem;color:#888;margin-top:2px;">{t['chantier']} · {t.get('responsable', '')}</div>
+        </div>""", unsafe_allow_html=True)
 
-        st.markdown(
-            f"<p style='font-size:.72rem;color:#9CA3AF;margin-top:.3rem;'>"
-            f"🔴 Ligne rouge = aujourd'hui ({TODAY.strftime('%d/%m/%Y')})</p>",
-            unsafe_allow_html=True,
-        )
+with col_taches_r:
+    st.markdown("### 📊 Résumé financier")
+    total_budget = df_c["budget_ht"].sum()
+    total_facture = df_c["facture_ht"].sum()
+    total_encaisse = df_c["encaisse"].sum()
+    total_reste = total_budget - total_facture
 
-# ══════════════════════ COLONNE MILIEU — Finances & Chantiers ════════════════════
-with col_mid:
-    st.markdown("### 💰 Avancement financier")
-    df_actifs = df_c[df_c["statut"] != "Terminé"].sort_values("budget_ht", ascending=False)
-    if df_actifs.empty:
-        st.info("Aucun chantier actif.")
-    else:
-        for _, row in df_actifs.iterrows():
-            budget   = float(row.get("budget_ht", 0) or 0)
-            fact     = float(row.get("facture_ht", 0) or 0)
-            encaisse = float(row.get("encaisse_ht", 0) or 0)
-            av       = float(row.get("avancement_pct", 0) or 0)
-            p_fact   = (fact / budget * 100) if budget else 0
-            reste    = budget - fact
-            badge_cls = {
-                "En cours": "badge-actif", "Planifié": "badge-planifie",
-                "En retard": "badge-retard", "En attente": "badge-attente",
-            }.get(str(row.get("statut", "")), "badge-planifie")
+    st.metric("Budget total", fmt_k(total_budget))
+    st.metric("Total facturé", fmt_k(total_facture), delta=f"{int(total_facture/total_budget*100)}% du budget" if total_budget > 0 else "")
+    st.metric("Total encaissé", fmt_k(total_encaisse), delta=f"{int(total_encaisse/total_facture*100)}% du facturé" if total_facture > 0 else "")
+    st.metric("Reste à facturer", fmt_k(total_reste))
 
-            st.markdown(f"""
-            <div class="ch-card">
-              <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.45rem;">
-                <div style="flex:1;min-width:0;">
-                  <div style="font-weight:700;font-size:.85rem;color:#0D3B6E;
-                              white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"
-                       title="{row['nom']}">{str(row['nom'])[:38]}</div>
-                  <div style="font-size:.73rem;color:#6B7280;">{row.get('client','')} · {row.get('localisation','')}</div>
-                </div>
-                <span class="badge {badge_cls}" style="margin-left:.5rem;flex-shrink:0;">{row.get('statut','')}</span>
-              </div>
-              <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.3rem;margin-bottom:.45rem;">
-                <div style="text-align:center;">
-                  <div style="font-size:.65rem;color:#9CA3AF;">Budget HT</div>
-                  <div style="font-size:.82rem;font-weight:700;color:#0D3B6E;">{fmt_k(budget)}</div>
-                </div>
-                <div style="text-align:center;">
-                  <div style="font-size:.65rem;color:#9CA3AF;">Facturé</div>
-                  <div style="font-size:.82rem;font-weight:700;color:#1B6CA8;">{fmt_k(fact)}</div>
-                </div>
-                <div style="text-align:center;">
-                  <div style="font-size:.65rem;color:#9CA3AF;">Encaissé</div>
-                  <div style="font-size:.82rem;font-weight:700;color:#059669;">{fmt_k(encaisse)}</div>
-                </div>
-                <div style="text-align:center;">
-                  <div style="font-size:.65rem;color:#9CA3AF;">Reste fact.</div>
-                  <div style="font-size:.82rem;font-weight:700;color:#D97706;">{fmt_k(reste)}</div>
-                </div>
-              </div>
-              <div style="display:flex;align-items:center;gap:.4rem;margin-bottom:.2rem;">
-                <span style="font-size:.65rem;color:#6B7280;width:72px;">Facturation</span>
-                <div class="prog-wrap" style="flex:1;">
-                  <div class="prog-bar" style="width:{p_fact:.0f}%;background:#1B6CA8;"></div>
-                </div>
-                <span style="font-size:.65rem;color:#1B6CA8;width:30px;text-align:right;">{p_fact:.0f}%</span>
-              </div>
-              <div style="display:flex;align-items:center;gap:.4rem;">
-                <span style="font-size:.65rem;color:#6B7280;width:72px;">Avancement</span>
-                <div class="prog-wrap" style="flex:1;">
-                  <div class="prog-bar" style="width:{av:.0f}%;background:#059669;"></div>
-                </div>
-                <span style="font-size:.65rem;color:#059669;width:30px;text-align:right;">{av:.0f}%</span>
-              </div>
-            </div>
-            """, unsafe_allow_html=True)
 
-# ══════════════════════ COLONNE DROITE — Tâches & Alertes ════════════════════════
-with col_right:
-    st.markdown("### 🗓️ Tâches à venir")
-    if df_e.empty:
-        st.info("Aucune tâche planifiée.")
-    else:
-        for _, etape in df_e.sort_values("date_dt").iterrows():
-            date_v    = etape.get("date_dt")
-            days_left = int((date_v - TODAY).days) if pd.notna(date_v) else 999
-            if days_left < 0:
-                bg = "#FEF2F2"; border = "#EF4444"; tag = f"🚨 {abs(days_left)}j retard"
-            elif days_left == 0:
-                bg = "#FFF7ED"; border = "#F59E0B"; tag = "⚠️ Aujourd'hui"
-            elif days_left <= 3:
-                bg = "#FFF7ED"; border = "#F59E0B"; tag = f"⚠️ Dans {days_left}j"
-            elif days_left <= 7:
-                bg = "#FFFBEB"; border = "#D97706"; tag = f"⏰ Dans {days_left}j"
-            else:
-                bg = "#F8FAFF"; border = "#CBD5E1"
-                tag = f"📅 {date_v.strftime('%d/%m') if pd.notna(date_v) else '—'}"
-            prio_c = {"Haute": "#DC2626", "Normale": "#6B7280", "Basse": "#9CA3AF"}.get(
-                etape.get("priorite", ""), "#6B7280"
-            )
-            st.markdown(f"""
-            <div class="task-item" style="background:{bg};border-color:{border};">
-              <div style="font-weight:700;font-size:.8rem;color:#0D3B6E;margin-bottom:.1rem;">
-                {etape.get('etape','')}</div>
-              <div style="font-size:.7rem;color:#6B7280;">{etape.get('chantier','')}</div>
-              <div style="font-size:.7rem;color:#6B7280;">{etape.get('responsable','')}</div>
-              <div style="display:flex;justify-content:space-between;margin-top:.3rem;">
-                <span style="font-size:.7rem;font-weight:700;color:{border};">{tag}</span>
-                <span style="font-size:.68rem;color:{prio_c};">◆ {etape.get('priorite','')}</span>
-              </div>
-            </div>
-            """, unsafe_allow_html=True)
-
-# ═══════════════════════════════════════ SECTION DOCUMENTS ═══════════════════════════════════════
-st.markdown("<div style='margin-top:1.5rem;'></div>", unsafe_allow_html=True)
 st.markdown("### 📂 Documents & Pièces")
 st.markdown("<p style='font-size:.85rem;color:#6B7280;margin-top:-.5rem;margin-bottom:.8rem;'>Retrouvez tous vos documents classés par type. Devis, factures, plans, comptes-rendus…</p>", unsafe_allow_html=True)
 
