@@ -1,16 +1,18 @@
 """
 Page 4 — Aide au planning de chantier
+Génère un planning + checklist. Permet de sauvegarder dans l'historique.
 """
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import streamlit as st
+import json
+from datetime import datetime
 from utils import (
     GLOBAL_CSS, render_sidebar, get_client, check_api_key,
     extract_text_from_pdf, generate_planning
 )
 
-# ─── Config ───────────────────────────────────────────────────────────────────
 st.set_page_config(
     page_title="Aide Planning · ConducteurPro",
     page_icon="📅",
@@ -20,7 +22,7 @@ st.set_page_config(
 st.markdown(GLOBAL_CSS, unsafe_allow_html=True)
 render_sidebar()
 
-# ─── En-tête ──────────────────────────────────────────────────────────────────
+# ─── En-tête ─────────────────────────────────────────────────────────────────────
 st.markdown("""
 <div class="page-header">
     <h2>📅 Aide au planning</h2>
@@ -28,19 +30,16 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# ─── Tabs : Saisie manuelle ou import ─────────────────────────────────────────
+# ─── Tabs : Saisie manuelle ou import ────────────────────────────────────────────
 tab_manual, tab_import, tab_analyses = st.tabs([
-    "✏️  Saisie manuelle",
-    "📄  Importer un document",
-    "🔗  Depuis mes analyses"
+    "✏️ Saisie manuelle",
+    "📄 Importer un document",
+    "🔗 Depuis mes analyses"
 ])
 
-context_parts = []
-
-# ─── Tab 1 : Saisie manuelle ──────────────────────────────────────────────────
+# ─── Tab 1 : Saisie manuelle ─────────────────────────────────────────────────────
 with tab_manual:
     st.markdown("##### Décrivez votre projet de construction")
-
     col1, col2 = st.columns(2)
     with col1:
         project_type = st.selectbox(
@@ -54,7 +53,6 @@ with tab_manual:
             "Type de structure",
             ["Maçonnerie traditionnelle", "Béton armé", "Ossature bois", "Métal / charpente", "Mixte", "Inconnu"]
         )
-
     with col2:
         localisation = st.text_input("Localisation", placeholder="Ex : Bordeaux (33), zone sismique 2")
         date_debut = st.text_input("Date de début souhaitée", placeholder="Ex : Septembre 2025")
@@ -63,7 +61,7 @@ with tab_manual:
 
     contraintes = st.text_area(
         "Contraintes particulières et informations complémentaires",
-        placeholder="Ex : Site en zone inondable, accès difficile, riverains proches, démolition préalable, lot séparé pour électricité...",
+        placeholder="Ex : Site en zone inondable, accès difficile, riverains proches, démolition préalable...",
         height=100
     )
 
@@ -81,15 +79,22 @@ INFORMATIONS PROJET :
 - Contraintes : {contraintes}
 """
         st.session_state["planning_manual_context"] = context_manual
+        # Mémoriser pour l'historique
+        st.session_state["planning_projet_info"] = {
+            "type": project_type,
+            "surface": surface,
+            "localisation": localisation,
+            "date_debut": date_debut,
+            "duree": duree,
+        }
         st.success("✅ Informations ajoutées !")
 
-# ─── Tab 2 : Import document ──────────────────────────────────────────────────
+# ─── Tab 2 : Import document ──────────────────────────────────────────────────────
 with tab_import:
     st.markdown("##### Importez un document pour enrichir le contexte planning")
     st.markdown("""
     <div class="info-box">
-        Vous pouvez importer ici : un DCE, une synthèse d'études, un programme de travaux,
-        un CCTP ou tout document décrivant le projet.
+    Vous pouvez importer ici : un DCE, une synthèse d'études, un programme de travaux, un CCTP ou tout document décrivant le projet.
     </div>
     """, unsafe_allow_html=True)
 
@@ -99,46 +104,41 @@ with tab_import:
     if doc_file and st.button("📖 Extraire et ajouter au contexte", use_container_width=False):
         with st.spinner("Extraction du texte..."):
             text = extract_text_from_pdf(doc_file)
-        if text.strip():
-            label = doc_type or doc_file.name
-            # Tronquer à 20 000 chars pour le contexte planning
-            text_short = text[:20000] + ("..." if len(text) > 20000 else "")
-            st.session_state[f"planning_doc_ctx_{doc_file.name}"] = f"\n\n--- {label} ---\n{text_short}"
-            st.success(f"✅ Document '{doc_file.name}' ajouté au contexte !")
-        else:
-            st.error("Impossible d'extraire le texte. Vérifiez que le PDF contient du texte.")
+            if text.strip():
+                text_short = text[:20000] + ("..." if len(text) > 20000 else "")
+                label = doc_type or doc_file.name
+                st.session_state[f"planning_doc_ctx_{doc_file.name}"] = f"\n\n--- {label} ---\n{text_short}"
+                st.success(f"✅ Document '{doc_file.name}' ajouté au contexte !")
+            else:
+                st.error("Impossible d'extraire le texte. Vérifiez que le PDF contient du texte.")
 
-# ─── Tab 3 : Analyses précédentes ─────────────────────────────────────────────
+# ─── Tab 3 : Analyses précédentes ────────────────────────────────────────────────
 with tab_analyses:
     if st.session_state.get("planning_context"):
         st.markdown("""
         <div class="success-box">
-            ✅ Des analyses depuis les autres modules ont été ajoutées automatiquement au contexte.
+        ✅ Des analyses depuis les autres modules ont été ajoutées automatiquement au contexte.
         </div>
         """, unsafe_allow_html=True)
-
         with st.expander("Voir le contexte importé des analyses"):
             st.text(st.session_state["planning_context"][:3000] + "...")
-
         if st.button("🗑️ Effacer le contexte importé"):
             del st.session_state["planning_context"]
             st.rerun()
     else:
         st.markdown("""
         <div class="info-box">
-            💡 <strong>Astuce :</strong> Après avoir analysé un DCE ou une étude technique dans les modules correspondants,
-            cliquez sur "Envoyer au module Planning" — les résultats seront automatiquement disponibles ici.
+        💡 <strong>Astuce :</strong> Après avoir analysé un DCE ou une étude technique dans les modules correspondants,
+        cliquez sur "Envoyer au module Planning" — les résultats seront automatiquement disponibles ici.
         </div>
         """, unsafe_allow_html=True)
 
-# ─── Assemblage du contexte et génération ─────────────────────────────────────
+# ─── Assemblage du contexte et génération ────────────────────────────────────────
 st.markdown("---")
 st.markdown("### 🚀 Générer le planning")
 
-# Résumé du contexte assemblé
 all_context_keys = ["planning_manual_context", "planning_context"]
 all_context_keys += [k for k in st.session_state.keys() if k.startswith("planning_doc_ctx_")]
-
 assembled_context = "\n".join([
     st.session_state.get(k, "")
     for k in all_context_keys
@@ -148,44 +148,43 @@ assembled_context = "\n".join([
 if assembled_context.strip():
     st.markdown("""
     <div class="success-box">
-        ✅ Contexte prêt — L'IA dispose de suffisamment d'informations pour générer un planning.
+    ✅ Contexte prêt — L'IA dispose de suffisamment d'informations pour générer un planning.
     </div>
     """, unsafe_allow_html=True)
-
     with st.expander("Voir le contexte assemblé"):
         st.text(assembled_context[:2000] + ("..." if len(assembled_context) > 2000 else ""))
 else:
     st.markdown("""
     <div class="warning-box">
-        ⚠️ Aucun contexte fourni. Remplissez au moins la saisie manuelle (onglet ✏️) ou importez un document.
+    ⚠️ Aucun contexte fourni. Remplissez au moins la saisie manuelle (onglet ✏️) ou importez un document.
     </div>
     """, unsafe_allow_html=True)
 
-# Option : demande spécifique
 specific_request = st.text_area(
     "Demande spécifique (optionnel)",
     placeholder="Ex : Insiste sur la phase gros oeuvre et les délais d'approvisionnement béton. Prévois 2 équipes maçonnerie...",
     height=80
 )
-
 if specific_request:
     assembled_context += f"\n\nDEMANDE SPÉCIFIQUE DU CDT : {specific_request}"
 
 col_btn, col_info = st.columns([2, 1])
 with col_btn:
-    generate_btn = st.button("🤖 Générer le planning et la checklist", use_container_width=True, disabled=not assembled_context.strip())
-
+    generate_btn = st.button(
+        "🤖 Générer le planning et la checklist",
+        use_container_width=True,
+        disabled=not assembled_context.strip()
+    )
 with col_info:
     st.markdown("""
     <div class="info-box" style="font-size:0.82rem;">
-        💡 Plus vous fournissez d'informations, plus le planning sera précis et adapté.
+    💡 Plus vous fournissez d'informations, plus le planning sera précis et adapté.
     </div>
     """, unsafe_allow_html=True)
 
 if generate_btn:
     if not check_api_key():
         st.stop()
-
     client = get_client()
     with st.spinner("🤖 Génération du planning... (30-60 secondes)"):
         try:
@@ -195,7 +194,7 @@ if generate_btn:
             st.error(f"Erreur lors de la génération : {e}")
             st.stop()
 
-# ─── Résultats ────────────────────────────────────────────────────────────────
+# ─── Résultats ────────────────────────────────────────────────────────────────────
 if "planning_result" in st.session_state:
     st.markdown("""
     <div class="result-box">
@@ -204,10 +203,50 @@ if "planning_result" in st.session_state:
     """, unsafe_allow_html=True)
 
     st.markdown(st.session_state["planning_result"])
-
     st.markdown("---")
 
-    col_dl1, col_dl2 = st.columns(2)
+    # ─── Sauvegarde dans l'historique ────────────────────────────────────────────
+    st.markdown("#### 💾 Sauvegarder ce planning")
+
+    col_sv1, col_sv2 = st.columns([2, 1])
+    with col_sv1:
+        planning_name = st.text_input(
+            "Nom du planning",
+            value=st.session_state.get("planning_projet_info", {}).get(
+                "type", f"Planning du {datetime.now().strftime('%d/%m/%Y')}"
+            ),
+            key="planning_save_name"
+        )
+    with col_sv2:
+        st.markdown("<br>", unsafe_allow_html=True)
+        if st.button("💾 Sauvegarder dans l'historique", use_container_width=True):
+            if "planning_history" not in st.session_state:
+                st.session_state.planning_history = []
+
+            projet_info = st.session_state.get("planning_projet_info", {})
+
+            # Extraction des phases pour l'édition ultérieure
+            from pages._planning_utils import extract_phases_from_markdown
+            phases = extract_phases_from_markdown(st.session_state["planning_result"])
+
+            new_entry = {
+                "id": f"{datetime.now().strftime('%Y%m%d%H%M%S')}",
+                "nom": planning_name,
+                "date": datetime.now().strftime("%d/%m/%Y à %H:%M"),
+                "projet": f"{projet_info.get('type','')} — {projet_info.get('surface','')}",
+                "localisation": projet_info.get("localisation", ""),
+                "date_debut": projet_info.get("date_debut", ""),
+                "duree": projet_info.get("duree", ""),
+                "contenu": st.session_state["planning_result"],
+                "phases": phases,
+                "contexte": assembled_context[:5000],
+            }
+            st.session_state.planning_history.append(new_entry)
+            st.success(f"✅ Planning '{planning_name}' sauvegardé dans l'historique !")
+
+    st.markdown("---")
+    col_dl1, col_dl2, col_dl3 = st.columns(3)
+
     with col_dl1:
         txt_content = f"AIDE AU PLANNING — Généré par ConducteurPro\n\n{st.session_state['planning_result']}"
         st.download_button(
@@ -226,11 +265,20 @@ if "planning_result" in st.session_state:
             mime="text/markdown",
             use_container_width=True
         )
+    with col_dl3:
+        if st.button("💰 Générer un devis à partir de ce planning", use_container_width=True):
+            projet_info = st.session_state.get("planning_projet_info", {})
+            st.session_state["devis_from_planning"] = {
+                "nom": planning_name,
+                "projet": f"{projet_info.get('type','')} — {projet_info.get('surface','')}",
+                "localisation": projet_info.get("localisation", ""),
+                "contenu": st.session_state["planning_result"],
+            }
+            st.switch_page("pages/8_Devis.py")
 
     if st.button("🔄 Générer un nouveau planning", use_container_width=False):
         del st.session_state["planning_result"]
-        # Nettoyer aussi les contextes
         for k in list(st.session_state.keys()):
-            if k.startswith("planning_"):
+            if k.startswith("planning_") and k not in ["planning_history"]:
                 del st.session_state[k]
         st.rerun()
