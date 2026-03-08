@@ -215,7 +215,8 @@ tabs = st.tabs([
     "👤 Client & Projet",
     "📋 Lignes du devis",
     "💸 Coût de revient",
-    "👁️ Aperçu & Export"
+    "👁️ Aperçu & Export",
+    "📦 Tarifs Fournisseurs",
 ])
 
 # ═══════════════════════════════════════════════════════════════════
@@ -352,19 +353,19 @@ with tabs[1]:
         e = st.session_state.devis_entreprise
         c1, c2 = st.columns(2)
         with c1:
-            e["nom"] = st.text_input("🏢 Nom entreprise *", value=e["nom"], placeholder="MARTIN Maçonnerie SAS")
-            e["siret"] = st.text_input("SIRET *", value=e["siret"])
-            e["telephone"] = st.text_input("📞 Téléphone", value=e["telephone"])
-            e["email"] = st.text_input("📧 Email", value=e["email"])
+            e["nom"] = st.text_input("🏢 Nom entreprise *", value=e["nom"], placeholder="MARTIN Maçonnerie SAS", key="ent_nom")
+            e["siret"] = st.text_input("SIRET *", value=e["siret"], key="ent_siret")
+            e["telephone"] = st.text_input("📞 Téléphone", value=e["telephone"], key="ent_tel")
+            e["email"] = st.text_input("📧 Email", value=e["email"], key="ent_email")
         with c2:
-            e["adresse"] = st.text_input("📍 Adresse", value=e["adresse"])
-            e["code_postal"] = st.text_input("Code postal", value=e["code_postal"])
-            e["ville"] = st.text_input("Ville", value=e["ville"])
-            e["site"] = st.text_input("🌐 Site web", value=e["site"])
+            e["adresse"] = st.text_input("📍 Adresse", value=e["adresse"], key="ent_adresse")
+            e["code_postal"] = st.text_input("Code postal", value=e["code_postal"], key="ent_cp")
+            e["ville"] = st.text_input("Ville", value=e["ville"], key="ent_ville")
+            e["site"] = st.text_input("🌐 Site web", value=e["site"], key="ent_site")
 
-    e["rcs"] = st.text_input("RCS", value=e["rcs"])
-    e["tva_intracommunautaire"] = st.text_input("N° TVA intra", value=e["tva_intracommunautaire"])
-    e["mentions"] = st.text_area("Mentions légales", value=e["mentions"], height=70)
+    e["rcs"] = st.text_input("RCS", value=e["rcs"], key="ent_rcs")
+    e["tva_intracommunautaire"] = st.text_input("N° TVA intra", value=e["tva_intracommunautaire"], key="ent_tva_intra")
+    e["mentions"] = st.text_area("Mentions légales", value=e["mentions"], height=70, key="ent_mentions")
 
     c1, c2 = st.columns(2)
     with c1:
@@ -392,28 +393,32 @@ with tabs[2]:
     d = st.session_state.devis_info
     c1, c2 = st.columns(2)
     with c1:
-        d["numero"] = st.text_input("📑 N° devis", value=d["numero"])
-        d["date"] = st.text_input("📅 Date", value=d["date"])
-        d["validite"] = st.text_input("⏳ Validité", value=d["validite"])
+        d["numero"] = st.text_input("📑 N° devis", value=d["numero"], key="dev_numero")
+        d["date"] = st.text_input("📅 Date", value=d["date"], key="dev_date")
+        d["validite"] = st.text_input("⏳ Validité", value=d["validite"], key="dev_validite")
         d["objet"] = st.text_input("📝 Objet des travaux", value=d["objet"],
-                                   placeholder="Installation plomberie salle de bain — Lyon 69")
+                                   placeholder="Installation plomberie salle de bain — Lyon 69",
+                                   key="dev_objet")
     with c2:
         d["tva_taux"] = st.number_input("TVA (%)", value=float(d["tva_taux"]),
                                          min_value=0.0, max_value=100.0, step=0.5,
-                                         help="5.5% amélioration, 10% rénovation, 20% neuf")
-        d["conditions_paiement"] = st.text_input("💳 Conditions paiement", value=d["conditions_paiement"])
+                                         help="5.5% amélioration, 10% rénovation, 20% neuf",
+                                         key="dev_tva")
+        d["conditions_paiement"] = st.text_input("💳 Conditions paiement",
+                                                  value=d["conditions_paiement"],
+                                                  key="dev_conditions")
 
     st.markdown("#### 👤 Client")
     c1, c2 = st.columns(2)
     with c1:
-        d["client_nom"] = st.text_input("Nom / Raison sociale *", value=d["client_nom"])
-        d["client_adresse"] = st.text_input("Adresse chantier", value=d["client_adresse"])
-        d["client_cp"] = st.text_input("Code postal", value=d["client_cp"])
+        d["client_nom"] = st.text_input("Nom / Raison sociale *", value=d["client_nom"], key="cli_nom")
+        d["client_adresse"] = st.text_input("Adresse chantier", value=d["client_adresse"], key="cli_adresse")
+        d["client_cp"] = st.text_input("Code postal client", value=d["client_cp"], key="cli_cp")
     with c2:
-        d["client_ville"] = st.text_input("Ville", value=d["client_ville"])
-        d["client_email"] = st.text_input("Email client", value=d["client_email"])
-        d["client_tel"] = st.text_input("Tél. client", value=d["client_tel"])
-    d["notes"] = st.text_area("Notes", value=d["notes"], height=80)
+        d["client_ville"] = st.text_input("Ville client", value=d["client_ville"], key="cli_ville")
+        d["client_email"] = st.text_input("Email client", value=d["client_email"], key="cli_email")
+        d["client_tel"] = st.text_input("Tél. client", value=d["client_tel"], key="cli_tel")
+    d["notes"] = st.text_area("Notes", value=d["notes"], height=80, key="dev_notes")
 
 # ═══════════════════════════════════════════════════════════════════
 # TAB 4 — LIGNES DU DEVIS
@@ -739,3 +744,288 @@ with tabs[5]:
         }
         st.download_button("📊 Exporter tout (JSON)", data=json.dumps(export_full, ensure_ascii=False, indent=2).encode(),
                            file_name=f"devis_{devis.get('numero','')}.json", mime="application/json", use_container_width=True)
+
+# ═══════════════════════════════════════════════════════════════════
+# TAB 7 — TARIFS FOURNISSEURS
+# ═══════════════════════════════════════════════════════════════════
+with tabs[6]:
+    st.markdown("### 📦 Tarifs Fournisseurs")
+    st.markdown("""
+    <div class="info-box">
+    📄 Importez un <strong>catalogue PDF fournisseur</strong> — l'IA extrait automatiquement les produits,
+    références et prix. Gérez et mettez à jour votre base de prix pour les réutiliser directement
+    dans vos grilles de devis.
+    </div>
+    """, unsafe_allow_html=True)
+
+    # ── Init ─────────────────────────────────────────────────────────────────
+    if "tarifs_fournisseurs" not in st.session_state:
+        st.session_state.tarifs_fournisseurs = pd.DataFrame(
+            columns=["fournisseur", "ref", "designation", "unite", "prix_achat_ht", "derniere_maj"]
+        )
+    if "_extracted_tarifs" not in st.session_state:
+        st.session_state._extracted_tarifs = None
+
+    UNITES_OPTIONS = ["m²", "m³", "ml", "u", "kg", "T", "sac", "L", "rouleau", "Fft", "h", "j"]
+
+    # ── Section import PDF ────────────────────────────────────────────────────
+    col_upload, col_help = st.columns([3, 2])
+
+    with col_upload:
+        st.markdown("#### 📄 Importer un catalogue fournisseur")
+        fournisseur_nom = st.text_input(
+            "Nom du fournisseur", placeholder="Point.P, Brico Dépôt, Kiloutou, Saint-Gobain...",
+            key="four_nom"
+        )
+        pdf_catalog = st.file_uploader("📥 Catalogue PDF (tarifs, bordereau de prix...)", type=["pdf"], key="pdf_catalog")
+
+        c_btn1, c_btn2 = st.columns(2)
+        with c_btn1:
+            extract_btn = st.button("🤖 Extraire les prix avec l'IA", use_container_width=True,
+                                    key="btn_extract_pdf", type="primary",
+                                    disabled=(not pdf_catalog or not fournisseur_nom))
+        with c_btn2:
+            manual_btn = st.button("➕ Saisie manuelle", use_container_width=True, key="btn_add_manual_four")
+
+        if manual_btn:
+            new_row = pd.DataFrame([{
+                "fournisseur": fournisseur_nom or "—",
+                "ref": "", "designation": "", "unite": "u",
+                "prix_achat_ht": 0.0,
+                "derniere_maj": datetime.now().strftime("%d/%m/%Y"),
+            }])
+            st.session_state.tarifs_fournisseurs = pd.concat(
+                [st.session_state.tarifs_fournisseurs, new_row], ignore_index=True
+            )
+            st.rerun()
+
+        if extract_btn and pdf_catalog and fournisseur_nom:
+            if check_api_key():
+                with st.spinner("📖 Lecture du PDF..."):
+                    try:
+                        import pdfplumber
+                        all_text = []
+                        with pdfplumber.open(pdf_catalog) as pdf_doc:
+                            for page in pdf_doc.pages[:30]:
+                                t = page.extract_text()
+                                if t:
+                                    all_text.append(t)
+                                # Also extract tables
+                                for table in page.extract_tables():
+                                    for row in table:
+                                        if row:
+                                            all_text.append(" | ".join(str(c) for c in row if c))
+                        raw_text = "\n".join(all_text)[:60000]
+                    except Exception as ex:
+                        st.error(f"Erreur lecture PDF : {ex}")
+                        raw_text = ""
+
+                if raw_text:
+                    with st.spinner("🤖 Extraction des prix par l'IA (30-60s)..."):
+                        try:
+                            client_ai = get_client()
+                            prompt = f"""Tu es un expert en tarification BTP. Analyse ce catalogue fournisseur et extrait TOUS les produits/articles avec leurs prix.
+
+Fournisseur : {fournisseur_nom}
+
+Réponds UNIQUEMENT avec un tableau JSON valide, sans markdown, sans explication.
+Format EXACT :
+[
+  {{"ref": "REF001", "designation": "Béton prêt à l'emploi B25", "unite": "m³", "prix_achat_ht": 95.50}},
+  {{"ref": "REF002", "designation": "Sable 0/4 en sac 25kg", "unite": "sac", "prix_achat_ht": 4.90}}
+]
+
+Règles :
+- Inclure TOUS les produits visibles (même sans référence, mettre "—")
+- Prix en euros HT décimaux (ex: 12.50)
+- Unités standards : m², m³, ml, u, kg, T, sac, L, rouleau, Fft, h
+- Si prix non trouvé, mettre 0
+- Maximum 200 produits
+
+CATALOGUE À ANALYSER :
+{raw_text}"""
+
+                            response = client_ai.messages.create(
+                                model="claude-opus-4-5",
+                                max_tokens=6000,
+                                messages=[{"role": "user", "content": prompt}]
+                            )
+                            result_text = response.content[0].text.strip()
+                            # Clean markdown fences
+                            if "```" in result_text:
+                                parts = result_text.split("```")
+                                for part in parts:
+                                    p = part.strip()
+                                    if p.startswith("json"):
+                                        p = p[4:]
+                                    if p.startswith("["):
+                                        result_text = p
+                                        break
+                            result_text = result_text.strip()
+                            if result_text.startswith("["):
+                                new_items = json.loads(result_text)
+                                df_new = pd.DataFrame(new_items)
+                                df_new["fournisseur"] = fournisseur_nom
+                                df_new["derniere_maj"] = datetime.now().strftime("%d/%m/%Y")
+                                for col in ["ref", "designation", "unite", "prix_achat_ht", "fournisseur", "derniere_maj"]:
+                                    if col not in df_new.columns:
+                                        df_new[col] = ""
+                                st.session_state._extracted_tarifs = df_new
+                                st.success(f"✅ {len(new_items)} produits extraits du catalogue {fournisseur_nom} !")
+                            else:
+                                st.error("L'IA n'a pas renvoyé un format JSON valide. Essayez avec un PDF mieux structuré.")
+                        except Exception as ex:
+                            st.error(f"Erreur extraction IA : {ex}")
+
+    with col_help:
+        st.markdown("#### ℹ️ Comment ça marche")
+        st.markdown("""
+        **3 étapes simples :**
+
+        1. 🏷️ **Nommez le fournisseur** (Point.P, Kiloutou...)
+        2. 📄 **Uploadez le PDF** de son catalogue / bordereau de prix
+        3. 🤖 **L'IA extrait** automatiquement tous les produits et prix
+
+        **Puis :**
+        - ✅ Vérifiez et corrigez le tableau extrait
+        - 💾 Sauvegardez dans votre base de prix
+        - 🔄 Utilisez ces prix directement dans vos devis
+
+        **Formats acceptés :**
+        Catalogues PDF, bordereaux de prix, listes tarifaires, devis fournisseurs
+        """)
+
+        if not st.session_state.tarifs_fournisseurs.empty:
+            nb_tarifs = len(st.session_state.tarifs_fournisseurs)
+            fournisseurs_uniq = st.session_state.tarifs_fournisseurs["fournisseur"].nunique()
+            st.markdown(f"""
+            <div class="success-box">
+            📦 <strong>{nb_tarifs} références</strong> de <strong>{fournisseurs_uniq} fournisseur(s)</strong> dans votre base
+            </div>
+            """, unsafe_allow_html=True)
+
+    # ── Validation des tarifs extraits ────────────────────────────────────────
+    if st.session_state._extracted_tarifs is not None and not st.session_state._extracted_tarifs.empty:
+        st.markdown("---")
+        st.markdown(f"#### ✅ {len(st.session_state._extracted_tarifs)} produits extraits — Vérifiez avant import")
+
+        df_ext_edit = st.data_editor(
+            st.session_state._extracted_tarifs,
+            use_container_width=True,
+            num_rows="dynamic",
+            key="editor_extracted_tarifs",
+            column_config={
+                "fournisseur": st.column_config.TextColumn("Fournisseur", width="small"),
+                "ref": st.column_config.TextColumn("Référence", width="small"),
+                "designation": st.column_config.TextColumn("Désignation", width="large"),
+                "unite": st.column_config.SelectboxColumn("Unité", options=UNITES_OPTIONS, width="small"),
+                "prix_achat_ht": st.column_config.NumberColumn("Prix achat HT (€)", min_value=0, step=0.1, format="%.2f €"),
+                "derniere_maj": st.column_config.TextColumn("MAJ", width="small"),
+            }
+        )
+
+        c_v1, c_v2, c_v3 = st.columns(3)
+        with c_v1:
+            if st.button("💾 Ajouter à ma base de prix", type="primary", use_container_width=True, key="btn_save_extracted"):
+                existing = st.session_state.tarifs_fournisseurs
+                combined = pd.concat([existing, df_ext_edit], ignore_index=True)
+                # Deduplicate on fournisseur+ref, keep newest
+                combined = combined.drop_duplicates(subset=["fournisseur", "ref"], keep="last")
+                st.session_state.tarifs_fournisseurs = combined
+                st.session_state._extracted_tarifs = None
+                st.success(f"✅ {len(df_ext_edit)} produits importés dans votre base !")
+                st.rerun()
+        with c_v2:
+            csv_ext = df_ext_edit.to_csv(index=False).encode("utf-8")
+            st.download_button("📊 Télécharger CSV", data=csv_ext,
+                               file_name=f"tarifs_{fournisseur_nom or 'export'}.csv",
+                               mime="text/csv", use_container_width=True, key="dl_extracted_csv")
+        with c_v3:
+            if st.button("🗑️ Annuler", use_container_width=True, key="btn_cancel_extracted"):
+                st.session_state._extracted_tarifs = None
+                st.rerun()
+
+    # ── Base de prix fournisseurs ─────────────────────────────────────────────
+    st.markdown("---")
+    st.markdown("#### 🗄️ Ma base de prix fournisseurs")
+
+    if st.session_state.tarifs_fournisseurs.empty:
+        st.info("📋 Aucun tarif fournisseur. Importez un catalogue PDF ou ajoutez manuellement ci-dessus.")
+    else:
+        # Filtres
+        cf1, cf2, cf3 = st.columns([1, 2, 1])
+        with cf1:
+            four_list = ["Tous"] + sorted(st.session_state.tarifs_fournisseurs["fournisseur"].dropna().unique().tolist())
+            filt_four = st.selectbox("Fournisseur", four_list, key="filt_fournisseur")
+        with cf2:
+            search_term = st.text_input("🔍 Rechercher", placeholder="béton, câble, tube...", key="search_tarif")
+        with cf3:
+            st.markdown("<div style='margin-top:1.6rem;'></div>", unsafe_allow_html=True)
+            if st.button("🔄 Utiliser dans grille devis", use_container_width=True, key="btn_use_in_devis"):
+                df_to_use = st.session_state.tarifs_fournisseurs.copy()
+                df_to_use["coeff"] = 1.30
+                df_to_use = df_to_use.rename(columns={"ref": "ref", "designation": "designation",
+                                                        "unite": "unite", "prix_achat_ht": "prix_achat"})
+                keep_cols = ["ref", "designation", "unite", "prix_achat", "coeff"]
+                for col in keep_cols:
+                    if col not in df_to_use.columns:
+                        df_to_use[col] = ""
+                st.session_state.grille_materiaux = pd.concat(
+                    [st.session_state.grille_materiaux, df_to_use[keep_cols]], ignore_index=True
+                ).drop_duplicates(subset=["ref"], keep="last")
+                st.success("✅ Prix intégrés dans la grille Métier & Tarifs !")
+
+        # Filter data
+        df_show = st.session_state.tarifs_fournisseurs.copy()
+        if filt_four != "Tous":
+            df_show = df_show[df_show["fournisseur"] == filt_four]
+        if search_term:
+            mask = (df_show["designation"].str.contains(search_term, case=False, na=False) |
+                    df_show["ref"].str.contains(search_term, case=False, na=False))
+            df_show = df_show[mask]
+
+        st.markdown(f"**{len(df_show)} références affichées**")
+        df_four_edit = st.data_editor(
+            df_show,
+            use_container_width=True,
+            num_rows="dynamic",
+            key="editor_tarifs_fournisseurs",
+            column_config={
+                "fournisseur": st.column_config.TextColumn("Fournisseur", width="small"),
+                "ref": st.column_config.TextColumn("Référence", width="small"),
+                "designation": st.column_config.TextColumn("Désignation", width="large"),
+                "unite": st.column_config.SelectboxColumn("Unité", options=UNITES_OPTIONS, width="small"),
+                "prix_achat_ht": st.column_config.NumberColumn("Prix achat HT (€)", min_value=0, step=0.1, format="%.2f €"),
+                "derniere_maj": st.column_config.TextColumn("MAJ", width="small"),
+            }
+        )
+
+        cs1, cs2, cs3 = st.columns(3)
+        with cs1:
+            if st.button("💾 Sauvegarder modifications", type="primary", use_container_width=True, key="save_tarifs_four"):
+                # Merge edited rows back into full dataset
+                if filt_four != "Tous" or search_term:
+                    # Replace edited rows in the full df (by index)
+                    full_df = st.session_state.tarifs_fournisseurs.copy()
+                    full_df.update(df_four_edit)
+                    st.session_state.tarifs_fournisseurs = full_df
+                else:
+                    st.session_state.tarifs_fournisseurs = df_four_edit
+                st.success("✅ Base de prix mise à jour !")
+        with cs2:
+            csv_all = st.session_state.tarifs_fournisseurs.to_csv(index=False).encode("utf-8")
+            st.download_button("📊 Exporter tout (CSV)", data=csv_all,
+                               file_name="tarifs_fournisseurs.csv",
+                               mime="text/csv", use_container_width=True, key="export_all_csv")
+        with cs3:
+            json_imp = st.file_uploader("📥 Importer CSV", type=["csv"], key="import_four_csv")
+            if json_imp:
+                try:
+                    df_imp = pd.read_csv(json_imp)
+                    st.session_state.tarifs_fournisseurs = pd.concat(
+                        [st.session_state.tarifs_fournisseurs, df_imp], ignore_index=True
+                    ).drop_duplicates(subset=["fournisseur", "ref"], keep="last")
+                    st.success(f"✅ {len(df_imp)} références importées !")
+                    st.rerun()
+                except Exception as ex:
+                    st.error(f"Erreur import : {ex}")
