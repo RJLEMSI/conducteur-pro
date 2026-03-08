@@ -459,8 +459,11 @@ with st.expander("⚙️ Gérer les chantiers, étapes et exporter", expanded=Fa
 
     with tab_ch:
         st.markdown("Ajoutez, modifiez ou supprimez vos chantiers. Chaque ligne = un chantier.")
+        _ch_src = st.session_state.tdb_chantiers.copy()
+        for _dc in ["date_debut", "date_fin"]:
+            _ch_src[_dc] = pd.to_datetime(_ch_src[_dc], errors="coerce")
         df_ch_edit = st.data_editor(
-            st.session_state.tdb_chantiers,
+            _ch_src,
             use_container_width=True, num_rows="dynamic",
             key="editor_tdb_chantiers",
             column_config={
@@ -487,6 +490,7 @@ with st.expander("⚙️ Gérer les chantiers, étapes et exporter", expanded=Fa
     with tab_et:
         st.markdown("Planifiez les étapes clés et jalons de chaque chantier.")
         df_et_src  = st.session_state.tdb_etapes.drop(columns=["date_dt"], errors="ignore")
+        df_et_src["date_echeance"] = pd.to_datetime(df_et_src["date_echeance"], errors="coerce")
         df_et_edit = st.data_editor(
             df_et_src, use_container_width=True, num_rows="dynamic",
             key="editor_tdb_etapes",
