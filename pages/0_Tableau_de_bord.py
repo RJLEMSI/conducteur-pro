@@ -410,9 +410,11 @@ fig.update_layout(
     plot_bgcolor="white",
 )
 # Ligne rouge pour aujourd'hui
-fig.add_vline(x=pd.Timestamp.now(), line_width=2, line_dash="dash", line_color="red",
-              annotation_text="Aujourd'hui", annotation_position="top right",
-              annotation_font_color="red", annotation_font_size=11)
+today_ts = pd.Timestamp.now()
+fig.add_shape(type="line", x0=today_ts, x1=today_ts, y0=0, y1=1, yref="paper",
+             line=dict(color="red", width=2, dash="dash"))
+fig.add_annotation(x=today_ts, y=1, yref="paper", text="Aujourd'hui",
+                   showarrow=False, font=dict(color="red", size=11), yshift=10)
 
 # Afficher le pourcentage sur les barres
 for i, row in df_gantt.iterrows():
