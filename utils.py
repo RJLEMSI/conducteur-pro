@@ -1,6 +1,6 @@
 """
-utils.py — Fonctions partagées : traitement PDF, images, appels IA Claude,
-génération devis PDF, vérification abonnement Stripe.
+utils.py â Fonctions partagÃ©es : traitement PDF, images, appels IA Claude,
+gÃ©nÃ©ration devis PDF, vÃ©rification abonnement Stripe.
 """
 import io
 import base64
@@ -10,7 +10,7 @@ import fitz  # PyMuPDF
 from PIL import Image
 import anthropic
 
-# ─── CSS global réutilisable ─────────────────────────────────────────────────────
+# âââ CSS global rÃ©utilisable âââââââââââââââââââââââââââââââââââââââââââââââââââââ
 GLOBAL_CSS = """
 <style>
 #MainMenu, footer, header {visibility: hidden;}
@@ -64,11 +64,11 @@ GLOBAL_CSS = """
 </style>
 """
 
-# ─── Sidebar standard ─────────────────────────────────────────────────────────────
+# âââ Sidebar standard âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 def render_sidebar():
-    """Affiche la sidebar de navigation commune à toutes les pages."""
+    """Affiche la sidebar de navigation commune Ã  toutes les pages."""
     with st.sidebar:
-        st.markdown('<div class="sidebar-brand">🏗️ ConducteurPro</div>', unsafe_allow_html=True)
+        st.markdown('<div class="sidebar-brand">ðï¸ ConducteurPro</div>', unsafe_allow_html=True)
 
         if "api_key" not in st.session_state:
             st.session_state.api_key = ""
@@ -79,42 +79,41 @@ def render_sidebar():
             pass
 
         if not st.session_state.api_key:
-            st.markdown('<div class="api-box">⚠️ Clé API requise</div>', unsafe_allow_html=True)
-            key_input = st.text_input("Clé API Anthropic", type="password", placeholder="sk-ant-...", key="api_sidebar")
+            st.markdown('<div class="api-box">â ï¸ ClÃ© API requise</div>', unsafe_allow_html=True)
+            key_input = st.text_input("ClÃ© API Anthropic", type="password", placeholder="sk-ant-...", key="api_sidebar")
             if key_input:
                 st.session_state.api_key = key_input
                 st.rerun()
-            st.caption("🔑 [Créer une clé gratuite →](https://console.anthropic.com)")
+            st.caption("ð [CrÃ©er une clÃ© gratuite â](https://console.anthropic.com)")
         else:
-            st.success("✅ Claude AI connecté")
+            st.success("â Claude AI connectÃ©")
 
-        # Affichage du plan si connecté
+        # Affichage du plan si connectÃ©
         if st.session_state.get("user_email"):
-            plan_labels = {"free": "🆓 Gratuit", "pro": "🚀 Pro", "team": "🏢 Équipe"}
-            st.caption(f"👤 {st.session_state.user_email}")
-            st.caption(f"Plan : {plan_labels.get(st.session_state.get('user_plan','free'), '🆓 Gratuit')}")
+            plan_labels = {"free": "ð Gratuit", "pro": "ð Pro", "team": "ð¢ Ãquipe"}
+            st.caption(f"ð¤ {st.session_state.user_email}")
+            st.caption(f"Plan : {plan_labels.get(st.session_state.get('user_plan','free'), 'ð Gratuit')}")
 
         st.divider()
         st.markdown("**Navigation**")
-        st.page_link("app.py", label="🏠 Accueil")
-        st.page_link("pages/1_Metres.py", label="📐 Métrés automatiques")
-        st.page_link("pages/2_DCE.py", label="📋 Synthèse DCE")
-        st.page_link("pages/3_Etudes.py", label="🔬 Études techniques")
-        st.page_link("pages/4_Planning.py", label="📅 Aide au planning")
-        st.page_link("pages/5_PLU.py", label="🗺️ Analyse PLU")
-        st.page_link("pages/6_Synthese.py", label="🧠 Synthèse Globale ★")
+        st.page_link("app.py", label="ð  Accueil")
+        st.page_link("pages/1_Metres.py", label="ð MÃ©trÃ©s automatiques")
+        st.page_link("pages/2_DCE.py", label="ð SynthÃ¨se DCE")
+        st.page_link("pages/3_Etudes.py", label="ð¬ Ãtudes techniques")
+        st.page_link("pages/4_Planning.py", label="ð Aide au planning")
+        st.page_link("pages/5_PLU.py", label="ðºï¸ Analyse PLU")
+        st.page_link("pages/6_Synthese.py", label="ð§  SynthÃ¨se Globale â")
         st.markdown("---")
-        st.page_link("pages/7_Historique.py", label="📚 Historique plannings")
-        st.page_link("pages/8_Devis.py", label="💰 Générateur de devis")
-        st.page_link("pages/9_Abonnement.py", label="⭐ Mon abonnement")
+        st.page_link("pages/8_Devis.py", label="ð° GÃ©nÃ©rateur de devis")
+        st.page_link("pages/9_Abonnement.py", label="â­ Mon abonnement")
         st.divider()
         st.caption("ConducteurPro v2.0")
-        st.caption("Propulsé par Claude AI")
+        st.caption("PropulsÃ© par Claude AI")
 
 
-# ─── Client Anthropic ──────────────────────────────────────────────────────────────
+# âââ Client Anthropic ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 def get_client():
-    """Retourne un client Anthropic ou None si pas de clé."""
+    """Retourne un client Anthropic ou None si pas de clÃ©."""
     api_key = st.session_state.get("api_key", "")
     if api_key:
         return anthropic.Anthropic(api_key=api_key)
@@ -122,21 +121,21 @@ def get_client():
 
 
 def check_api_key():
-    """Vérifie la clé API et affiche un message d'erreur si absente."""
+    """VÃ©rifie la clÃ© API et affiche un message d'erreur si absente."""
     if not st.session_state.get("api_key"):
         st.markdown("""
         <div class="warning-box">
-        ⚠️ <strong>Clé API manquante.</strong> Entrez votre clé API Anthropic dans la barre latérale.<br>
-        <a href="https://console.anthropic.com" target="_blank">→ Créer une clé gratuite sur console.anthropic.com</a>
+        â ï¸ <strong>ClÃ© API manquante.</strong> Entrez votre clÃ© API Anthropic dans la barre latÃ©rale.<br>
+        <a href="https://console.anthropic.com" target="_blank">â CrÃ©er une clÃ© gratuite sur console.anthropic.com</a>
         </div>
         """, unsafe_allow_html=True)
         return False
     return True
 
 
-# ─── Traitement PDF ────────────────────────────────────────────────────────────────
+# âââ Traitement PDF ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 def extract_text_from_pdf(uploaded_file) -> str:
-    """Extrait le texte complet d'un PDF uploadé via Streamlit."""
+    """Extrait le texte complet d'un PDF uploadÃ© via Streamlit."""
     text_pages = []
     try:
         with pdfplumber.open(uploaded_file) as pdf:
@@ -151,7 +150,7 @@ def extract_text_from_pdf(uploaded_file) -> str:
 
 
 def pdf_first_page_to_image(uploaded_file, zoom: float = 2.5) -> bytes:
-    """Convertit la 1ère page d'un PDF en image PNG haute résolution."""
+    """Convertit la 1Ã¨re page d'un PDF en image PNG haute rÃ©solution."""
     try:
         file_bytes = uploaded_file.read()
         doc = fitz.open(stream=file_bytes, filetype="pdf")
@@ -160,7 +159,7 @@ def pdf_first_page_to_image(uploaded_file, zoom: float = 2.5) -> bytes:
         pix = page.get_pixmap(matrix=mat, alpha=False)
         return pix.tobytes("png")
     except Exception as e:
-        st.error(f"Erreur conversion PDF → image : {e}")
+        st.error(f"Erreur conversion PDF â image : {e}")
         return None
 
 
@@ -186,28 +185,28 @@ def image_file_to_base64(uploaded_file) -> tuple:
 def truncate_text(text: str, max_chars: int = 80000) -> str:
     if len(text) <= max_chars:
         return text
-    return text[:max_chars] + f"\n\n[... Document tronqué à {max_chars} caractères pour l'analyse ...]"
+    return text[:max_chars] + f"\n\n[... Document tronquÃ© Ã  {max_chars} caractÃ¨res pour l'analyse ...]"
 
 
-# ─── Fonctions IA ─────────────────────────────────────────────────────────────────
+# âââ Fonctions IA âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 def analyze_plan_image(image_b64: str, media_type: str, client, extra_info: str = "") -> str:
-    extra = f"\n\nInformations complémentaires : {extra_info}" if extra_info else ""
-    prompt = f"""Tu es un métreur expert du bâtiment et des travaux publics, avec 20 ans d'expérience.
-Analyse ce plan de construction avec précision et professionnalisme.
+    extra = f"\n\nInformations complÃ©mentaires : {extra_info}" if extra_info else ""
+    prompt = f"""Tu es un mÃ©treur expert du bÃ¢timent et des travaux publics, avec 20 ans d'expÃ©rience.
+Analyse ce plan de construction avec prÃ©cision et professionnalisme.
 
-MISSION : Extraire tous les ouvrages mesurables de ce plan et produire un tableau de métrés complet.
+MISSION : Extraire tous les ouvrages mesurables de ce plan et produire un tableau de mÃ©trÃ©s complet.
 
 INSTRUCTIONS :
-1. Identifie chaque ouvrage visible (cloisons, sols, plafonds, menuiseries, fondations, maçonnerie, etc.)
-2. Estime les quantités en utilisant les dimensions lisibles ou les proportions visuelles
-3. Indique l'unité appropriée (m², ml, m³, u, forfait)
-4. Note les hypothèses faites si des cotes ne sont pas lisibles
+1. Identifie chaque ouvrage visible (cloisons, sols, plafonds, menuiseries, fondations, maÃ§onnerie, etc.)
+2. Estime les quantitÃ©s en utilisant les dimensions lisibles ou les proportions visuelles
+3. Indique l'unitÃ© appropriÃ©e (mÂ², ml, mÂ³, u, forfait)
+4. Note les hypothÃ¨ses faites si des cotes ne sont pas lisibles
 5. Ajoute une colonne "Observations" pour les points importants
 
-RÉPONDS AVEC :
-- Un résumé du plan en 3 lignes (type de bâtiment, niveau, zone analysée)
-- Un tableau Markdown complet avec colonnes : | N° | Ouvrage | Description | Unité | Quantité | Observations |
-- Une section "Points d'attention" listant ce qui nécessite vérification sur site{extra}
+RÃPONDS AVEC :
+- Un rÃ©sumÃ© du plan en 3 lignes (type de bÃ¢timent, niveau, zone analysÃ©e)
+- Un tableau Markdown complet avec colonnes : | NÂ° | Ouvrage | Description | UnitÃ© | QuantitÃ© | Observations |
+- Une section "Points d'attention" listant ce qui nÃ©cessite vÃ©rification sur site{extra}
 
 Sois le plus exhaustif possible. Si une cote n'est pas lisible, estime avec une note."""
     response = client.messages.create(
@@ -225,31 +224,31 @@ Sois le plus exhaustif possible. Si une cote n'est pas lisible, estime avec une 
 
 
 def synthesize_dce(text: str, client) -> str:
-    prompt = f"""Tu es un conducteur de travaux senior avec 15 ans d'expérience.
-Analyse ce DCE (Dossier de Consultation des Entreprises) et fournis une synthèse opérationnelle.
+    prompt = f"""Tu es un conducteur de travaux senior avec 15 ans d'expÃ©rience.
+Analyse ce DCE (Dossier de Consultation des Entreprises) et fournis une synthÃ¨se opÃ©rationnelle.
 
-STRUCTURE TA RÉPONSE AINSI :
+STRUCTURE TA RÃPONSE AINSI :
 
-## 📌 Fiche de synthèse rapide
-- **Maïtre d'ouvrage** :
-- **Maître d'œuvre** :
+## ð Fiche de synthÃ¨se rapide
+- **MaÃ¯tre d'ouvrage** :
+- **MaÃ®tre d'Åuvre** :
 - **Nature des travaux** :
 - **Montant estimatif** :
-- **Délai d'exécution** :
+- **DÃ©lai d'exÃ©cution** :
 
-## 📅 Dates critiques
+## ð Dates critiques
 
-## ⚙️ Exigences techniques principales
+## âï¸ Exigences techniques principales
 
-## ⚠️ Points de vigilance
+## â ï¸ Points de vigilance
 
-## 📄 Documents à fournir
+## ð Documents Ã  fournir
 
-## 💰 Critères de sélection de l'offre
+## ð° CritÃ¨res de sÃ©lection de l'offre
 
-## 🔧 Recommandations pour la préparation du chantier
+## ð§ Recommandations pour la prÃ©paration du chantier
 
-DCE À ANALYSER :
+DCE Ã ANALYSER :
 {truncate_text(text)}"""
     response = client.messages.create(
         model="claude-opus-4-5",
@@ -261,26 +260,26 @@ DCE À ANALYSER :
 
 def analyze_technical_study(text: str, study_type: str, client) -> str:
     study_contexts = {
-        "béton / fondations": "étude béton armé, fondations et structures en béton. Tu maîtrises les Eurocodes, le BAEL, les classes d'exposition béton, les dosages et la résistance.",
-        "structure / charpente": "étude de structure et charpente (bois, métal, béton). Tu maîtrises les charges, les contreventements, les assemblages et les descentes de charges.",
-        "thermique / RE2020": "étude thermique et performance énergétique (RE2020, RT2012, BBC). Tu maîtrises les Bbio, Cep, Ic, ponts thermiques et déperditions.",
-        "acoustique": "étude acoustique et isolement aux bruits. Tu maîtrises les DnT,A, L'nT,W, les affaiblissements acoustiques et les réglementations NRA.",
+        "bÃ©ton / fondations": "Ã©tude bÃ©ton armÃ©, fondations et structures en bÃ©ton. Tu maÃ®trises les Eurocodes, le BAEL, les classes d'exposition bÃ©ton, les dosages et la rÃ©sistance.",
+        "structure / charpente": "Ã©tude de structure et charpente (bois, mÃ©tal, bÃ©ton). Tu maÃ®trises les charges, les contreventements, les assemblages et les descentes de charges.",
+        "thermique / RE2020": "Ã©tude thermique et performance Ã©nergÃ©tique (RE2020, RT2012, BBC). Tu maÃ®trises les Bbio, Cep, Ic, ponts thermiques et dÃ©perditions.",
+        "acoustique": "Ã©tude acoustique et isolement aux bruits. Tu maÃ®trises les DnT,A, L'nT,W, les affaiblissements acoustiques et les rÃ©glementations NRA.",
     }
-    context = study_contexts.get(study_type, "étude technique du bâtiment")
+    context = study_contexts.get(study_type, "Ã©tude technique du bÃ¢timent")
     prompt = f"""Tu es un expert en {context}
-Analyse cette étude technique et synthétise les informations essentielles pour un conducteur de travaux sur chantier.
+Analyse cette Ã©tude technique et synthÃ©tise les informations essentielles pour un conducteur de travaux sur chantier.
 
-STRUCTURE TA RÉPONSE :
+STRUCTURE TA RÃPONSE :
 
-## 📋 Résumé exécutif
-## 📊 Données et valeurs clés
-## 🏗️ Contraintes d'exécution
-## ⚠️ Points de vigilance critiques
-## 📐 Interfaces avec autres corps d'état
-## 📚 Normes et DTU de référence
-## 📅 Impact sur le planning
+## ð RÃ©sumÃ© exÃ©cutif
+## ð DonnÃ©es et valeurs clÃ©s
+## ðï¸ Contraintes d'exÃ©cution
+## â ï¸ Points de vigilance critiques
+## ð Interfaces avec autres corps d'Ã©tat
+## ð Normes et DTU de rÃ©fÃ©rence
+## ð Impact sur le planning
 
-ÉTUDE À ANALYSER :
+ÃTUDE Ã ANALYSER :
 {truncate_text(text)}"""
     response = client.messages.create(
         model="claude-opus-4-5",
@@ -291,32 +290,32 @@ STRUCTURE TA RÉPONSE :
 
 
 def generate_planning(context: str, client) -> str:
-    """Génère une aide au planning basée sur le contexte du projet."""
+    """GÃ©nÃ¨re une aide au planning basÃ©e sur le contexte du projet."""
     prompt = f"""Tu es un planificateur de chantier expert.
-Basé sur les informations suivantes, aide le conducteur de travaux à organiser son chantier.
+BasÃ© sur les informations suivantes, aide le conducteur de travaux Ã  organiser son chantier.
 
-STRUCTURE TA RÉPONSE :
+STRUCTURE TA RÃPONSE :
 
-## 🗓️ Phasage recommandé des travaux
-(Tableau avec : Phase | Description | Durée estimée | Conditions préalables)
+## ðï¸ Phasage recommandÃ© des travaux
+(Tableau avec : Phase | Description | DurÃ©e estimÃ©e | Conditions prÃ©alables)
 
-## ⏱️ Planning simplifié
+## â±ï¸ Planning simplifiÃ©
 (Vue chronologique : semaines ou mois selon la taille du projet)
 
-## 👷 Ressources humaines estimées
-(Effectifs par phase : ouvriers, chefs d'équipe, sous-traitants)
+## ð· Ressources humaines estimÃ©es
+(Effectifs par phase : ouvriers, chefs d'Ã©quipe, sous-traitants)
 
-## 🏗️ Matériaux et matériel clés
-(Approvisionnements critiques à anticiper, délais de livraison à prévoir)
+## ðï¸ MatÃ©riaux et matÃ©riel clÃ©s
+(Approvisionnements critiques Ã  anticiper, dÃ©lais de livraison Ã  prÃ©voir)
 
-## ⚠️ Risques et marges à prévoir
+## â ï¸ Risques et marges Ã  prÃ©voir
 (Risques climatiques, techniques, administratifs et les marges correspondantes)
 
-## ✅ Checklist de démarrage de chantier
-(Liste des actions à faire avant le premier coup de pelleteuse, cochable)
+## â Checklist de dÃ©marrage de chantier
+(Liste des actions Ã  faire avant le premier coup de pelleteuse, cochable)
 
-## 📋 Réunions et jalons clés
-(Points de contrôle, OPR, réceptions partielles, RICT, DOE, etc.)
+## ð RÃ©unions et jalons clÃ©s
+(Points de contrÃ´le, OPR, rÃ©ceptions partielles, RICT, DOE, etc.)
 
 CONTEXTE DU PROJET :
 {context}"""
@@ -329,24 +328,24 @@ CONTEXTE DU PROJET :
 
 
 def analyze_plu(text: str, projet_context: str, client) -> str:
-    prompt = f"""Tu es un expert en droit de l'urbanisme et en règles PLU/PLUi français, avec 20 ans d'expérience.
-Analyse ce règlement PLU et extrait toutes les règles applicables au projet décrit.
+    prompt = f"""Tu es un expert en droit de l'urbanisme et en rÃ¨gles PLU/PLUi franÃ§ais, avec 20 ans d'expÃ©rience.
+Analyse ce rÃ¨glement PLU et extrait toutes les rÃ¨gles applicables au projet dÃ©crit.
 
 CONTEXTE DU PROJET : {projet_context}
 
-STRUCTURE TA RÉPONSE :
+STRUCTURE TA RÃPONSE :
 
-## 🗺️ Zone applicable et caractère
-## ✅ Usages autorisés / ❌ Interdits
-## 📐 Tableau des règles chiffrées applicables
-| Règle | Valeur PLU | Valeur projet | Conformité |
+## ðºï¸ Zone applicable et caractÃ¨re
+## â Usages autorisÃ©s / â Interdits
+## ð Tableau des rÃ¨gles chiffrÃ©es applicables
+| RÃ¨gle | Valeur PLU | Valeur projet | ConformitÃ© |
 |-------|-----------|---------------|------------|
-## ⚠️ Points de vigilance et contraintes spécifiques
-## 📋 Documents à fournir pour le dépôt de permis de construire
-## 🔍 Vérifications terrain indispensables
-## 💡 Recommandations pour optimiser le projet dans cette zone
+## â ï¸ Points de vigilance et contraintes spÃ©cifiques
+## ð Documents Ã  fournir pour le dÃ©pÃ´t de permis de construire
+## ð VÃ©rifications terrain indispensables
+## ð¡ Recommandations pour optimiser le projet dans cette zone
 
-RÈGLEMENT PLU À ANALYSER :
+RÃGLEMENT PLU Ã ANALYSER :
 {truncate_text(text, max_chars=70000)}"""
     response = client.messages.create(
         model="claude-opus-4-5",
@@ -357,25 +356,25 @@ RÈGLEMENT PLU À ANALYSER :
 
 
 def generate_synthese_globale(context: str, options: str, client) -> str:
-    prompt = f"""Tu es un conducteur de travaux senior et expert en gestion de projets de construction, avec 25 ans d'expérience.
-Tu as accès à l'ensemble des documents du projet ci-dessous.
-Produis un RAPPORT DE SYNTHÈSE GLOBALE complet et opérationnel.
+    prompt = f"""Tu es un conducteur de travaux senior et expert en gestion de projets de construction, avec 25 ans d'expÃ©rience.
+Tu as accÃ¨s Ã  l'ensemble des documents du projet ci-dessous.
+Produis un RAPPORT DE SYNTHÃSE GLOBALE complet et opÃ©rationnel.
 
 OPTIONS DU RAPPORT : {options}
 
 STRUCTURE OBLIGATOIRE DU RAPPORT :
 
-## 📋 1. FICHE PROJET SYNTHÉTIQUE
-## ✅ 2. CONFORMITÉ URBANISTIQUE (PLU)
-## ⚠️ 3. POINTS CRITIQUES ET ALERTES
-## 🔗 4. CONTRADICTIONS ET INTERFACES IDENTIFIÉES
-## 📐 5. SYNTHÈSE DES MÉTRÉS ET QUANTITÉS CLÉS
-## 📅 6. PLANNING DIRECTEUR RECOMMANDÉ
-## 💰 7. BUDGET ESTIMATIF PAR LOT
-## 🏗️ 8. CONTRAINTES D'EXÉCUTION MAJEURES
-## ✅ 9. CHECKLIST DE MISE EN CHANTIER
-## ⚠️ 10. ANALYSE DES RISQUES
-## 📌 11. CE QUI RESTE À VÉRIFIER PAR LE CDT
+## ð 1. FICHE PROJET SYNTHÃTIQUE
+## â 2. CONFORMITÃ URBANISTIQUE (PLU)
+## â ï¸ 3. POINTS CRITIQUES ET ALERTES
+## ð 4. CONTRADICTIONS ET INTERFACES IDENTIFIÃES
+## ð 5. SYNTHÃSE DES MÃTRÃS ET QUANTITÃS CLÃS
+## ð 6. PLANNING DIRECTEUR RECOMMANDÃ
+## ð° 7. BUDGET ESTIMATIF PAR LOT
+## ðï¸ 8. CONTRAINTES D'EXÃCUTION MAJEURES
+## â 9. CHECKLIST DE MISE EN CHANTIER
+## â ï¸ 10. ANALYSE DES RISQUES
+## ð 11. CE QUI RESTE Ã VÃRIFIER PAR LE CDT
 
 DOCUMENTS ET CONTEXTE DU PROJET :
 {truncate_text(context, max_chars=90000)}"""
@@ -387,23 +386,23 @@ DOCUMENTS ET CONTEXTE DU PROJET :
     return response.content[0].text
 
 
-# ─── Génération de devis : lots par IA ────────────────────────────────────────────
+# âââ GÃ©nÃ©ration de devis : lots par IA ââââââââââââââââââââââââââââââââââââââââââââ
 def generate_devis_lots(projet_desc: str, client) -> list:
-    """Génère les lignes de devis (lots + estimations) pour un projet donné."""
+    """GÃ©nÃ¨re les lignes de devis (lots + estimations) pour un projet donnÃ©."""
     import json
-    prompt = f"""Tu es un économiste de la construction expert. Pour le projet suivant, génère une liste
-de lots de travaux avec des estimations de prix unitaires réalistes (prix 2024-2025 en France).
+    prompt = f"""Tu es un Ã©conomiste de la construction expert. Pour le projet suivant, gÃ©nÃ¨re une liste
+de lots de travaux avec des estimations de prix unitaires rÃ©alistes (prix 2024-2025 en France).
 
 PROJET : {projet_desc}
 
-Réponds UNIQUEMENT avec un tableau JSON valide, sans markdown, sans explication.
+RÃ©ponds UNIQUEMENT avec un tableau JSON valide, sans markdown, sans explication.
 Format exact :
 [
-  {{"lot": "Lot 01", "designation": "Installation de chantier et clôture de chantier", "unite": "Fft", "quantite": 1, "prix_unitaire_ht": 3500}},
-  {{"lot": "Lot 02", "designation": "Terrassements et fouilles", "unite": "m³", "quantite": 50, "prix_unitaire_ht": 45}}
+  {{"lot": "Lot 01", "designation": "Installation de chantier et clÃ´ture de chantier", "unite": "Fft", "quantite": 1, "prix_unitaire_ht": 3500}},
+  {{"lot": "Lot 02", "designation": "Terrassements et fouilles", "unite": "mÂ³", "quantite": 50, "prix_unitaire_ht": 45}}
 ]
 
-Inclure tous les lots standards pour ce type de projet (8 à 15 lots). Prix réalistes France 2024."""
+Inclure tous les lots standards pour ce type de projet (8 Ã  15 lots). Prix rÃ©alistes France 2024."""
 
     response = client.messages.create(
         model="claude-opus-4-5",
@@ -420,9 +419,9 @@ Inclure tous les lots standards pour ce type de projet (8 à 15 lots). Prix réa
     return json.loads(text.strip())
 
 
-# ─── Génération PDF du devis ───────────────────────────────────────────────────────
+# âââ GÃ©nÃ©ration PDF du devis âââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 def generate_devis_pdf(entreprise: dict, devis: dict, lignes, logo_b64: str = None) -> bytes:
-    """Génère un PDF professionnel du devis. Retourne les bytes du PDF."""
+    """GÃ©nÃ¨re un PDF professionnel du devis. Retourne les bytes du PDF."""
     from fpdf import FPDF
     import tempfile, os
 
@@ -443,7 +442,7 @@ def generate_devis_pdf(entreprise: dict, devis: dict, lignes, logo_b64: str = No
             self.set_y(-12)
             self.set_font("Helvetica", "I", 7.5)
             self.set_text_color(150, 150, 150)
-            self.cell(0, 5, f"Page {self.page_no()} — {entreprise.get('nom', '')} — SIRET {entreprise.get('siret', '')}", align="C")
+            self.cell(0, 5, f"Page {self.page_no()} â {entreprise.get('nom', '')} â SIRET {entreprise.get('siret', '')}", align="C")
 
     pdf = DevisPDF()
     pdf.set_auto_page_break(auto=True, margin=18)
@@ -601,7 +600,7 @@ def generate_devis_pdf(entreprise: dict, devis: dict, lignes, logo_b64: str = No
     pdf.set_font("Helvetica", "", 8)
     pdf.set_text_color(80, 80, 80)
     pdf.cell(90, 4.5, "Signature du prestataire :")
-    pdf.cell(90, 4.5, "Bon pour accord — signature client :")
+    pdf.cell(90, 4.5, "Bon pour accord â signature client :")
     pdf.ln()
     pdf.set_x(14)
     pdf.cell(90, 18, "", border=1)
@@ -616,10 +615,10 @@ def generate_devis_pdf(entreprise: dict, devis: dict, lignes, logo_b64: str = No
     return bytes(pdf.output())
 
 
-# ─── Vérification abonnement Stripe ───────────────────────────────────────────────
+# âââ VÃ©rification abonnement Stripe âââââââââââââââââââââââââââââââââââââââââââââââ
 def check_subscription_status(email: str) -> str:
     """
-    Vérifie le statut d'abonnement d'un utilisateur via l'API Stripe.
+    VÃ©rifie le statut d'abonnement d'un utilisateur via l'API Stripe.
     Retourne : 'free', 'pro', ou 'team'
     """
     stripe_key = st.secrets.get("STRIPE_SECRET_KEY", "")
@@ -658,5 +657,5 @@ def check_subscription_status(email: str) -> str:
         return "pro"  # Abonnement actif mais price non reconnu
 
     except Exception as e:
-        st.warning(f"Impossible de vérifier l'abonnement : {e}")
+        st.warning(f"Impossible de vÃ©rifier l'abonnement : {e}")
         return "free"
