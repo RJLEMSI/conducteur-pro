@@ -520,7 +520,7 @@ for r in range(rows_needed):
                 if not docs_ch.empty:
                     st.markdown("**Documents associés :**")
                     for _, d in docs_ch.iterrows():
-                        st.markdown(f"- 📄 {d['titre']} ({d.get('statut', '')})")
+                        st.markdown(f"- 📄 {d['nom']} ({d.get('statut_doc', '')})")
 
         idx += 1
 
