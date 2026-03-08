@@ -99,7 +99,7 @@ def render_sidebar():
         st.page_link("app.py", label="🏠 Accueil")
         st.page_link("pages/1_Metres.py", label="📐 Métrés automatiques")
         st.page_link("pages/2_DCE.py", label="📋 Synthèse DCE")
-        st.page_link("pages/3_Etudes.py", label="�, Études techniques")
+        st.page_link("pages/3_Etudes.py", label="🔬 Études techniques")
         st.page_link("pages/4_Planning.py", label="📅 Aide au planning")
         st.page_link("pages/5_PLU.py", label="🗺️ Analyse PLU")
         st.page_link("pages/6_Synthese.py", label="🧠 Synthèse Globale ★")
@@ -231,8 +231,8 @@ Analyse ce DCE (Dossier de Consultation des Entreprises) et fournis une synthès
 STRUCTURE TA RÉPONSE AINSI :
 
 ## 📌 Fiche de synthèse rapide
-- **Métre d'ouvrage** :
-- **Maître d'◙uvre** :
+- **Maïtre d'ouvrage** :
+- **Maître d'œuvre** :
 - **Nature des travaux** :
 - **Montant estimatif** :
 - **Délai d'exécution** :
@@ -420,7 +420,7 @@ Inclure tous les lots standards pour ce type de projet (8 à 15 lots). Prix réa
     return json.loads(text.strip())
 
 
-# ─── Génération PDF du devis ──────────────────────────────────────────────────────
+# ─── Génération PDF du devis ───────────────────────────────────────────────────────
 def generate_devis_pdf(entreprise: dict, devis: dict, lignes, logo_b64: str = None) -> bytes:
     """Génère un PDF professionnel du devis. Retourne les bytes du PDF."""
     from fpdf import FPDF
