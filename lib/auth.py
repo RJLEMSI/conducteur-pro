@@ -296,7 +296,7 @@ def require_auth():
 # ─── Affichage du plan ────────────────────────────────────────────────────────
 
 def get_plan_display(plan: str = None) -> dict:
-    """Retourne les informations d'affichage pour un plan donn�.
+    """Retourne les informations d'affichage pour un plan donné.
     Returns: dict avec 'name', 'icon', 'color', 'price', 'features'
     """
     import streamlit as st
