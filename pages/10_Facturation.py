@@ -15,7 +15,7 @@ render_sidebar()
 
 # ── Données de démonstration ────────────────────────────────────────
 def _default_factures():
-    return pd.DataFrame([
+    return [
         {"ref": "FACT-2025-001", "chantier": "Résidence Les Pins", "type": "Situation",
          "objet": "Situation n°1 — Gros œuvre fondations", "montant_ht": 71250,
          "tva": 14250, "montant_ttc": 85500, "date_emission": "2025-02-15",
@@ -40,10 +40,10 @@ def _default_factures():
          "objet": "Acompte démarrage — Plomberie", "montant_ht": 11550,
          "tva": 2310, "montant_ttc": 13860, "date_emission": "2025-04-05",
          "date_echeance": "2025-05-05", "statut": "Brouillon", "client": "Syndic Colbert"},
-    ])
+    ]
 
 def _default_commandes():
-    return pd.DataFrame([
+    return [
         {"ref": "CMD-2025-001", "chantier": "Résidence Les Pins", "fournisseur": "Point P Lyon",
          "objet": "Béton C25/30 — 45 m³", "montant_ht": 6750, "date_commande": "2025-01-20",
          "date_livraison": "2025-02-05", "statut": "Livrée"},
@@ -59,15 +59,15 @@ def _default_commandes():
         {"ref": "CMD-2025-005", "chantier": "Immeuble Colbert", "fournisseur": "Brossette",
          "objet": "Tubes cuivre + raccords plomberie", "montant_ht": 4600, "date_commande": "2025-04-10",
          "date_livraison": "2025-05-01", "statut": "Commandée"},
-    ])
+    ]
 
 if "factures" not in st.session_state:
     st.session_state.factures = _default_factures()
 if "commandes" not in st.session_state:
     st.session_state.commandes = _default_commandes()
 
-df_f = st.session_state.factures.copy()
-df_cmd = st.session_state.commandes.copy()
+df_f = pd.DataFrame(st.session_state.factures)
+df_cmd = pd.DataFrame(st.session_state.commandes)
 
 # ── En-tête ─────────────────────────────────────────────────────────
 st.markdown("""<div style="background:linear-gradient(135deg,#1a5276,#2e86c1);border-radius:16px;padding:28px 32px;color:#fff;margin-bottom:20px;">
@@ -90,8 +90,8 @@ k4.metric("🚨 En retard", f"{total_retard/1000:.0f}k€", delta=f"{nb_retard} 
 
 st.markdown("---")
 
-# ── Onglets Factures / Commandes ────────────────────────────────────
-tab_fact, tab_cmd = st.tabs(["📄 Factures", "📦 Commandes fournisseurs"])
+# ── Onglets Factures / Commandes / Créer ─────────────────────────────
+tab_fact, tab_cmd, tab_new = st.tabs(["📄 Factures", "📦 Commandes fournisseurs", "➕ Nouvelle facture"])
 
 with tab_fact:
     # Filtres
@@ -111,7 +111,6 @@ with tab_fact:
     if filtre_statut != "Tous":
         df_ff = df_ff[df_ff["statut"] == filtre_statut]
 
-    # Tableau des factures
     statut_colors = {"Payée": "#4CAF50", "Envoyée": "#2196F3", "En retard": "#e53935", "Brouillon": "#9E9E9E"}
 
     for _, row in df_ff.iterrows():
@@ -137,12 +136,7 @@ with tab_fact:
 
     st.markdown(f"<p style='font-size:0.85rem;color:#888;margin-top:8px;'>{len(df_ff)} facture(s) affichée(s) sur {len(df_f)}</p>", unsafe_allow_html=True)
 
-    # Bouton créer nouvelle facture
-    with st.expander("➕ Créer une nouvelle facture"):
-        st.info("🚧 Fonctionnalité en développement — Vous pourrez bientôt créer des factures directement depuis cette interface.")
-
 with tab_cmd:
-    # Filtres commandes
     col_c1, col_c2 = st.columns(2)
     with col_c1:
         filtre_ch_cmd = st.selectbox("Chantier", ["Tous"] + sorted(df_cmd["chantier"].unique().tolist()), key="cmd_chantier")
@@ -180,5 +174,65 @@ with tab_cmd:
 
     st.markdown(f"<p style='font-size:0.85rem;color:#888;margin-top:8px;'>{len(df_cmdf)} commande(s) affichée(s) sur {len(df_cmd)}</p>", unsafe_allow_html=True)
 
-    with st.expander("➕ Nouvelle commande fournisseur"):
-        st.info("🚧 Fonctionnalité en développement — Vous pourrez bientôt créer des commandes directement.")
+# ── TAB 3: Formulaire Nouvelle Facture ──────────────────────────────
+with tab_new:
+    st.markdown("### ➕ Créer une nouvelle facture")
+    st.caption("Remplissez les informations ci-dessous pour générer une nouvelle facture.")
+
+    with st.form("form_new_facture", clear_on_submit=True):
+        fc1, fc2 = st.columns(2)
+        with fc1:
+            new_chantier = st.text_input("Chantier *", placeholder="Ex : Résidence Les Pins")
+            new_client = st.text_input("Client *", placeholder="Ex : SCI Les Pins")
+            new_type = st.selectbox("Type de facture *", ["Situation", "Acompte", "Solde", "Avoir"])
+            new_objet = st.text_input("Objet *", placeholder="Ex : Situation n°3 — Plomberie")
+        with fc2:
+            new_montant = st.number_input("Montant HT (€) *", min_value=0.0, step=100.0, format="%.2f")
+            new_tva_rate = st.selectbox("Taux TVA", ["20%", "10%", "5.5%", "0%"])
+            new_date_em = st.date_input("Date d'émission", value=datetime.now())
+            new_echeance = st.number_input("Délai de paiement (jours)", value=30, min_value=0, step=1)
+
+        submitted = st.form_submit_button("🧾 Créer la facture", use_container_width=True, type="primary")
+
+        if submitted:
+            if not new_chantier or not new_client or not new_objet or new_montant <= 0:
+                st.error("Veuillez remplir tous les champs obligatoires (*) et saisir un montant supérieur à 0.")
+            else:
+                tva_rate = float(new_tva_rate.replace("%", "")) / 100
+                tva_amount = round(new_montant * tva_rate, 2)
+                ttc = round(new_montant + tva_amount, 2)
+                date_ech = new_date_em + timedelta(days=new_echeance)
+
+                # Générer la référence
+                existing_refs = [f["ref"] for f in st.session_state.factures]
+                num = len(existing_refs) + 1
+                new_ref = f"FACT-{new_date_em.year}-{num:03d}"
+
+                new_facture = {
+                    "ref": new_ref,
+                    "chantier": new_chantier,
+                    "type": new_type,
+                    "objet": new_objet,
+                    "montant_ht": new_montant,
+                    "tva": tva_amount,
+                    "montant_ttc": ttc,
+                    "date_emission": new_date_em.strftime("%Y-%m-%d"),
+                    "date_echeance": date_ech.strftime("%Y-%m-%d"),
+                    "statut": "Brouillon",
+                    "client": new_client,
+                }
+
+                st.session_state.factures.append(new_facture)
+                st.success(f"Facture **{new_ref}** créée avec succès ! Montant : {new_montant:,.0f} € HT ({ttc:,.0f} € TTC)")
+                st.balloons()
+
+    # Aperçu des dernières factures créées
+    st.divider()
+    st.markdown("#### 📋 Dernières factures")
+    recent = pd.DataFrame(st.session_state.factures[-5:])
+    if len(recent) > 0:
+        display = recent[["ref", "chantier", "type", "objet", "montant_ht", "statut"]].rename(columns={
+            "ref": "Réf.", "chantier": "Chantier", "type": "Type",
+            "objet": "Objet", "montant_ht": "Montant HT", "statut": "Statut"
+        })
+        st.dataframe(display, use_container_width=True, hide_index=True)
