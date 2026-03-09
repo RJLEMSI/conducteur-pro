@@ -1,18 +1,29 @@
-# Secrets (NEVER commit)
+# Secrets - NEVER commit these
 .streamlit/secrets.toml
+secrets.toml
+.env
+.env.*
 
 # Python
 __pycache__/
-*.pyc
-*.pyo
-.env
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
 venv/
 .venv/
 
 # IDE
 .vscode/
 .idea/
+*.swp
+*.swo
 
 # OS
 .DS_Store
 Thumbs.db
+
+# Temp files
+*.tmp
+*.bak
