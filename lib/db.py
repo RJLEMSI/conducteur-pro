@@ -357,3 +357,74 @@ def get_dashboard_stats(user_id: str) -> dict:
             "total_paye": 0, "taux_recouvrement": 0,
             "chantiers": [], "devis": [], "factures": [],
         }
+
+# ─── Documents ──────────────────────────────────────────────────────────────
+
+def create_document(data: dict) -> dict:
+    """Crée un enregistrement de document dans la table documents."""
+    client = _client()
+    if not client:
+        return data
+    try:
+        user_id = st.session_state.get("user_id")
+        if user_id:
+            data["user_id"] = user_id
+        result = client.table("documents").insert(data).execute()
+        if result.data and len(result.data) > 0:
+            return result.data[0]
+        return data
+    except Exception:
+        return data
+
+
+def get_documents(user_id: str = None, chantier_id: str = None, famille: str = None) -> list:
+    """Récupère les documents avec filtres optionnels."""
+    client = _client()
+    if not client:
+        return []
+    try:
+        query = client.table("documents").select("*")
+        if user_id:
+            query = query.eq("user_id", user_id)
+        if chantier_id:
+            query = query.eq("chantier_id", chantier_id)
+        if famille:
+            query = query.eq("famille", famille)
+        result = query.order("created_at", desc=True).execute()
+        return result.data or []
+    except Exception:
+        return []
+
+
+def delete_document(document_id: str) -> bool:
+    """Supprime un document."""
+    client = _client()
+    if not client:
+        return False
+    try:
+        client.table("documents").delete().eq("id", document_id).execute()
+        return True
+    except Exception:
+        return False
+
+
+# ─── Activity Log ───────────────────────────────────────────────────────────
+
+def log_activity(action: str, resource_type: str = "", resource_id: str = "", details: dict = None):
+    """Enregistre une action dans le journal d'activité."""
+    client = _client()
+    if not client:
+        return
+    try:
+        user_id = st.session_state.get("user_id")
+        if not user_id:
+            return
+        client.table("activity_log").insert({
+            "user_id": user_id,
+            "action": action,
+            "resource_type": resource_type,
+            "resource_id": resource_id,
+            "details": details or {},
+        }).execute()
+    except Exception:
+        pass  # Ne pas bloquer l'app si le logging échoue
