@@ -1,24 +1,24 @@
 """
-auth.py — Authentification utilisateur via Supabase Auth.
-Login, register, logout, vérification email, reset password, feature gating.
+auth.py â Authentification utilisateur via Supabase Auth.
+Login, register, logout, vÃ©rification email, reset password, feature gating.
 """
 import streamlit as st
 from datetime import datetime
 from lib.supabase_client import get_supabase_client, init_supabase_session
 
 
-# ─── Inscription ──────────────────────────────────────────────────────────────
+# âââ Inscription ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 def register_user(email: str, password: str, display_name: str = "", company_name: str = "") -> dict:
     """
-    Inscrit un nouvel utilisateur via Supabase Auth + crée le profil.
+    Inscrit un nouvel utilisateur via Supabase Auth + crÃ©e le profil.
     Retourne {"success": bool, "message": str, "user_id": str|None}
     """
     client = get_supabase_client()
     if not client:
-        return {"success": False, "message": "Supabase non configuré. Vérifiez vos secrets.", "user_id": None}
+        return {"success": False, "message": "Supabase non configurÃ©. VÃ©rifiez vos secrets.", "user_id": None}
 
     try:
-        # Créer l'utilisateur dans Supabase Auth
+        # CrÃ©er l'utilisateur dans Supabase Auth
         result = client.auth.sign_up({
             "email": email,
             "password": password,
@@ -31,11 +31,11 @@ def register_user(email: str, password: str, display_name: str = "", company_nam
         })
 
         if result.user is None:
-            return {"success": False, "message": "Erreur lors de l'inscription. Vérifiez vos informations.", "user_id": None}
+            return {"success": False, "message": "Erreur lors de l'inscription. VÃ©rifiez vos informations.", "user_id": None}
 
         user_id = result.user.id
 
-        # Créer le profil utilisateur dans la table user_profiles
+        # CrÃ©er le profil utilisateur dans la table user_profiles
         try:
             client.table("user_profiles").insert({
                 "user_id": user_id,
@@ -49,23 +49,23 @@ def register_user(email: str, password: str, display_name: str = "", company_nam
                 "onboarding_complete": False,
             }).execute()
         except Exception:
-            # Le profil sera créé au premier login si échec ici
+            # Le profil sera crÃ©Ã© au premier login si Ã©chec ici
             pass
 
         return {
             "success": True,
-            "message": "Compte créé ! Vérifiez votre email pour confirmer votre inscription.",
+            "message": "Compte crÃ©Ã© ! VÃ©rifiez votre email pour confirmer votre inscription.",
             "user_id": user_id,
         }
 
     except Exception as e:
         error_msg = str(e)
         if "already registered" in error_msg.lower() or "already exists" in error_msg.lower():
-            return {"success": False, "message": "Un compte existe déjà avec cet email.", "user_id": None}
+            return {"success": False, "message": "Un compte existe dÃ©jÃ  avec cet email.", "user_id": None}
         return {"success": False, "message": f"Erreur : {error_msg}", "user_id": None}
 
 
-# ─── Connexion ────────────────────────────────────────────────────────────────
+# âââ Connexion ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 def login_user(email: str, password: str) -> dict:
     """
     Connecte un utilisateur existant.
@@ -73,7 +73,7 @@ def login_user(email: str, password: str) -> dict:
     """
     client = get_supabase_client()
     if not client:
-        return {"success": False, "message": "Supabase non configuré.", "user_id": None}
+        return {"success": False, "message": "Supabase non configurÃ©.", "user_id": None}
 
     try:
         result = client.auth.sign_in_with_password({
@@ -96,7 +96,7 @@ def login_user(email: str, password: str) -> dict:
         # Charger le profil utilisateur
         _load_user_profile(client, user_id, email)
 
-        return {"success": True, "message": "Connexion réussie !", "user_id": user_id}
+        return {"success": True, "message": "Connexion rÃ©ussie !", "user_id": user_id}
 
     except Exception as e:
         error_msg = str(e)
@@ -106,7 +106,7 @@ def login_user(email: str, password: str) -> dict:
 
 
 def _load_user_profile(client, user_id: str, email: str):
-    """Charge ou crée le profil utilisateur depuis Supabase."""
+    """Charge ou crÃ©e le profil utilisateur depuis Supabase."""
     try:
         result = client.table("user_profiles").select("*").eq("user_id", user_id).execute()
 
@@ -116,7 +116,7 @@ def _load_user_profile(client, user_id: str, email: str):
             st.session_state.user_name = profile.get("display_name", "")
             st.session_state.user_plan = profile.get("subscription_plan", "free")
         else:
-            # Créer le profil s'il n'existe pas
+            # CrÃ©er le profil s'il n'existe pas
             new_profile = {
                 "user_id": user_id,
                 "email": email,
@@ -132,9 +132,9 @@ def _load_user_profile(client, user_id: str, email: str):
         st.session_state.user_plan = "free"
 
 
-# ─── Déconnexion ──────────────────────────────────────────────────────────────
+# âââ DÃ©connexion ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 def logout_user():
-    """Déconnecte l'utilisateur et nettoie la session."""
+    """DÃ©connecte l'utilisateur et nettoie la session."""
     client = get_supabase_client()
     if client:
         try:
@@ -154,23 +154,23 @@ def logout_user():
     init_supabase_session()
 
 
-# ─── Reset password ───────────────────────────────────────────────────────────
+# âââ Reset password âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 def reset_password(email: str) -> dict:
-    """Envoie un email de réinitialisation du mot de passe."""
+    """Envoie un email de rÃ©initialisation du mot de passe."""
     client = get_supabase_client()
     if not client:
-        return {"success": False, "message": "Supabase non configuré."}
+        return {"success": False, "message": "Supabase non configurÃ©."}
 
     try:
         client.auth.reset_password_email(email)
-        return {"success": True, "message": "Email de réinitialisation envoyé. Vérifiez votre boîte mail."}
+        return {"success": True, "message": "Email de rÃ©initialisation envoyÃ©. VÃ©rifiez votre boÃ®te mail."}
     except Exception as e:
         return {"success": False, "message": f"Erreur : {e}"}
 
 
-# ─── Refresh session ─────────────────────────────────────────────────────────
+# âââ Refresh session âââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 def refresh_session():
-    """Tente de rafraîchir la session si un refresh token existe."""
+    """Tente de rafraÃ®chir la session si un refresh token existe."""
     if not st.session_state.get("supabase_refresh_token"):
         return False
 
@@ -193,7 +193,7 @@ def refresh_session():
     return False
 
 
-# ─── Feature gating ──────────────────────────────────────────────────────────
+# âââ Feature gating ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 PLAN_LIMITS = {
     "free": {
         "max_chantiers": 3,
@@ -207,7 +207,7 @@ PLAN_LIMITS = {
     "pro": {
         "max_chantiers": 50,
         "max_documents_mb": 100_000,  # 100 GB
-        "max_analyses_month": -1,  # illimité
+        "max_analyses_month": -1,  # illimitÃ©
         "devis_pdf": True,
         "historique": True,
         "import_data": True,
@@ -226,7 +226,7 @@ PLAN_LIMITS = {
 
 
 def check_feature(feature: str) -> bool:
-    """Vérifie si l'utilisateur a accès à une fonctionnalité."""
+    """VÃ©rifie si l'utilisateur a accÃ¨s Ã  une fonctionnalitÃ©."""
     plan = st.session_state.get("user_plan", "free")
     limits = PLAN_LIMITS.get(plan, PLAN_LIMITS["free"])
 
@@ -239,42 +239,42 @@ def check_feature(feature: str) -> bool:
 
 
 def get_plan_limit(feature: str):
-    """Retourne la limite d'un plan pour une fonctionnalité."""
+    """Retourne la limite d'un plan pour une fonctionnalitÃ©."""
     plan = st.session_state.get("user_plan", "free")
     limits = PLAN_LIMITS.get(plan, PLAN_LIMITS["free"])
     return limits.get(feature, 0)
 
 
-def show_upgrade_message(feature_name: str = "cette fonctionnalité"):
-    """Affiche un message incitant à passer à un plan supérieur."""
-    st.warning(f"⚠️ **{feature_name}** n'est pas disponible avec votre plan actuel.")
+def show_upgrade_message(feature_name: str = "cette fonctionnalitÃ©"):
+    """Affiche un message incitant Ã  passer Ã  un plan supÃ©rieur."""
+    st.warning(f"â ï¸ **{feature_name}** n'est pas disponible avec votre plan actuel.")
     col1, col2 = st.columns(2)
     with col1:
         st.markdown("""
         <div style="background:linear-gradient(135deg,#0D3B6E,#1B6CA8);color:white;
                     border-radius:12px;padding:1rem;text-align:center;">
-            <div style="font-size:1.1rem;font-weight:700;">🚀 Pro — 65,90 €/mois</div>
-            <div style="font-size:.85rem;opacity:.85;margin-top:.3rem;">1 utilisateur · 50 chantiers · 100 GB</div>
+            <div style="font-size:1.1rem;font-weight:700;">ð Pro â 65,90 â¬/mois</div>
+            <div style="font-size:.85rem;opacity:.85;margin-top:.3rem;">1 utilisateur Â· 50 chantiers Â· 100 GB</div>
         </div>
         """, unsafe_allow_html=True)
     with col2:
         st.markdown("""
         <div style="background:linear-gradient(135deg,#1B6CA8,#3B82F6);color:white;
                     border-radius:12px;padding:1rem;text-align:center;">
-            <div style="font-size:1.1rem;font-weight:700;">🏢 Équipe — 119,60 €/mois</div>
-            <div style="font-size:.85rem;opacity:.85;margin-top:.3rem;">4 utilisateurs · 500 chantiers · 500 GB</div>
+            <div style="font-size:1.1rem;font-weight:700;">ð¢ Ãquipe â 119,60 â¬/mois</div>
+            <div style="font-size:.85rem;opacity:.85;margin-top:.3rem;">4 utilisateurs Â· 500 chantiers Â· 500 GB</div>
         </div>
         """, unsafe_allow_html=True)
-    if st.button("⭐ Voir les offres d'abonnement", use_container_width=True):
+    if st.button("â­ Voir les offres d'abonnement", use_container_width=True):
         st.switch_page("pages/9_Abonnement.py")
 
 
-# ─── Garde de page (à appeler en haut de chaque page protégée) ───────────────
+# âââ Garde de page (Ã  appeler en haut de chaque page protÃ©gÃ©e) âââââââââââââââ
 def require_auth():
     """
-    Vérifie que l'utilisateur est connecté.
+    VÃ©rifie que l'utilisateur est connectÃ©.
     Redirige vers la page de connexion sinon.
-    Retourne True si authentifié.
+    Retourne True si authentifiÃ©.
     """
     init_supabase_session()
 
@@ -285,18 +285,18 @@ def require_auth():
     if refresh_session():
         return True
 
-    # Non connecté → rediriger
-    st.warning("🔒 Veuillez vous connecter pour accéder à cette page.")
+    # Non connectÃ© â rediriger
+    st.warning("ð Veuillez vous connecter pour accÃ©der Ã  cette page.")
     if st.button("Se connecter", type="primary", use_container_width=True):
         st.switch_page("pages/00_Connexion.py")
     st.stop()
     return False
 
 
-# ─── Affichage du plan ────────────────────────────────────────────────────────
+# âââ Affichage du plan ââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
 def get_plan_display(plan: str = None) -> dict:
-    """Retourne les informations d'affichage pour un plan donné.
+    """Retourne les informations d'affichage pour un plan donnÃ©.
     Returns: dict avec 'name', 'icon', 'color', 'price', 'features'
     """
     import streamlit as st
@@ -339,4 +339,9 @@ def get_plan_display(plan: str = None) -> dict:
                 "Tout Pro +",
                 "Jusqu\u2019\u00e0 4 utilisateurs",
                 "Partage de chantiers",
-                "Formation d\u00e9di\u0
+                "Formation dédiée (1h)",
+                "Stockage 20 Go",
+            ]
+        }
+    }
+    return plans.get(plan, plans["free"])
