@@ -30,7 +30,7 @@ st.divider()
 # --- Plans disponibles ---
 st.subheader("Plans disponibles")
 
-col1, col2 = st.columns(3)
+col1, col2, col3 = st.columns(3)
 plans = ["free", "pro", "team"]
 
 for i, (col, plan_key) in enumerate(zip([col1, col2, col3], plans)):
