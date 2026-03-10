@@ -38,7 +38,7 @@ def render_saas_sidebar(user_id: str):
     from lib.auth import logout_user
     
     with st.sidebar:
-        st.markdown("""<div style="text-align:center;padding:0.5rem 0 0.8rem;"><span style="font-size:1.5rem;font-weight:800;color:#0D3B6E;">🏗️ ConducteurPro</span><br><span style="font-size:0.7rem;color:#7a8a9a;letter-spacing:0.5px;">LOGICIEL BTP PROFESSIONNEL</span></div>""", unsafe_allow_html=True)
+        st.markdown("""<div style="text-align:center;padding:0.5rem 0 0.8rem;"><span style="font-size:1.5rem;font-weight:800;color:#0D3B6E;">ðï¸ ConducteurPro</span><br><span style="font-size:0.7rem;color:#7a8a9a;letter-spacing:0.5px;">LOGICIEL BTP PROFESSIONNEL</span></div>""", unsafe_allow_html=True)
         st.markdown("---")
         
         # Infos utilisateur
@@ -57,7 +57,7 @@ def render_saas_sidebar(user_id: str):
             if limit != float("inf"):
                 st.progress(min(nb / limit, 1.0), text=f"Chantiers: {nb}/{int(limit)}")
             else:
-                st.markdown(f"**Chantiers:** {nb} (illimité)")
+                st.markdown(f"**Chantiers:** {nb} (illimitÃ©)")
         
         st.markdown("---")
         
@@ -84,7 +84,7 @@ def render_saas_sidebar(user_id: str):
         st.markdown("---")
         
         # Logout
-        if st.button(" Se déconnecter", use_container_width=True):
+        if st.button(" Se dÃ©connecter", use_container_width=True):
             logout_user()
             st.switch_page("pages/00_Connexion.py")
 
@@ -99,7 +99,7 @@ def chantier_selector(key: str = "chantier_select"):
     chantiers = db.get_chantiers(user_id) or []
     
     if not chantiers:
-        st.info("Aucun chantier trouvé. Créez-en un depuis le Tableau de bord.")
+        st.info("Aucun chantier trouvÃ©. CrÃ©ez-en un depuis le Tableau de bord.")
         return None
     
     # Format options
