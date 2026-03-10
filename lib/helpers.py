@@ -44,9 +44,9 @@ def render_saas_sidebar(user_id: str):
         # Infos utilisateur
         profile = db.get_profile(user_id)
         if profile:
-            plan = profile.get("plan", "free")
+            plan = profile.get("subscription_plan", "free")
             plan_labels = {"free": " Gratuit", "pro": " Pro", "team": " quipe"}
-            st.markdown(f"**Utilisateur:** {profile.get('full_name', 'N/A')}")
+            st.markdown(f"**Utilisateur:** {profile.get('display_name', 'N/A')}")
             st.markdown(f"**Plan:** {plan_labels.get(plan, plan)}")
             st.markdown(f"**Email:** {profile.get('email', 'N/A')}")
             
@@ -99,7 +99,7 @@ def chantier_selector(key: str = "chantier_select"):
     chantiers = db.get_chantiers(user_id) or []
     
     if not chantiers:
-        st.info("Aucun chantier trouv. Crez-en un depuis le Tableau de bord.")
+        st.info("Aucun chantier trouvé. Créez-en un depuis le Tableau de bord.")
         return None
     
     # Format options
@@ -126,7 +126,7 @@ def require_feature(user_id: str, feature: str):
     from lib.auth import show_upgrade_message
     
     profile = db.get_profile(user_id)
-    plan = profile.get("plan", "free") if profile else "free"
+    plan = profile.get("subscription_plan", "free") if profile else "free"
     
     # Dfinir quelles features sont disponibles par plan
     feature_access = {
