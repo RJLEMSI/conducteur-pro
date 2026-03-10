@@ -9,6 +9,24 @@ from lib.helpers import page_setup, render_saas_sidebar
 from lib import db
 from utils import GLOBAL_CSS
 
+
+# Mapping statuts pour affichage
+STATUT_DISPLAY = {
+    "en_cours": "En cours", "termine": "Terminé", "en_attente": "En attente",
+    "annule": "Annulé", "brouillon": "Brouillon", "envoye": "Envoyé",
+    "envoyee": "Envoyée", "accepte": "Accepté", "refuse": "Refusé",
+    "payee": "Payée", "en_retard": "En retard", "validé": "Validé",
+}
+
+def _fmt_date(val):
+    if pd.isna(val) or val is None:
+        return ""
+    s = str(val)[:10]
+    return s
+
+def _fmt_statut(val):
+    return STATUT_DISPLAY.get(str(val), str(val).replace("_", " ").capitalize())
+
 user_id = page_setup(title="Tableau de bord", icon="📊")
 st.markdown(GLOBAL_CSS, unsafe_allow_html=True)
 render_saas_sidebar(user_id)
@@ -39,6 +57,10 @@ with tab1:
         df = pd.DataFrame(chantiers)
         cols_display = [c for c in ["nom", "client_nom", "statut", "adresse", "created_at"] if c in df.columns]
         df_display = df[cols_display].copy() if cols_display else df.copy()
+        if "statut" in df_display.columns:
+            df_display["statut"] = df_display["statut"].apply(_fmt_statut)
+        if "created_at" in df_display.columns:
+            df_display["created_at"] = df_display["created_at"].apply(_fmt_date)
         df_display.columns = [{"nom": "Nom", "client_nom": "Client", "statut": "Statut", "adresse": "Adresse", "created_at": "Créé le"}.get(c, c) for c in df_display.columns]
         st.dataframe(df_display, use_container_width=True)
         
@@ -68,9 +90,13 @@ with tab2:
     devis = stats.get("devis", [])
     if devis:
         df = pd.DataFrame(devis)
-        cols_display = [c for c in ["titre", "montant_ht", "statut", "created_at"] if c in df.columns]
+        cols_display = [c for c in ["objet", "montant_ht", "statut", "created_at"] if c in df.columns]
         df_display = df[cols_display].copy() if cols_display else df.copy()
-        df_display.columns = [{"titre": "Titre", "montant_ht": "Montant HT", "statut": "Statut", "created_at": "Créé le"}.get(c, c) for c in df_display.columns]
+        if "statut" in df_display.columns:
+            df_display["statut"] = df_display["statut"].apply(_fmt_statut)
+        if "created_at" in df_display.columns:
+            df_display["created_at"] = df_display["created_at"].apply(_fmt_date)
+        df_display.columns = [{"objet": "Objet", "montant_ht": "Montant HT", "statut": "Statut", "created_at": "Créé le"}.get(c, c) for c in df_display.columns]
         st.dataframe(df_display, use_container_width=True)
     else:
         st.info("Aucun devis.")
@@ -81,6 +107,10 @@ with tab3:
         df = pd.DataFrame(factures)
         cols_display = [c for c in ["numero", "montant_ttc", "statut", "date_echeance"] if c in df.columns]
         df_display = df[cols_display].copy() if cols_display else df.copy()
+        if "statut" in df_display.columns:
+            df_display["statut"] = df_display["statut"].apply(_fmt_statut)
+        if "date_echeance" in df_display.columns:
+            df_display["date_echeance"] = df_display["date_echeance"].apply(_fmt_date)
         df_display.columns = [{"numero": "N°", "montant_ttc": "Montant TTC", "statut": "Statut", "date_echeance": "Échéance"}.get(c, c) for c in df_display.columns]
         st.dataframe(df_display, use_container_width=True)
     else:
