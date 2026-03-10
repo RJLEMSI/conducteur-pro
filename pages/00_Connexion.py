@@ -15,7 +15,6 @@ st.markdown(GLOBAL_CSS, unsafe_allow_html=True)
 
 # Cacher la sidebar pour la page de connexion
 st.markdown("""
-st.markdown("""
 <style>
     /* Hide sidebar on login page */
     [data-testid="stSidebar"] { display: none; }
@@ -142,8 +141,6 @@ st.markdown("""
         color: #6a7a8a;
     }
 </style>
-""", unsafe_allow_html=True)
-
 """, unsafe_allow_html=True)
 
 init_supabase_session()
