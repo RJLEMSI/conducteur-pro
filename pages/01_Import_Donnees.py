@@ -16,7 +16,7 @@ from lib.import_manager import (
     import_json_full,
 )
 
-# st.set_page_config gere par app.py
+# st.set_page_config géré par app.py
 st.markdown(GLOBAL_CSS, unsafe_allow_html=True)
 render_sidebar()
 require_auth()
