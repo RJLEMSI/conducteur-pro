@@ -22,22 +22,22 @@ with tab1:
 ConducteurPro  
 Contact : contact@conducteurpro.fr
 
-**Hebergement :**  
+**Hébergement :**  
 - Application : Streamlit Cloud (Snowflake Inc.)  
   Address: 450 Concar Dr, San Mateo, CA 94402, USA
-- Base de donnees : Supabase Inc.  
+- Base de données : Supabase Inc.  
   Address: 970 Toa Payoh North, Singapore
 
 **Directeur de la publication :**  
 Le responsable de la société exploitante de ConducteurPro.
 
-**Propriete intellectuelle :**  
+**Propriété intellectuelle :**  
 L'ensemble du contenu du site ConducteurPro (textes, images, logos, logiciels) est protégé par le droit d'auteur. 
-Toute reproduction, meme partielle, est interdite sans autorisation prealable ecrite.
+Toute reproduction, même partielle, est interdite sans autorisation préalable écrite.
 
-**Donnees personnelles :**  
+**Données personnelles :**  
 Conformément au RGPD et à la loi Informatique et Libertés, vous disposez d'un droit d'accès, 
-de rectification, de suppression et de portabilite de vos donnees. 
+de rectification, de suppression et de portabilité de vos données. 
 Pour exercer ces droits : contact@conducteurpro.fr
     """)
 
@@ -64,12 +64,12 @@ via la plateforme sécurisée Stripe. L'abonnement est mensuel et reconduit taci
 
 **Article 5 - Droit de retractation**  
 Conformément à l'article L221-28 du Code de la consommation, le droit de retractation 
-ne peut etre exerce pour les services pleinement executes avant la fin du delai de retractation 
-et dont l'execution a commence avec l'accord prealable du consommateur.
+ne peut etre exerce pour les services pleinement executes avant la fin du délai de retractation 
+et dont l'execution a commence avec l'accord préalable du consommateur.
 
-**Article 6 - Resiliation**  
+**Article 6 - Résiliation**  
 L'utilisateur peut resilier son abonnement à tout moment depuis son espace personnel. 
-La résiliation prend effet a la fin de la periode d'abonnement en cours.
+La résiliation prend effet à la fin de la période d'abonnement en cours.
 
 **Article 7 - Responsabilite**  
 ConducteurPro s'engage a fournir un service conforme aux descriptions. 
@@ -77,7 +77,7 @@ Les analyses generees par l'intelligence artificielle sont fournies a titre indi
 et ne se substituent pas a l'expertise professionnelle du conducteur de travaux.
 
 **Article 8 - Protection des donnees**  
-Les données personnelles sont traitées conformement a notre Politique de Confidentialité 
+Les données personnelles sont traitées conformêment a notre Politique de Confidentialité 
 et au Reglement General sur la Protection des Donnees (RGPD).
 
 **Article 9 - Droit applicable**  
@@ -135,10 +135,10 @@ par les clauses contractuelles types de la Commission europeenne.
 
 **8. Vos droits**  
 Conformément au RGPD, vous disposez des droits suivants :
-- Droit d'acces a vos donnees
+- Droit d'acces a vos données
 - Droit de rectification
 - Droit a l'effacement (droit a l'oubli)
-- Droit a la portabilite
+- Droit a la portabilité
 - Droit d'opposition
 - Droit a la limitation du traitement
 
@@ -156,7 +156,7 @@ ConducteurPro utilise uniquement des cookies techniques nécessaires au fonction
 du service. Aucun cookie publicitaire ou de tracking n'est utilise.
 
 **11. Contact DPO**  
-Pour toute question relative a la protection de vos donnees :  
+Pour toute question relative a la protection de vos données :  
 **contact@conducteurpro.fr**
     """)
 
