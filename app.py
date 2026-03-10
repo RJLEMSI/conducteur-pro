@@ -19,17 +19,17 @@ st.markdown(GLOBAL_CSS, unsafe_allow_html=True)
 # --- Navigation dynamique selon authentification ---
 if is_authenticated():
     pages = {
-        "General": [
+        "Général": [
             st.Page("pages/0_Tableau_de_bord.py", title="Tableau de bord", icon="📊", default=True),
-            st.Page("pages/01_Import_Donnees.py", title="Import Donnees", icon="📥"),
+            st.Page("pages/01_Import_Donnees.py", title="Import Données", icon="📥"),
         ],
         "Analyses": [
-            st.Page("pages/1_Metres.py", title="Metres", icon="📐"),
+            st.Page("pages/1_Metres.py", title="Métrés", icon="📐"),
             st.Page("pages/2_DCE.py", title="DCE", icon="📋"),
-            st.Page("pages/3_Etudes.py", title="Etudes", icon="🔬"),
+            st.Page("pages/3_Etudes.py", title="Études", icon="🔬"),
             st.Page("pages/4_Planning.py", title="Planning", icon="📅"),
             st.Page("pages/5_PLU.py", title="PLU", icon="🏛️"),
-            st.Page("pages/6_Synthese.py", title="Synthese", icon="📝"),
+            st.Page("pages/6_Synthese.py", title="Synthèse", icon="📝"),
         ],
         "Business": [
             st.Page("pages/8_Devis.py", title="Devis", icon="💰"),
@@ -38,15 +38,15 @@ if is_authenticated():
         ],
         "Compte": [
             st.Page("pages/9_Abonnement.py", title="Abonnement", icon="⭐"),
-            st.Page("pages/12_Legal.py", title="Mentions legales", icon="⚖️"),
-            st.Page("pages/00_Connexion.py", title="Mon compte", icon="👤"),
+            st.Page("pages/12_Legal.py", title="Mentions légales", icon="⚖️"),
+            st.Page("pages/13_Mon_Compte.py", title="Mon compte", icon="👤"),
         ],
     }
 else:
     pages = {
         "": [
             st.Page("pages/00_Connexion.py", title="Connexion", icon="🔐", default=True),
-            st.Page("pages/12_Legal.py", title="Mentions legales", icon="⚖️"),
+            st.Page("pages/12_Legal.py", title="Mentions légales", icon="⚖️"),
         ],
     }
 
