@@ -322,7 +322,7 @@ def get_plan_display(plan: str = None) -> dict:
             "name": "Pro",
             "icon": "*",
             "color": "#0066cc",
-            "price": "69,90 EUR/mois",
+            "price": "65,90 EUR/mois",
             "features": [
                 "Chantiers illimités",
                 "Analyses IA illimitées",
@@ -337,7 +337,7 @@ def get_plan_display(plan: str = None) -> dict:
             "name": "Équipe",
             "icon": "*",
             "color": "#28a745",
-            "price": "118,90 EUR/mois",
+            "price": "119,60 EUR/mois",
             "features": [
                 "Tout Pro +",
                 "Jusqu'à 4 utilisateurs",
