@@ -5,7 +5,7 @@ st.set_page_config(page_title="ConducteurPro Mon Compte", page_icon="\U0001f464"
 
 from lib.auth import require_auth, get_plan_display, PLAN_LIMITS
 from lib.db import get_profile
-from lib.supabase_client import get_client
+from lib.supabase_client import get_supabase_client
 
 auth = require_auth()
 if not auth:
@@ -88,7 +88,7 @@ with tab1:
                 "address": address,
             }
             try:
-                client = get_client()
+                client = get_supabase_client()
                 client.table("user_profiles").update(updates).eq("user_id", user_id).execute()
                 st.success("Profil mis a jour avec succes !")
                 st.rerun()
