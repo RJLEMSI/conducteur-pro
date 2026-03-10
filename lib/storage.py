@@ -253,11 +253,11 @@ def delete_file(storage_path: str) -> bool:
 
 #  Utilitaires 
 
-def get_storage_usage() -> dict:
-    """Calcule l'espace de stockage utilisé par l'utilisateur courant."""
+def get_storage_usage(user_id: str = None) -> dict:
+    """Calcule l'espace de stockage utilisé par l'utilisateur."""
     from lib.db import get_documents
-    docs = get_documents(limit=5000)
-    total_bytes = sum(d.get("file_size_bytes", 0) or 0 for d in docs)
+    docs = get_documents(user_id=user_id) if user_id else get_documents()
+    total_bytes = sum(d.get("taille", d.get("file_size_bytes", 0)) or 0 for d in docs)
     return {
         "total_bytes": total_bytes,
         "total_mb": total_bytes / (1024 * 1024),
