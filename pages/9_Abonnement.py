@@ -74,4 +74,4 @@ for i, (col, plan_key) in enumerate(zip([col1, col2], plans)):
                     st.error(f"Erreur Stripe: {str(e)}")
 
 st.divider()
-st.caption("Les paiements sont securises par Stripe. Vous pouvez annuler a tout moment.")
+st.caption("Les paiements sont sécurisés par Stripe. Vous pouvez annuler à tout moment.")
