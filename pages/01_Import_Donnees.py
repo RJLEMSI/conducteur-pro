@@ -1,6 +1,6 @@
 """
-Page 01  Import de donnes client
-Wizard d'import : CSV, Excel, JSON pour chantiers, factures, tapes.
+Page 01  Import de données client
+Wizard d'import : CSV, Excel, JSON pour chantiers, factures, étapes.
 """
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -23,14 +23,14 @@ require_auth()
 
 # Vrifier l'accs
 if not check_feature("import_data"):
-    show_upgrade_message("L'import de donnes")
+    show_upgrade_message("L'import de données")
     st.stop()
 
 #  En-tte 
 st.markdown("""
 <div class="page-header">
-    <h2> Import de donnes</h2>
-    <p>Importez la base de donnes complte de votre client : chantiers, factures, tapes, documents</p>
+    <h2> Import de données</h2>
+    <p>Importez la base de données complète de votre client : chantiers, factures, étapes, documents</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -38,9 +38,9 @@ st.markdown("""
 tab_chantiers, tab_factures, tab_etapes, tab_json, tab_templates = st.tabs([
     " Chantiers",
     " Factures",
-    " tapes / Planning",
+    "Étapes / Planning",
     " Import complet (JSON)",
-    " Modles CSV"
+    " Modèles CSV"
 ])
 
 #  IMPORT CHANTIERS 
@@ -59,7 +59,7 @@ with tab_chantiers:
         df = parse_file(file, "csv" if ext == "csv" else "excel")
 
         if not df.empty:
-            st.markdown(f"**{len(df)} lignes dtectes.** Aperu :")
+            st.markdown(f"**{len(df)} lignes dtectes.** Aperçu :")
             st.dataframe(df.head(10), use_container_width=True)
 
             # Mapping des colonnes
@@ -70,7 +70,7 @@ with tab_chantiers:
 
             if missing:
                 st.error(f"Colonnes obligatoires manquantes : {', '.join(missing)}")
-                st.info("Consultez l'onglet 'Modles CSV' pour voir le format attendu.")
+                st.info("Consultez l'onglet 'Modèles CSV' pour voir le format attendu.")
             else:
                 present = [c for c in optional_cols if c in df.columns]
                 st.success(f"Colonnes dtectes : nom + {', '.join(present)}")
@@ -122,7 +122,7 @@ with tab_factures:
 
 #  IMPORT TAPES 
 with tab_etapes:
-    st.markdown("### Importer des tapes de planning")
+    st.markdown("### Importer des étapes de planning")
 
     file_e = st.file_uploader(
         "Fichier CSV ou Excel",
@@ -141,7 +141,7 @@ with tab_etapes:
             if not chantier_map:
                 st.warning(" Aucun chantier trouv.")
             else:
-                if st.button(" Importer les tapes", type="primary", key="btn_import_e"):
+                if st.button(" Importer les étapes", type="primary", key="btn_import_e"):
                     with st.spinner("Import en cours..."):
                         results = import_etapes(df_e, chantier_map)
                     st.markdown(f"**Rsultat : {results['success']} importes, {results['errors']} erreurs**")
@@ -168,7 +168,7 @@ with tab_json:
 
             for section in sections:
                 items = data[section]
-                st.markdown(f"**{section.capitalize()}** : {len(items)} lments")
+                st.markdown(f"**{section.capitalize()}** : {len(items)} éléments")
 
             if st.button(" Tout importer", type="primary", key="btn_import_json"):
                 with st.spinner("Import complet en cours..."):
@@ -184,7 +184,7 @@ with tab_json:
 
 #  MODLES CSV 
 with tab_templates:
-    st.markdown("### Modles CSV  tlcharger")
+    st.markdown("### Modèles CSV  télécharger")
     st.markdown("Utilisez ces modles pour prparer vos fichiers d'import.")
 
     col1, col2, col3 = st.columns(3)
