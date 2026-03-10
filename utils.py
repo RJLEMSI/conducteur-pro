@@ -96,7 +96,8 @@ def render_sidebar():
 
         st.divider()
         st.markdown("**Navigation**")
-        st.page_link("app.py", label="🏠 Accueil")
+        try:
+            st.page_link("app.py", label="🏠 Accueil")
         st.page_link("pages/1_Metres.py", label="📐 Métrés automatiques")
         st.page_link("pages/2_DCE.py", label="📋 Synthèse DCE")
         st.page_link("pages/3_Etudes.py", label="🔬 Études techniques")
@@ -106,6 +107,8 @@ def render_sidebar():
         st.markdown("---")
         st.page_link("pages/8_Devis.py", label="💰 Générateur de devis")
         st.page_link("pages/9_Abonnement.py", label="⭐ Mon abonnement")
+        except Exception:
+            pass  # page_link navigation optional
         st.divider()
         st.caption("ConducteurPro v2.0")
         st.caption("Propulsé par Claude AI")
