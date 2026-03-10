@@ -258,7 +258,7 @@ def show_upgrade_message(feature_name: str = "cette fonctionnalite"):
         st.markdown("""
         <div style="background:#f8f9fa;padding:15px;border-radius:8px;text-align:center;">
             <h4>Plan Pro</h4>
-            <p>69,90 EUR/mois</p>
+            <p>65,90 EUR/mois</p>
             <p>Toutes les fonctionnalites</p>
         </div>
         """, unsafe_allow_html=True)
@@ -266,7 +266,7 @@ def show_upgrade_message(feature_name: str = "cette fonctionnalite"):
         st.markdown("""
         <div style="background:#f8f9fa;padding:15px;border-radius:8px;text-align:center;">
             <h4>Plan Équipe</h4>
-            <p>118,90 EUR/mois</p>
+            <p>119,60 EUR/mois</p>
             <p>Jusqu'à 4 utilisateurs</p>
         </div>
         """, unsafe_allow_html=True)
@@ -342,7 +342,7 @@ def get_plan_display(plan: str = None) -> dict:
                 "Tout Pro +",
                 "Jusqu'à 4 utilisateurs",
                 "Partage de chantiers",
-                "Formation dediee (1h)",
+                "Formation dédiée (1h)",
                 "Stockage 20 Go",
             ]
         }
