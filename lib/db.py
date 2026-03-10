@@ -1,6 +1,6 @@
 """
-ConducteurPro — Module de base de données (Supabase PostgreSQL).
-Fournit toutes les opérations CRUD pour les tables métier.
+ConducteurPro â Module de base de donnÃ©es (Supabase PostgreSQL).
+Fournit toutes les opÃ©rations CRUD pour les tables mÃ©tier.
 """
 from lib.supabase_client import get_supabase_client
 from datetime import datetime
@@ -10,10 +10,10 @@ def _client():
     return get_supabase_client()
 
 
-# ─── Profils ──────────────────────────────────────────────────────────────────
+# âââ Profils ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
 def get_profile(user_id: str) -> dict | None:
-    """Récupère le profil utilisateur."""
+    """RÃ©cupÃ¨re le profil utilisateur."""
     try:
         r = _client().table("user_profiles").select("*").eq("user_id", user_id).single().execute()
         return r.data
@@ -22,7 +22,7 @@ def get_profile(user_id: str) -> dict | None:
 
 
 def update_profile(user_id: str, data: dict) -> bool:
-    """Met à jour le profil utilisateur."""
+    """Met Ã  jour le profil utilisateur."""
     try:
         _client().table("user_profiles").update(data).eq("user_id", user_id).execute()
         return True
@@ -30,10 +30,10 @@ def update_profile(user_id: str, data: dict) -> bool:
         return False
 
 
-# ─── Chantiers ────────────────────────────────────────────────────────────────
+# âââ Chantiers ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
 def get_chantiers(user_id: str) -> list:
-    """Récupère tous les chantiers de l'utilisateur."""
+    """RÃ©cupÃ¨re tous les chantiers de l'utilisateur."""
     try:
         r = _client().table("chantiers").select("*").eq("user_id", user_id).order("created_at", desc=True).execute()
         return r.data or []
@@ -42,7 +42,7 @@ def get_chantiers(user_id: str) -> list:
 
 
 def get_chantier(chantier_id: str) -> dict | None:
-    """Récupère un chantier par ID."""
+    """RÃ©cupÃ¨re un chantier par ID."""
     try:
         r = _client().table("chantiers").select("*").eq("id", chantier_id).single().execute()
         return r.data
@@ -51,7 +51,7 @@ def get_chantier(chantier_id: str) -> dict | None:
 
 
 def create_chantier(user_id: str, data: dict) -> dict | None:
-    """Crée un nouveau chantier."""
+    """CrÃ©e un nouveau chantier."""
     try:
         data["user_id"] = user_id
         data["created_at"] = datetime.utcnow().isoformat()
@@ -62,7 +62,7 @@ def create_chantier(user_id: str, data: dict) -> dict | None:
 
 
 def update_chantier(chantier_id: str, data: dict) -> bool:
-    """Met à jour un chantier."""
+    """Met Ã  jour un chantier."""
     try:
         _client().table("chantiers").update(data).eq("id", chantier_id).execute()
         return True
@@ -71,7 +71,7 @@ def update_chantier(chantier_id: str, data: dict) -> bool:
 
 
 def delete_chantier(chantier_id: str) -> bool:
-    """Supprime un chantier et ses données associées."""
+    """Supprime un chantier et ses donnÃ©es associÃ©es."""
     try:
         _client().table("chantiers").delete().eq("id", chantier_id).execute()
         return True
@@ -79,10 +79,10 @@ def delete_chantier(chantier_id: str) -> bool:
         return False
 
 
-# ─── Études / Analyses ────────────────────────────────────────────────────────
+# âââ Ãtudes / Analyses ââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
 def get_etudes(user_id: str = None, chantier_id: str = None, etude_type: str = None) -> list:
-    """Récupère les études, avec filtrage optionnel."""
+    """RÃ©cupÃ¨re les Ã©tudes, avec filtrage optionnel."""
     try:
         q = _client().table("etudes").select("*")
         if user_id:
@@ -98,7 +98,7 @@ def get_etudes(user_id: str = None, chantier_id: str = None, etude_type: str = N
 
 
 def save_etude(user_id: str, chantier_id: str, etude_type: str, titre: str, contenu: str, metadata: dict = None) -> dict | None:
-    """Sauvegarde une nouvelle étude/analyse."""
+    """Sauvegarde une nouvelle Ã©tude/analyse."""
     try:
         data = {
             "user_id": user_id,
@@ -116,7 +116,7 @@ def save_etude(user_id: str, chantier_id: str, etude_type: str, titre: str, cont
 
 
 def delete_etude(etude_id: str) -> bool:
-    """Supprime une étude."""
+    """Supprime une Ã©tude."""
     try:
         _client().table("etudes").delete().eq("id", etude_id).execute()
         return True
@@ -124,10 +124,10 @@ def delete_etude(etude_id: str) -> bool:
         return False
 
 
-# ─── Métrés ───────────────────────────────────────────────────────────────────
+# âââ MÃ©trÃ©s âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
 def get_metres(chantier_id: str) -> list:
-    """Récupère les métrés d'un chantier."""
+    """RÃ©cupÃ¨re les mÃ©trÃ©s d'un chantier."""
     try:
         r = _client().table("metres").select("*").eq("chantier_id", chantier_id).order("created_at", desc=True).execute()
         return r.data or []
@@ -136,7 +136,7 @@ def get_metres(chantier_id: str) -> list:
 
 
 def save_metre(user_id: str, chantier_id: str, data: dict) -> dict | None:
-    """Sauvegarde un métré."""
+    """Sauvegarde un mÃ©trÃ©."""
     try:
         data["user_id"] = user_id
         data["chantier_id"] = chantier_id
@@ -147,10 +147,10 @@ def save_metre(user_id: str, chantier_id: str, data: dict) -> dict | None:
         return None
 
 
-# ─── Devis ────────────────────────────────────────────────────────────────────
+# âââ Devis ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
 def get_devis(chantier_id: str = None, user_id: str = None) -> list:
-    """Récupère les devis."""
+    """RÃ©cupÃ¨re les devis."""
     try:
         q = _client().table("devis").select("*")
         if chantier_id:
@@ -176,7 +176,7 @@ def save_devis(user_id: str, chantier_id: str, data: dict) -> dict | None:
 
 
 def update_devis(devis_id: str, data: dict) -> bool:
-    """Met à jour un devis."""
+    """Met Ã  jour un devis."""
     try:
         _client().table("devis").update(data).eq("id", devis_id).execute()
         return True
@@ -184,10 +184,10 @@ def update_devis(devis_id: str, data: dict) -> bool:
         return False
 
 
-# ─── Factures ─────────────────────────────────────────────────────────────────
+# âââ Factures âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
 def get_factures(chantier_id: str = None, user_id: str = None) -> list:
-    """Récupère les factures."""
+    """RÃ©cupÃ¨re les factures."""
     try:
         q = _client().table("factures").select("*")
         if chantier_id:
@@ -213,7 +213,7 @@ def save_facture(user_id: str, chantier_id: str, data: dict) -> dict | None:
 
 
 def update_facture(facture_id: str, data: dict) -> bool:
-    """Met à jour une facture."""
+    """Met Ã  jour une facture."""
     try:
         _client().table("factures").update(data).eq("id", facture_id).execute()
         return True
@@ -221,10 +221,10 @@ def update_facture(facture_id: str, data: dict) -> bool:
         return False
 
 
-# ─── Étapes (Planning) ────────────────────────────────────────────────────────
+# âââ Ãtapes (Planning) ââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
 def get_etapes(chantier_id: str) -> list:
-    """Récupère les étapes d'un chantier."""
+    """RÃ©cupÃ¨re les Ã©tapes d'un chantier."""
     try:
         r = _client().table("etapes").select("*").eq("chantier_id", chantier_id).order("ordre").execute()
         return r.data or []
@@ -233,7 +233,7 @@ def get_etapes(chantier_id: str) -> list:
 
 
 def save_etape(user_id: str, chantier_id: str, data: dict) -> dict | None:
-    """Sauvegarde une étape."""
+    """Sauvegarde une Ã©tape."""
     try:
         data["user_id"] = user_id
         data["chantier_id"] = chantier_id
@@ -245,7 +245,7 @@ def save_etape(user_id: str, chantier_id: str, data: dict) -> dict | None:
 
 
 def update_etape(etape_id: str, data: dict) -> bool:
-    """Met à jour une étape."""
+    """Met Ã  jour une Ã©tape."""
     try:
         _client().table("etapes").update(data).eq("id", etape_id).execute()
         return True
@@ -254,7 +254,7 @@ def update_etape(etape_id: str, data: dict) -> bool:
 
 
 def delete_etape(etape_id: str) -> bool:
-    """Supprime une étape."""
+    """Supprime une Ã©tape."""
     try:
         _client().table("etapes").delete().eq("id", etape_id).execute()
         return True
@@ -262,22 +262,7 @@ def delete_etape(etape_id: str) -> bool:
         return False
 
 
-# ─── Documents ────────────────────────────────────────────────────────────────
-
-def get_documents(chantier_id: str = None, user_id: str = None, doc_type: str = None) -> list:
-    """Récupère les documents."""
-    try:
-        q = _client().table("documents").select("*")
-        if chantier_id:
-            q = q.eq("chantier_id", chantier_id)
-        if user_id:
-            q = q.eq("user_id", user_id)
-        if doc_type:
-            q = q.eq("type", doc_type)
-        r = q.order("created_at", desc=True).execute()
-        return r.data or []
-    except Exception:
-        return []
+# âââ Documents ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
 
 def save_document(user_id: str, chantier_id: str, data: dict) -> dict | None:
@@ -301,10 +286,10 @@ def delete_document(doc_id: str) -> bool:
         return False
 
 
-# ─── Abonnements ──────────────────────────────────────────────────────────────
+# âââ Abonnements ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
 def get_subscription(user_id: str) -> dict | None:
-    """Récupère l'abonnement actif de l'utilisateur."""
+    """RÃ©cupÃ¨re l'abonnement actif de l'utilisateur."""
     try:
         r = _client().table("subscriptions").select("*").eq("user_id", user_id).eq("active", True).single().execute()
         return r.data
@@ -313,7 +298,7 @@ def get_subscription(user_id: str) -> dict | None:
 
 
 def update_subscription(user_id: str, data: dict) -> bool:
-    """Met à jour l'abonnement."""
+    """Met Ã  jour l'abonnement."""
     try:
         _client().table("subscriptions").upsert({**data, "user_id": user_id}).execute()
         return True
@@ -321,7 +306,7 @@ def update_subscription(user_id: str, data: dict) -> bool:
         return False
 
 
-# ─── Statistiques Dashboard ───────────────────────────────────────────────────
+# âââ Statistiques Dashboard âââââââââââââââââââââââââââââââââââââââââââââââââââ
 
 def get_dashboard_stats(user_id: str) -> dict:
     """Calcule les statistiques pour le tableau de bord."""
@@ -333,7 +318,7 @@ def get_dashboard_stats(user_id: str) -> dict:
         # Montants
         total_devis = sum(float(d.get("montant_ht", 0) or 0) for d in devis)
         total_factures = sum(float(f.get("montant_ttc", 0) or 0) for f in factures)
-        factures_payees = [f for f in factures if f.get("statut") == "payée"]
+        factures_payees = [f for f in factures if f.get("statut") == "payÃ©e"]
         total_paye = sum(float(f.get("montant_ttc", 0) or 0) for f in factures_payees)
         
         return {
@@ -358,10 +343,10 @@ def get_dashboard_stats(user_id: str) -> dict:
             "chantiers": [], "devis": [], "factures": [],
         }
 
-# ─── Documents ──────────────────────────────────────────────────────────────
+# âââ Documents ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
 def create_document(data: dict) -> dict:
-    """Crée un enregistrement de document dans la table documents."""
+    """CrÃ©e un enregistrement de document dans la table documents."""
     client = _client()
     if not client:
         return data
@@ -377,8 +362,8 @@ def create_document(data: dict) -> dict:
         return data
 
 
-def get_documents(user_id: str = None, chantier_id: str = None, famille: str = None) -> list:
-    """Récupère les documents avec filtres optionnels."""
+def get_documents(user_id: str = None, chantier_id: str = None, famille: str = None, doc_type: str = None) -> list:
+    """RÃ©cupÃ¨re les documents avec filtres optionnels."""
     client = _client()
     if not client:
         return []
@@ -390,6 +375,8 @@ def get_documents(user_id: str = None, chantier_id: str = None, famille: str = N
             query = query.eq("chantier_id", chantier_id)
         if famille:
             query = query.eq("famille", famille)
+        if doc_type:
+            query = query.eq("type", doc_type)
         result = query.order("created_at", desc=True).execute()
         return result.data or []
     except Exception:
@@ -408,10 +395,10 @@ def delete_document(document_id: str) -> bool:
         return False
 
 
-# ─── Activity Log ───────────────────────────────────────────────────────────
+# âââ Activity Log âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
 def log_activity(action: str, resource_type: str = "", resource_id: str = "", details: dict = None):
-    """Enregistre une action dans le journal d'activité."""
+    """Enregistre une action dans le journal d'activitÃ©."""
     client = _client()
     if not client:
         return
@@ -427,10 +414,10 @@ def log_activity(action: str, resource_type: str = "", resource_id: str = "", de
             "details": details or {},
         }).execute()
     except Exception:
-        pass  # Ne pas bloquer l'app si le logging échoue
+        pass  # Ne pas bloquer l'app si le logging Ã©choue
 
 
-# ─── Aliases pour compatibilité import_manager ─────────────────────────────
+# âââ Aliases pour compatibilitÃ© import_manager âââââââââââââââââââââââââââââ
 create_facture = save_facture
 create_devis = save_devis
 create_etape = save_etape
