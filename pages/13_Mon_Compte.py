@@ -1,6 +1,6 @@
 import streamlit as st
 from lib.helpers import page_setup
-from lib.auth import get_user_profile, update_user_profile
+from lib import db
 
 page_setup()
 user_id = st.session_state.get("user_id")
@@ -10,16 +10,16 @@ if not user_id:
 
 st.markdown("## 👤 Mon Compte")
 
-profile = get_user_profile(user_id) or {}
+profile = db.get_profile(user_id) or {}
 
 st.markdown("### Informations personnelles")
 
 with st.form("profile_form"):
-    display_name = st.text_input("Nom complet", value=profile.get("display_name", ""))
-    company_name = st.text_input("Entreprise", value=profile.get("company_name", ""))
-    siret = st.text_input("SIRET", value=profile.get("siret", ""))
-    phone = st.text_input("Téléphone", value=profile.get("phone", ""))
-    address = st.text_input("Adresse", value=profile.get("address", ""))
+    display_name = st.text_input("Nom complet", value=profile.get("display_name", "") or "")
+    company_name = st.text_input("Entreprise", value=profile.get("company_name", "") or "")
+    siret = st.text_input("SIRET", value=profile.get("siret", "") or "")
+    phone = st.text_input("Téléphone", value=profile.get("phone", "") or "")
+    address = st.text_input("Adresse", value=profile.get("address", "") or "")
     
     submitted = st.form_submit_button("Mettre à jour")
     if submitted:
@@ -30,7 +30,7 @@ with st.form("profile_form"):
             "phone": phone,
             "address": address,
         }
-        if update_user_profile(user_id, updates):
+        if db.update_profile(user_id, updates):
             st.success("Profil mis à jour !")
             st.rerun()
         else:
