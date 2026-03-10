@@ -40,11 +40,13 @@ with st.form("new_facture"):
     if st.form_submit_button("Créer la facture") and numero:
         result = db.save_facture(user_id, chantier["id"], {
             "numero": numero, "montant_ht": montant_ht,
-            "tva": tva, "montant_ttc": montant_ttc,
+            "tva_pct": tva, "tva_montant": round(montant_ht * tva / 100, 2),
+            "montant_ttc": montant_ttc,
+            "client_nom": chantier.get("client_nom", ""),
+            "objet": chantier.get("nom", ""),
             "statut": statut.lower().replace(" ", "_").replace("é", "e"),
-            "date_emission": date_emission.isoformat(),
+            "date_facture": date_emission.isoformat(),
             "date_echeance": date_echeance.isoformat(),
-            "description": description
         })
         if result:
             st.success(f"Facture {numero} créée.")
@@ -59,21 +61,21 @@ if factures:
     
     # KPIs
     total = sum(float(f.get("montant_ttc", 0) or 0) for f in factures)
-    payees = sum(float(f.get("montant_ttc", 0) or 0) for f in factures if f.get("statut") == "payée")
+    payees = sum(float(f.get("montant_ttc", 0) or 0) for f in factures if f.get("statut") in ("payee", "payée"))
     col1, col2, col3 = st.columns(3)
     col1.metric("Total facturé", f"{total:,.2f} €")
     col2.metric("Total payé", f"{payees:,.2f} €")
     col3.metric("Reste à payer", f"{total - payees:,.2f} €")
     
     # Table
-    cols_display = [c for c in ["numero", "montant_ttc", "statut", "date_emission", "date_echeance"] if c in df.columns]
+    cols_display = [c for c in ["numero", "client_nom", "objet", "montant_ttc", "statut", "date_facture", "date_echeance"] if c in df.columns]
     st.dataframe(df[cols_display] if cols_display else df, use_container_width=True)
     
     # Mise à jour statut
     st.subheader("🔄 Mettre à jour un statut")
     facture_options = {f"{f.get('numero', 'N/A')} - {f.get('montant_ttc', 0):,.2f}€": f for f in factures}
     selected = st.selectbox("Facture", list(facture_options.keys()))
-    new_status = st.selectbox("Nouveau statut", ["en_attente", "envoyee", "payée", "en_retard", "annulee"])
+    new_status = st.selectbox("Nouveau statut", ["en_attente", "envoyee", "payee", "en_retard", "annulee"])
     if st.button("Mettre à jour"):
         fac = facture_options[selected]
         db.update_facture(fac["id"], {"statut": new_status})
