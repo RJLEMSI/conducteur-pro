@@ -1,18 +1,19 @@
 import streamlit as st
-import os, json
+import os
 
 st.set_page_config(page_title="ConducteurPro Abonnement", page_icon="\u2b50", layout="wide")
 
 from lib.auth import require_auth, get_plan_display, PLAN_LIMITS
 from lib.db import get_profile
 
-user = require_auth()
-if not user:
+auth = require_auth()
+if not auth:
     st.stop()
 
-profile = get_profile(user.id)
+user_id = st.session_state.get("user_id")
+user_email = st.session_state.get("user_email", "")
+profile = get_profile(user_id)
 current_plan = (profile or {}).get("subscription_plan", "free")
-plan_info = get_plan_display(current_plan)
 
 # --- CSS ---
 st.markdown("""
@@ -59,9 +60,6 @@ st.markdown("""
 }
 .plan-price .period {
     font-size: 16px; font-weight: 400; color: #7f8c8d;
-}
-.plan-price .currency {
-    font-size: 20px; vertical-align: super;
 }
 .feature-list { list-style: none; padding: 0; margin: 20px 0; }
 .feature-list li {
@@ -145,7 +143,7 @@ plans = [
     {
         "key": "team", "name": "Equipe", "icon": "\U0001f680",
         "price": "119,60", "period": "/mois", "popular": False,
-        "subtitle": "Pour les equipes jusqu'a 4",
+        "subtitle": "Pour les equipes jusqu a 4",
         "features": [
             ("\u2713", True, "500 chantiers"),
             ("\u2713", True, "500 Go de stockage"),
@@ -171,8 +169,12 @@ for p in plans:
         cls = "feat-yes" if is_yes else "feat-no"
         features_html += f'<li><span class="{cls}">{icon}</span> {text}</li>'
     
-    price_display = f'{p["price"]}' if p["price"] == "0" else f'{p["price"]}\u20ac'
-    period_display = f'<span class="period">{p["period"]}</span>' if p["period"] else '<span class="period">Gratuit</span>'
+    if p["price"] == "0":
+        price_display = "0"
+        period_display = '<span class="period">Gratuit</span>'
+    else:
+        price_display = f'{p["price"]}\u20ac'
+        period_display = f'<span class="period">{p["period"]}</span>'
     
     cards_html += f"""
     <div class="pricing-card{popular_cls}">
@@ -197,13 +199,12 @@ price_team = os.environ.get("STRIPE_PRICE_TEAM", "")
 
 with col1:
     if current_plan != "free":
-        if st.button("\u2b07\ufe0f  Revenir au gratuit", use_container_width=True):
+        if st.button("Revenir au gratuit", use_container_width=True):
             st.warning("Contactez le support pour reclasser votre abonnement.")
 
 with col2:
     if current_plan != "pro":
-        label = "\u2b50 Passer au Pro - 65,90\u20ac/mois"
-        if st.button(label, use_container_width=True, type="primary"):
+        if st.button("Passer au Pro - 65,90\u20ac/mois", use_container_width=True, type="primary"):
             if stripe_key and price_pro:
                 try:
                     import stripe
@@ -214,8 +215,8 @@ with col2:
                         mode="subscription",
                         success_url="https://deva8r5poktveiufcmdppb.streamlit.app/Abonnement?success=true",
                         cancel_url="https://deva8r5poktveiufcmdppb.streamlit.app/Abonnement?cancel=true",
-                        client_reference_id=str(user.id),
-                        customer_email=user.email,
+                        client_reference_id=str(user_id),
+                        customer_email=user_email,
                     )
                     st.markdown(f'<meta http-equiv="refresh" content="0;url={session.url}">', unsafe_allow_html=True)
                 except Exception as e:
@@ -223,12 +224,11 @@ with col2:
             else:
                 st.info("Paiement Stripe en cours de configuration.")
     else:
-        st.success("\u2713 Vous etes sur le plan Pro")
+        st.success("Vous etes sur le plan Pro")
 
 with col3:
     if current_plan != "team":
-        label = "\U0001f680 Passer a Equipe - 119,60\u20ac/mois"
-        if st.button(label, use_container_width=True):
+        if st.button("Passer a Equipe - 119,60\u20ac/mois", use_container_width=True):
             if stripe_key and price_team:
                 try:
                     import stripe
@@ -239,8 +239,8 @@ with col3:
                         mode="subscription",
                         success_url="https://deva8r5poktveiufcmdppb.streamlit.app/Abonnement?success=true",
                         cancel_url="https://deva8r5poktveiufcmdppb.streamlit.app/Abonnement?cancel=true",
-                        client_reference_id=str(user.id),
-                        customer_email=user.email,
+                        client_reference_id=str(user_id),
+                        customer_email=user_email,
                     )
                     st.markdown(f'<meta http-equiv="refresh" content="0;url={session.url}">', unsafe_allow_html=True)
                 except Exception as e:
@@ -248,13 +248,13 @@ with col3:
             else:
                 st.info("Paiement Stripe en cours de configuration.")
     else:
-        st.success("\u2713 Vous etes sur le plan Equipe")
+        st.success("Vous etes sur le plan Equipe")
 
 # Success / Cancel messages
 params = st.query_params
 if params.get("success"):
     st.balloons()
-    st.success("\U0001f389 Paiement reussi ! Votre abonnement est maintenant actif.")
+    st.success("Paiement reussi ! Votre abonnement est maintenant actif.")
 elif params.get("cancel"):
     st.warning("Paiement annule. Vous pouvez reessayer a tout moment.")
 
@@ -268,7 +268,7 @@ with st.expander("Puis-je changer de formule a tout moment ?"):
 with st.expander("Mes donnees sont-elles en securite ?"):
     st.write("Absolument. Tous vos fichiers sont chiffres (AES-256) et stockes sur des serveurs securises en Europe. Chaque compte est isole et vos donnees ne sont jamais partagees.")
 
-with st.expander("Comment fonctionne la periode d'essai ?"):
+with st.expander("Comment fonctionne la periode d essai ?"):
     st.write("La formule Decouverte est gratuite et sans limite de temps. Vous pouvez tester les fonctionnalites de base avec 3 chantiers avant de passer a un plan payant.")
 
 with st.expander("Quels moyens de paiement acceptez-vous ?"):
