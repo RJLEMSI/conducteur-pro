@@ -61,6 +61,116 @@ GLOBAL_CSS = """
     background: #FFF7ED; border: 1px solid #FCD34D;
     border-radius: 10px; padding: 0.8rem 1rem; margin-bottom: 1rem; font-size: 0.85rem;
 }
+
+    /* ── Metric cards ────────────────────────────── */
+    [data-testid="stMetric"] {
+        background: white;
+        border: 1px solid #e8ecf1;
+        border-radius: 12px;
+        padding: 1rem 1.2rem;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+        transition: all 0.2s ease;
+    }
+    [data-testid="stMetric"]:hover {
+        box-shadow: 0 4px 12px rgba(13,59,110,0.1);
+        transform: translateY(-1px);
+    }
+    [data-testid="stMetricLabel"] {
+        font-size: 0.8rem !important;
+        color: #5a6a7a !important;
+        font-weight: 500 !important;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+    [data-testid="stMetricValue"] {
+        font-size: 1.6rem !important;
+        font-weight: 700 !important;
+        color: #1A2B3C !important;
+    }
+    
+    /* ── DataFrames / Tables ─────────────────────── */
+    [data-testid="stDataFrame"] {
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+    }
+    
+    /* ── Tabs styling ────────────────────────────── */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 0;
+        background: transparent;
+        border-bottom: 2px solid #e8ecf1;
+    }
+    .stTabs [data-baseweb="tab"] {
+        padding: 0.6rem 1.4rem;
+        font-weight: 500;
+        border-radius: 8px 8px 0 0;
+    }
+    .stTabs [aria-selected="true"] {
+        background: white;
+        border-bottom: 2px solid #1B4F8A !important;
+    }
+    
+    /* ── Expanders ───────────────────────────────── */
+    .streamlit-expanderHeader {
+        font-weight: 600 !important;
+        color: #1A2B3C !important;
+        background: #F8FAFC;
+        border-radius: 10px;
+    }
+    
+    /* ── Forms ────────────────────────────────────── */
+    [data-testid="stForm"] {
+        background: white;
+        border: 1px solid #e8ecf1;
+        border-radius: 14px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 6px rgba(0,0,0,0.04);
+    }
+    
+    /* ── Sidebar ──────────────────────────────────── */
+    [data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #F0F4F8 0%, #E8EDF3 100%);
+        border-right: 1px solid #dde3eb;
+    }
+    [data-testid="stSidebarNavLink"] {
+        border-radius: 8px !important;
+        margin: 2px 0 !important;
+        transition: all 0.15s ease !important;
+    }
+    [data-testid="stSidebarNavLink"]:hover {
+        background: rgba(27,79,138,0.08) !important;
+    }
+    [data-testid="stSidebarNavLink"][aria-selected="true"] {
+        background: rgba(27,79,138,0.12) !important;
+        font-weight: 600 !important;
+    }
+    
+    /* ── Select boxes & inputs ────────────────────── */
+    .stSelectbox > div > div, .stTextInput > div > div > input, .stNumberInput > div > div > input {
+        border-radius: 8px !important;
+        border-color: #dde3eb !important;
+    }
+    .stSelectbox > div > div:focus-within, .stTextInput > div > div > input:focus {
+        border-color: #1B4F8A !important;
+        box-shadow: 0 0 0 2px rgba(27,79,138,0.15) !important;
+    }
+    
+    /* ── Toast / notifications ────────────────────── */
+    .stSuccess, .stInfo, .stWarning, .stError {
+        border-radius: 10px !important;
+        font-size: 0.9rem !important;
+    }
+    
+    /* ── Page transitions ─────────────────────────── */
+    .main .block-container {
+        animation: fadeIn 0.3s ease-in;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(5px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
 </style>
 """
 
