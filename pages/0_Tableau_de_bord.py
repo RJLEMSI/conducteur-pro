@@ -37,7 +37,7 @@ with tab1:
     chantiers = stats.get("chantiers", [])
     if chantiers:
         df = pd.DataFrame(chantiers)
-        cols_display = [c for c in ["nom", "client", "statut", "adresse", "created_at"] if c in df.columns]
+        cols_display = [c for c in ["nom", "client_nom", "statut", "adresse", "created_at"] if c in df.columns]
         st.dataframe(df[cols_display] if cols_display else df, use_container_width=True)
         
         # Répartition par statut
@@ -55,7 +55,7 @@ with tab1:
             adresse = st.text_input("Adresse")
             submitted = st.form_submit_button("Créer")
             if submitted and nom:
-                result = db.create_chantier(user_id, {"nom": nom, "client": client, "adresse": adresse, "statut": "en_cours"})
+                result = db.create_chantier(user_id, {"nom": nom, "client_nom": client, "adresse": adresse, "statut": "en_cours"})
                 if result:
                     st.success(f"Chantier '{nom}' créé !")
                     st.rerun()
