@@ -38,7 +38,9 @@ with tab1:
     if chantiers:
         df = pd.DataFrame(chantiers)
         cols_display = [c for c in ["nom", "client_nom", "statut", "adresse", "created_at"] if c in df.columns]
-        st.dataframe(df[cols_display] if cols_display else df, use_container_width=True)
+        df_display = df[cols_display].copy() if cols_display else df.copy()
+        df_display.columns = [{"nom": "Nom", "client_nom": "Client", "statut": "Statut", "adresse": "Adresse", "created_at": "Créé le"}.get(c, c) for c in df_display.columns]
+        st.dataframe(df_display, use_container_width=True)
         
         # Répartition par statut
         if "statut" in df.columns:
@@ -67,7 +69,9 @@ with tab2:
     if devis:
         df = pd.DataFrame(devis)
         cols_display = [c for c in ["titre", "montant_ht", "statut", "created_at"] if c in df.columns]
-        st.dataframe(df[cols_display] if cols_display else df, use_container_width=True)
+        df_display = df[cols_display].copy() if cols_display else df.copy()
+        df_display.columns = [{"titre": "Titre", "montant_ht": "Montant HT", "statut": "Statut", "created_at": "Créé le"}.get(c, c) for c in df_display.columns]
+        st.dataframe(df_display, use_container_width=True)
     else:
         st.info("Aucun devis.")
 
@@ -76,6 +80,8 @@ with tab3:
     if factures:
         df = pd.DataFrame(factures)
         cols_display = [c for c in ["numero", "montant_ttc", "statut", "date_echeance"] if c in df.columns]
-        st.dataframe(df[cols_display] if cols_display else df, use_container_width=True)
+        df_display = df[cols_display].copy() if cols_display else df.copy()
+        df_display.columns = [{"numero": "N°", "montant_ttc": "Montant TTC", "statut": "Statut", "date_echeance": "Échéance"}.get(c, c) for c in df_display.columns]
+        st.dataframe(df_display, use_container_width=True)
     else:
         st.info("Aucune facture.")
