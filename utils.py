@@ -122,6 +122,13 @@ def get_client():
 
 def check_api_key():
     """Vérifie la clé API et affiche un message d'erreur si absente."""
+    # Charger depuis les secrets si pas encore en session
+    if not st.session_state.get("api_key"):
+        try:
+            if st.secrets.get("ANTHROPIC_API_KEY"):
+                st.session_state.api_key = st.secrets["ANTHROPIC_API_KEY"]
+        except Exception:
+            pass
     if not st.session_state.get("api_key"):
         st.markdown("""
         <div class="warning-box">
