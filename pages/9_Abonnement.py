@@ -15,7 +15,7 @@ render_saas_sidebar(user_id)
 st.title("Mon Abonnement")
 
 profile = db.get_profile(user_id)
-current_plan = profile.get("plan", "free") if profile else "free"
+current_plan = profile.get("subscription_plan", "free") if profile else "free"
 plan_info = get_plan_display(current_plan)
 
 # --- Plan actuel ---
