@@ -92,7 +92,7 @@ def render_saas_sidebar(user_id: str):
 #  Slecteur de chantier 
 
 def chantier_selector(key: str = "chantier_select"):
-    """Affiche un slecteur de chantier et retourne le chantier slectionn (dict) ou None."""
+    """Affiche un sélecteur de chantier et retourne le chantier sélectionné (dict) ou None."""
     from lib import db
     
     user_id = get_user_id()
@@ -103,7 +103,16 @@ def chantier_selector(key: str = "chantier_select"):
         return None
     
     # Format options
-    options = {f"{c['nom']}  {c.get('client', 'N/A')}": c for c in chantiers}
+    options = {}
+    for c in chantiers:
+        client_nom = c.get("client_nom", "") or c.get("client", "")
+        ville = c.get("ville", "")
+        label = c["nom"]
+        if client_nom:
+            label += f" — {client_nom}"
+        elif ville:
+            label += f" — {ville}"
+        options[label] = c
     selected_label = st.selectbox(
         " Chantier",
         list(options.keys()),
@@ -113,11 +122,11 @@ def chantier_selector(key: str = "chantier_select"):
     return options.get(selected_label)
 
 
-#  Vrification de fonctionnalits (feature gating) 
+#  Vérification de fonctionnalités (feature gating) 
 
 def require_feature(user_id: str, feature: str):
-    """Vrifie que l'utilisateur a accs  une fonctionnalit selon son plan.
-    Affiche un message d'upgrade et stoppe la page si pas d'accs.
+    """Vérifie que l'utilisateur a accès à une fonctionnalité selon son plan.
+    Affiche un message d'upgrade et stoppe la page si pas d'accès.
     
     Features: 'ai_analysis', 'import_data', 'export_pdf', 'advanced_planning',
               'multi_user', 'priority_support'
