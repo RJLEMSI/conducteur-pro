@@ -32,10 +32,19 @@ with st.form("new_devis"):
     description = st.text_area("Description / Détails")
     
     if st.form_submit_button("Créer le devis") and titre:
+        # Auto-générer le numéro de devis
+        existing = db.get_devis(user_id=user_id)
+        next_num = len(existing) + 1
+        numero = f"DEV-{datetime.now().strftime('%Y')}-{next_num:03d}"
         result = db.save_devis(user_id, chantier["id"], {
-            "titre": titre, "montant_ht": montant_ht,
-            "tva": tva, "montant_ttc": montant_ttc,
-            "statut": statut, "description": description
+            "numero": numero,
+            "objet": titre,
+            "client_nom": chantier.get("client_nom", ""),
+            "montant_ht": montant_ht,
+            "tva_pct": tva,
+            "montant_ttc": montant_ttc,
+            "statut": statut.lower().replace("é", "e"),
+            "date_devis": datetime.now().strftime("%Y-%m-%d"),
         })
         if result:
             st.success(f"Devis '{titre}' créé ({montant_ttc:,.2f} € TTC)")
@@ -75,8 +84,8 @@ st.subheader("📋 Devis existants")
 devis = db.get_devis(chantier_id=chantier["id"])
 if devis:
     for d in devis:
-        status_icon = {"Brouillon": "📝", "Envoyé": "📤", "Accepté": "✅", "Refusé": "❌"}.get(d.get("statut", ""), "📄")
-        with st.expander(f"{status_icon} {d.get('titre', 'N/A')} — {d.get('montant_ttc', 0):,.2f} € TTC"):
+        status_icon = {"brouillon": "📝", "envoye": "📤", "accepte": "✅", "refuse": "❌", "Brouillon": "📝", "Envoyé": "📤", "Accepté": "✅", "Refusé": "❌"}.get(d.get("statut", ""), "📄")
+        with st.expander(f"{status_icon} {d.get('objet', d.get('titre', 'N/A'))} — {d.get('montant_ttc', 0):,.2f} € TTC"):
             st.write(f"**Statut:** {d.get('statut', 'N/A')}")
             st.write(f"**Montant HT:** {d.get('montant_ht', 0):,.2f} €")
             st.write(f"**TVA:** {d.get('tva', 20)}%")
