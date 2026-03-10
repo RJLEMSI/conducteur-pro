@@ -85,7 +85,7 @@ st.markdown("""
 <div class="features-grid">
     <div class="feature-item">
         <div class="icon"></div>
-        <div class="label">Mtrs automatiques</div>
+        <div class="label">Métrés automatiques</div>
     </div>
     <div class="feature-item">
         <div class="icon"></div>
@@ -97,7 +97,7 @@ st.markdown("""
     </div>
     <div class="feature-item">
         <div class="icon"></div>
-        <div class="label">Synthse DCE</div>
+        <div class="label">Synthèse DCE</div>
     </div>
     <div class="feature-item">
         <div class="icon"></div>
@@ -105,7 +105,7 @@ st.markdown("""
     </div>
     <div class="feature-item">
         <div class="icon"></div>
-        <div class="label">Propuls par l'IA</div>
+        <div class="label">Propulsé par l'IA</div>
     </div>
 </div>
 """, unsafe_allow_html=True)
@@ -113,14 +113,14 @@ st.markdown("""
 #  Formulaire connexion / inscription 
 tab_login, tab_register, tab_reset = st.tabs([
     " Se connecter",
-    " Crer un compte",
-    " Mot de passe oubli"
+    " Créer un compte",
+    " Mot de passe oublié"
 ])
 
 #  Connexion 
 with tab_login:
     with st.form("login_form", clear_on_submit=False):
-        st.markdown("#### Connectez-vous  votre compte")
+        st.markdown("#### Connectez-vous à votre compte")
         email = st.text_input("Email", placeholder="votre@email.fr", key="login_email")
         password = st.text_input("Mot de passe", type="password", placeholder="", key="login_pwd")
 
@@ -141,7 +141,7 @@ with tab_login:
 
     st.markdown("""
     <div style="text-align:center;margin-top:1rem;font-size:0.85rem;color:#6B7280;">
-        Pas encore de compte ? Cliquez sur l'onglet <strong>"Crer un compte"</strong> ci-dessus.
+        Pas encore de compte ? Cliquez sur l'onglet <strong>"Créer un compte"</strong> ci-dessus.
     </div>
     """, unsafe_allow_html=True)
 
@@ -168,7 +168,7 @@ with tab_register:
         </div>
         """, unsafe_allow_html=True)
 
-        submitted = st.form_submit_button("Crer mon compte", type="primary", use_container_width=True)
+        submitted = st.form_submit_button("Créer mon compte", type="primary", use_container_width=True)
 
         if submitted:
             if not reg_email or not reg_pwd:
@@ -215,6 +215,6 @@ with tab_reset:
 st.markdown("---")
 st.markdown("""
 <div style="text-align:center;color:#9CA3AF;font-size:0.8rem;">
-    ConducteurPro v3.0  Propuls par Claude AI   2025 ConducteurPro
+    ConducteurPro v3.0  Propulsé par Claude AI   2025 ConducteurPro
 </div>
 """, unsafe_allow_html=True)
