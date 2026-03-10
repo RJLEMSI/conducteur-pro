@@ -1,6 +1,6 @@
 """
-Generateur de factures PDF professionnelles pour ConducteurPro.
-Utilise fpdf2 pour creer des factures pretes a envoyer aux clients.
+Générateur de factures PDF professionnelles pour ConducteurPro.
+Utilise fpdf2 pour créer des factures prêtes à envoyer aux clients.
 """
 import io
 import os
@@ -8,7 +8,7 @@ from datetime import datetime
 from fpdf import FPDF
 
 
-# Chercher la police DejaVu Sans sur le systeme
+# Chercher la police DejaVu Sans sur le système
 FONT_DIR = None
 FONT_PATHS = [
     "/usr/share/fonts/truetype/dejavu",
@@ -22,7 +22,7 @@ for p in FONT_PATHS:
 
 
 class InvoicePDF(FPDF):
-    """PDF de facture professionnelle avec en-tete et pied de page."""
+    """PDF de facture professionnelle avec en-tête et pied de page."""
 
     def __init__(self, company_info: dict = None):
         super().__init__()
@@ -30,21 +30,24 @@ class InvoicePDF(FPDF):
         self.set_auto_page_break(auto=True, margin=25)
 
         # Ajouter police Unicode si disponible
+        self._use_dejavu = False
         if FONT_DIR:
             regular = os.path.join(FONT_DIR, "DejaVuSans.ttf")
             bold = os.path.join(FONT_DIR, "DejaVuSans-Bold.ttf")
             if os.path.isfile(regular):
                 self.add_font("DejaVu", "", regular, uni=True)
+                self._use_dejavu = True
             if os.path.isfile(bold):
                 self.add_font("DejaVu", "B", bold, uni=True)
-            self._use_dejavu = os.path.isfile(regular)
-        else:
-            self._use_dejavu = False
 
     def _font(self, style="", size=10):
         """Set font - utilise DejaVu si disponible, sinon Helvetica."""
         name = "DejaVu" if self._use_dejavu else "Helvetica"
         self.set_font(name, style, size)
+
+    def _euro(self):
+        """Retourne le symbole euro ou EUR selon la police."""
+        return "€" if self._use_dejavu else "EUR"
 
     def header(self):
         # Bandeau bleu en haut
@@ -69,7 +72,7 @@ class InvoicePDF(FPDF):
         if siret:
             self.cell(0, 5, f"SIRET : {siret}", ln=True)
         if phone:
-            self.cell(0, 5, f"Tel : {phone}", ln=True)
+            self.cell(0, 5, f"Tél : {phone}", ln=True)
         if email:
             self.cell(0, 5, f"Email : {email}", ln=True)
         if address:
@@ -84,7 +87,7 @@ class InvoicePDF(FPDF):
         self._font("", 7)
         self.set_text_color(130, 140, 150)
         company_name = self.company.get("company_name") or "ConducteurPro"
-        self.cell(0, 4, f"{company_name} - Document genere automatiquement", align="C", ln=True)
+        self.cell(0, 4, f"{company_name} - Document généré automatiquement", align="C", ln=True)
         self.cell(0, 4, f"Page {self.page_no()}/{{nb}}", align="C")
 
 
@@ -95,7 +98,7 @@ def generate_invoice_pdf(
     chantier_info: dict = None,
     lignes: list = None,
 ) -> bytes:
-    """Genere un PDF de facture professionnelle et retourne les bytes."""
+    """Génère un PDF de facture professionnelle et retourne les bytes."""
     if company_info is None:
         company_info = {}
     if client_info is None:
@@ -105,12 +108,8 @@ def generate_invoice_pdf(
     if lignes is None:
         lignes = []
 
-    # Symbole monnaie - utilise EUR si pas de police Unicode
-    euro = "EUR"
-    if FONT_DIR:
-        euro = "\u20ac"
-
     pdf = InvoicePDF(company_info=company_info)
+    euro = pdf._euro()
     pdf.alias_nb_pages()
     pdf.add_page()
 
@@ -119,11 +118,11 @@ def generate_invoice_pdf(
     pdf.set_text_color(27, 79, 138)
     pdf.cell(0, 10, "FACTURE", ln=True)
 
-    # Numero et dates
+    # Numéro et dates
     pdf._font("B", 11)
     pdf.set_text_color(40, 50, 60)
     numero = facture.get("numero", "N/A")
-    pdf.cell(0, 7, f"N. {numero}", ln=True)
+    pdf.cell(0, 7, f"N° {numero}", ln=True)
 
     pdf._font("", 10)
     pdf.set_text_color(80, 90, 100)
@@ -131,7 +130,7 @@ def generate_invoice_pdf(
     date_echeance = facture.get("date_echeance", "")
     pdf.cell(0, 6, f"Date : {date_facture}", ln=True)
     if date_echeance:
-        pdf.cell(0, 6, f"Echeance : {date_echeance}", ln=True)
+        pdf.cell(0, 6, f"Échéance : {date_echeance}", ln=True)
     pdf.ln(6)
 
     # BLOC CLIENT
@@ -144,7 +143,7 @@ def generate_invoice_pdf(
     pdf.set_xy(114, y_start + 3)
     pdf._font("B", 10)
     pdf.set_text_color(27, 79, 138)
-    pdf.cell(0, 5, "FACTURER A :", ln=True)
+    pdf.cell(0, 5, "FACTURER à :", ln=True)
 
     pdf.set_x(114)
     pdf._font("B", 10)
@@ -168,7 +167,7 @@ def generate_invoice_pdf(
     if client_tel:
         pdf.cell(0, 5, client_tel, ln=True)
 
-    # Chantier reference
+    # Référence chantier
     pdf.set_y(y_start + 40)
     chantier_nom = chantier_info.get("nom", "")
     if chantier_nom:
@@ -182,12 +181,11 @@ def generate_invoice_pdf(
     pdf.ln(8)
 
     # TABLEAU DES PRESTATIONS
-    # En-tete tableau
     pdf.set_fill_color(27, 79, 138)
     pdf.set_text_color(255, 255, 255)
     pdf._font("B", 9)
     col_widths = [90, 20, 35, 45]
-    headers_txt = ["Description", "Qte", "Prix unit. HT", "Montant HT"]
+    headers_txt = ["Description", "Qté", "Prix unit. HT", "Montant HT"]
     for i, h in enumerate(headers_txt):
         pdf.cell(col_widths[i], 8, h, border=0, fill=True, align="C" if i > 0 else "L")
     pdf.ln()
@@ -214,7 +212,6 @@ def generate_invoice_pdf(
             pdf.ln()
             fill = not fill
     else:
-        # Ligne unique avec le montant total
         montant_ht = float(facture.get("montant_ht", 0))
         objet_line = facture.get("objet", "Prestation")
         pdf.set_fill_color(255, 255, 255)
@@ -224,7 +221,7 @@ def generate_invoice_pdf(
         pdf.cell(col_widths[3], 7, f"{montant_ht:,.2f} {euro}", fill=True, align="R")
         pdf.ln()
 
-    # Ligne separatrice
+    # Ligne séparatrice
     pdf.set_draw_color(27, 79, 138)
     pdf.line(10, pdf.get_y(), 200, pdf.get_y())
     pdf.ln(4)
@@ -270,10 +267,10 @@ def generate_invoice_pdf(
     if date_echeance:
         pdf.cell(0, 5, f"Paiement attendu avant le {date_echeance}.", ln=True)
     else:
-        pdf.cell(0, 5, "Paiement a 30 jours a compter de la date de facturation.", ln=True)
+        pdf.cell(0, 5, "Paiement à 30 jours à compter de la date de facturation.", ln=True)
 
-    pdf.cell(0, 5, "En cas de retard, des penalites de 3 fois le taux d'interet legal seront appliquees.", ln=True)
-    pdf.cell(0, 5, f"Indemnite forfaitaire de recouvrement : 40,00 {euro}.", ln=True)
+    pdf.cell(0, 5, f"En cas de retard, des pénalités de 3 fois le taux d'intérêt légal seront appliquées.", ln=True)
+    pdf.cell(0, 5, f"Indemnité forfaitaire de recouvrement : 40,00 {euro}.", ln=True)
 
     pdf.ln(8)
 
@@ -283,7 +280,7 @@ def generate_invoice_pdf(
     if tva_pct == 0:
         pdf.cell(0, 4, "TVA non applicable, art. 293 B du CGI", ln=True)
     else:
-        pdf.cell(0, 4, f"TVA a {tva_pct:.1f}% incluse dans le montant TTC.", ln=True)
+        pdf.cell(0, 4, f"TVA à {tva_pct:.1f}% incluse dans le montant TTC.", ln=True)
 
     # Return PDF bytes
     return pdf.output()
