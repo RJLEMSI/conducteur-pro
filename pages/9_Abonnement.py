@@ -8,32 +8,32 @@ from lib import db
 from lib.auth import get_plan_display, PLAN_LIMITS
 from utils import GLOBAL_CSS
 
-user_id = page_setup(title="Abonnement", icon="💳")
+user_id = page_setup(title="Abonnement", icon="ð³")
 st.markdown(GLOBAL_CSS, unsafe_allow_html=True)
 render_saas_sidebar(user_id)
 
-st.title("💳 Mon Abonnement")
+st.title("ð³ Mon Abonnement")
 
 profile = db.get_profile(user_id)
 current_plan = profile.get("plan", "free") if profile else "free"
 plan_info = get_plan_display(current_plan)
 
-# ─── Plan actuel ──────────────────────────────────────────────────────────────
+# âââ Plan actuel ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 st.subheader(f"{plan_info['icon']} Plan actuel: {plan_info['name']}")
 st.markdown(f"**Prix:** {plan_info['price']}")
-st.markdown("**Fonctionnalités incluses:**")
+st.markdown("**FonctionnalitÃ©s incluses:**")
 for f in plan_info["features"]:
-    st.markdown(f"- ✅ {f}")
+    st.markdown(f"- â {f}")
 
 st.markdown("---")
 
-# ─── Changer de plan ──────────────────────────────────────────────────────────
-st.subheader("🔄 Changer de plan")
+# âââ Changer de plan ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+st.subheader("ð Changer de plan")
 
-col1, col2, col3 = st.columns(3)
+col1, col2 = st.columns(2)
 
-plans = ["free", "pro", "team"]
-for i, (col, plan_key) in enumerate(zip([col1, col2, col3], plans)):
+plans = ["free", "pro"]
+for i, (col, plan_key) in enumerate(zip([col1, col2], plans)):
     info = get_plan_display(plan_key)
     with col:
         is_current = plan_key == current_plan
@@ -43,10 +43,10 @@ for i, (col, plan_key) in enumerate(zip([col1, col2, col3], plans)):
             st.markdown(f"- {feat}")
         
         if is_current:
-            st.success("✅ Plan actuel")
+            st.success("â Plan actuel")
         elif plan_key == "free":
-            if st.button("Rétrograder", key=f"plan_{plan_key}"):
-                st.warning("Contactez le support pour rétrograder.")
+            if st.button("RÃ©trograder", key=f"plan_{plan_key}"):
+                st.warning("Contactez le support pour rÃ©trograder.")
         else:
             if st.button(f"Passer au plan {info['name']}", key=f"plan_{plan_key}", type="primary"):
                 try:
@@ -67,13 +67,13 @@ for i, (col, plan_key) in enumerate(zip([col1, col2, col3], plans)):
                         metadata={"user_id": user_id, "plan": plan_key},
                         customer_email=profile.get("email", "") if profile else "",
                     )
-                    st.markdown(f"[🔗 Procéder au paiement]({session.url})")
+                    st.markdown(f"[ð ProcÃ©der au paiement]({session.url})")
                 except Exception as e:
                     st.error(f"Erreur Stripe: {e}")
 
-# ─── Historique ───────────────────────────────────────────────────────────────
+# âââ Historique âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 st.markdown("---")
-st.subheader("📜 Historique")
+st.subheader("ð Historique")
 sub = db.get_subscription(user_id)
 if sub:
     st.json(sub)
