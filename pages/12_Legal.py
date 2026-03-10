@@ -8,7 +8,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import streamlit as st
 from utils import GLOBAL_CSS
 
-# st.set_page_config gere par app.py
+# st.set_page_config géré par app.py
 st.markdown(GLOBAL_CSS, unsafe_allow_html=True)
 
 st.title("\u2696\ufe0f Informations Légales")
