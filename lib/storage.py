@@ -16,10 +16,10 @@ BUCKET_NAME = "conducteurpro-files"
 
 FAMILLE_FOLDERS = {
     "Plans": "plans",
-    "M�tr�s": "metres",
+    "Métrés": "metres",
     "Devis": "devis",
     "Documents techniques": "documents_techniques",
-    "�tudes": "etudes",
+    "Études": "etudes",
     "Factures": "factures",
     "Contrats": "contrats",
 }
@@ -29,23 +29,23 @@ FAMILLE_FOLDERS = {
 
 def _get_encryption_key() -> bytes:
     """
-    R�cup�re ou g�n�re la cl� de chiffrement depuis les secrets Streamlit.
-    Chaque d�ploiement utilise une cl� fixe pour pouvoir d�chiffrer les fichiers.
+    Récupère ou génère la clé de chiffrement depuis les secrets Streamlit.
+    Chaque déploiement utilise une clé fixe pour pouvoir déchiffrer les fichiers.
     """
     key = st.secrets.get("ENCRYPTION_KEY", "")
     if key:
         return key.encode()
-    # Fallback : g�n�rer une cl� d�terministe bas�e sur la cl� Supabase
+    # Fallback : générer une clé déterministe basée sur la clé Supabase
     seed = st.secrets.get("SUPABASE_SERVICE_KEY", "default-seed-key")
-    return Fernet.generate_key()  # En prod, utiliser une cl� fixe dans secrets
+    return Fernet.generate_key()  # En prod, utiliser une clé fixe dans secrets
 
 
 def encrypt_bytes(data: bytes) -> bytes:
-    """Chiffre des donn�es avec Fernet (AES-256)."""
+    """Chiffre des données avec Fernet (AES-256)."""
     try:
         key = st.secrets.get("ENCRYPTION_KEY", "")
         if not key:
-            return data  # Pas de chiffrement si pas de cl�
+            return data  # Pas de chiffrement si pas de clé
         f = Fernet(key.encode())
         return f.encrypt(data)
     except Exception:
@@ -53,7 +53,7 @@ def encrypt_bytes(data: bytes) -> bytes:
 
 
 def decrypt_bytes(data: bytes) -> bytes:
-    """D�chiffre des donn�es avec Fernet (AES-256)."""
+    """Déchiffre des données avec Fernet (AES-256)."""
     try:
         key = st.secrets.get("ENCRYPTION_KEY", "")
         if not key:
@@ -80,33 +80,33 @@ def upload_file(
     chantier_id: str,
     famille: str,
     doc_type: str = "",
-    statut: str = "Valid�",
+    statut: str = "Validé",
     metadata: dict = None,
     encrypt: bool = True,
 ) -> dict:
     """
-    Upload un fichier dans Supabase Storage et cr�e l'enregistrement document.
+    Upload un fichier dans Supabase Storage et crée l'enregistrement document.
 
     Args:
         file_bytes: Contenu du fichier en bytes
         filename: Nom du fichier
-        chantier_id: ID du chantier associ�
-        famille: Famille de document (Plans, M�tr�s, Devis, etc.)
-        doc_type: Type sp�cifique (ex: "Plan d'ex�cution")
+        chantier_id: ID du chantier associé
+        famille: Famille de document (Plans, Métrés, Devis, etc.)
+        doc_type: Type spécifique (ex: "Plan d'exécution")
         statut: Statut du document
-        metadata: M�tadonn�es suppl�mentaires (JSONB)
+        metadata: Métadonnées supplémentaires (JSONB)
         encrypt: Chiffrer le fichier avant upload
 
     Returns:
-        dict: Enregistrement du document cr��, ou {} en cas d'erreur
+        dict: Enregistrement du document créé, ou {} en cas d'erreur
     """
     client = get_supabase_client()
     uid = st.session_state.get("user_id")
     if not client or not uid:
-        st.error("Non connect�. Impossible d'uploader le fichier.")
+        st.error("Non connecté. Impossible d'uploader le fichier.")
         return {}
 
-    # Chiffrer si demand�
+    # Chiffrer si demandé
     data_to_upload = encrypt_bytes(file_bytes) if encrypt else file_bytes
     is_encrypted = encrypt and bool(st.secrets.get("ENCRYPTION_KEY", ""))
 
@@ -116,7 +116,7 @@ def upload_file(
     # Calculer le hash
     file_hash = hashlib.sha256(file_bytes).hexdigest()
 
-    # D�terminer le content-type
+    # Déterminer le content-type
     ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
     content_types = {
         "pdf": "application/pdf",
@@ -138,7 +138,7 @@ def upload_file(
             file_options={"content-type": content_type}
         )
 
-        # Cr�er l'enregistrement document en DB
+        # Créer l'enregistrement document en DB
         doc_record = create_document({
             "chantier_id": chantier_id,
             "nom": filename,
@@ -152,7 +152,7 @@ def upload_file(
             "metadata": metadata or {},
         })
 
-        # Logger l'activit�
+        # Logger l'activité
         log_activity(
             action="document_uploaded",
             resource_type="document",
@@ -176,8 +176,8 @@ def upload_generated_document(
     metadata: dict = None,
 ) -> dict:
     """
-    Stocke un document G�N�R� par l'application (devis PDF, facture PDF, etc.).
-    M�me logique que upload_file mais avec statut "G�n�r�" et log sp�cifique.
+    Stocke un document GéNéRé par l'application (devis PDF, facture PDF, etc.).
+    Méme logique que upload_file mais avec statut "Généré" et log spécifique.
     """
     doc = upload_file(
         file_bytes=file_bytes,
@@ -185,7 +185,7 @@ def upload_generated_document(
         chantier_id=chantier_id,
         famille=famille,
         doc_type=doc_type,
-        statut="Valid�",
+        statut="Validé",
         metadata=metadata or {"generated": True, "generated_at": datetime.now().isoformat()},
     )
 
@@ -204,8 +204,8 @@ def upload_generated_document(
 
 def get_signed_url(storage_path: str, expires_in: int = 900) -> str:
     """
-    G�n�re une URL sign�e temporaire pour acc�der � un fichier.
-    Expire apr�s 15 minutes par d�faut.
+    Génére une URL signée temporaire pour accéder é un fichier.
+    Expire aprés 15 minutes par défaut.
     """
     client = get_supabase_client()
     if not client or not storage_path:
@@ -220,8 +220,8 @@ def get_signed_url(storage_path: str, expires_in: int = 900) -> str:
 
 def download_file(storage_path: str, is_encrypted: bool = False) -> bytes:
     """
-    T�l�charge un fichier depuis Supabase Storage.
-    D�chiffre si n�cessaire.
+    Télécharge un fichier depuis Supabase Storage.
+    Déchiffre si nécessaire.
     """
     client = get_supabase_client()
     if not client or not storage_path:
@@ -254,7 +254,7 @@ def delete_file(storage_path: str) -> bool:
 #  Utilitaires 
 
 def get_storage_usage() -> dict:
-    """Calcule l'espace de stockage utilis� par l'utilisateur courant."""
+    """Calcule l'espace de stockage utilisé par l'utilisateur courant."""
     from lib.db import get_documents
     docs = get_documents(limit=5000)
     total_bytes = sum(d.get("file_size_bytes", 0) or 0 for d in docs)
