@@ -1,5 +1,5 @@
 """
-Page 11 — Gestion Documentaire
+Page 11 - Gestion Documentaire
 Upload, téléchargement et organisation des documents par chantier.
 """
 import sys, os
@@ -12,25 +12,41 @@ from lib.helpers import page_setup, render_saas_sidebar, chantier_selector
 from lib import db, storage
 from utils import GLOBAL_CSS
 
-page_setup(title="Documents", icon="📁")
+page_setup(title="Documents", icon="\U0001f4c1")
 st.markdown(GLOBAL_CSS, unsafe_allow_html=True)
 user_id = st.session_state.get("user_id")
 render_saas_sidebar(user_id)
 
-st.title("📁 Gestion Documentaire")
+st.title("\U0001f4c1 Gestion Documentaire")
 
 chantier = chantier_selector(key="doc_chantier")
 if not chantier:
     st.stop()
 
-# ─── Upload ─────────────────────────────────────────────────────────────────
-st.subheader("📤 Importer un document")
-doc_type = st.selectbox("Type de document", ["Plan", "DCE", "Devis", "Facture", "Étude", "Contrat", "PV", "Photo", "Autre"], key="doc_type_upload")
-uploaded = st.file_uploader("Fichier", type=["pdf", "docx", "xlsx", "csv", "png", "jpg", "txt"], key="doc_upload")
+# --- Upload ---
+st.subheader("\U0001f4e4 Importer des documents")
+doc_type = st.selectbox(
+    "Type de document",
+    ["Plan", "DCE", "Devis", "Facture", "Étude", "Contrat", "PV", "Photo", "Autre"],
+    key="doc_type_upload",
+)
+uploaded_files = st.file_uploader(
+    "Fichiers",
+    type=["pdf", "docx", "xlsx", "csv", "png", "jpg", "jpeg", "txt"],
+    accept_multiple_files=True,
+    key="doc_upload",
+    help="Sélectionnez un ou plusieurs fichiers à importer",
+)
 
-if uploaded:
-    if st.button("📤 Uploader", type="primary"):
-        with st.spinner("Upload en cours..."):
+if uploaded_files:
+    nb = len(uploaded_files)
+    st.info(f"\U0001f4ce {nb} fichier{'s' if nb > 1 else ''} sélectionné{'s' if nb > 1 else ''}")
+    if st.button(f"\U0001f4e4 Uploader {nb} fichier{'s' if nb > 1 else ''}", type="primary"):
+        progress = st.progress(0, text="Upload en cours...")
+        success_count = 0
+        error_count = 0
+        for i, uploaded in enumerate(uploaded_files):
+            progress.progress((i) / nb, text=f"Upload de {uploaded.name}...")
             try:
                 file_result = storage.upload_file(
                     file_bytes=uploaded.getvalue(),
@@ -40,34 +56,40 @@ if uploaded:
                     doc_type=doc_type.lower(),
                 )
                 if file_result:
-                    st.success(f"✅ Document '{uploaded.name}' uploadé avec succès.")
-                    st.rerun()
+                    success_count += 1
                 else:
-                    st.error("Erreur lors de l'upload. Vérifiez que le stockage est configuré.")
+                    error_count += 1
+                    st.warning(f"\u26a0\ufe0f Échec pour '{uploaded.name}'")
             except Exception as e:
-                st.error(f"Erreur : {str(e)[:100]}")
+                error_count += 1
+                st.error(f"Erreur pour '{uploaded.name}' : {str(e)[:100]}")
+        progress.progress(1.0, text="Terminé !")
+        if success_count > 0:
+            st.success(f"\u2705 {success_count} fichier{'s' if success_count > 1 else ''} uploadé{'s' if success_count > 1 else ''} avec succès.")
+        if error_count > 0:
+            st.error(f"{error_count} fichier{'s' if error_count > 1 else ''} en erreur.")
+        st.rerun()
 
-# ─── Documents existants ────────────────────────────────────────────────────
+# --- Documents existants ---
 st.markdown("---")
-st.subheader("📋 Documents du chantier")
+st.subheader("\U0001f4cb Documents du chantier")
 
-# Filtres
+docs = db.get_documents(user_id=user_id, chantier_id=chantier["id"])
+
 filter_type = st.selectbox("Filtrer par type", ["Tous", "Plan", "DCE", "Devis", "Facture", "Étude", "Contrat", "PV", "Photo", "Autre"], key="doc_filter")
-
-docs = db.get_documents(chantier_id=chantier["id"])
 if filter_type != "Tous":
     docs = [d for d in docs if d.get("type", d.get("famille", "")) == filter_type]
 
 if docs:
     total_size = sum(d.get("taille", d.get("file_size_bytes", 0)) or 0 for d in docs)
     size_display = f"{total_size / 1024 / 1024:.1f} Mo" if total_size > 1024 * 1024 else f"{total_size / 1024:.0f} Ko"
-    st.info(f"📊 {len(docs)} documents — {size_display}")
+    st.info(f"\U0001f4c2 {len(docs)} documents - {size_display}")
 
-    ICONS = {"Plan": "📐", "DCE": "📋", "Devis": "💰", "Facture": "🧾", "Étude": "📝", "Contrat": "📄", "PV": "📝", "Photo": "📷"}
+    ICONS = {"Plan": "\U0001f4d0", "DCE": "\U0001f4d1", "Devis": "\U0001f4b0", "Facture": "\U0001f9fe", "Étude": "\U0001f4d6", "Contrat": "\U0001f4dc", "PV": "\U0001f4dd", "Photo": "\U0001f4f7"}
 
     for doc in docs:
         doc_famille = doc.get("type", doc.get("famille", "Autre"))
-        icon = ICONS.get(doc_famille, "📄")
+        icon = ICONS.get(doc_famille, "\U0001f4c4")
         nom = doc.get("nom", doc.get("filename", "N/A"))
         taille = doc.get("taille", doc.get("file_size_bytes", 0)) or 0
         taille_str = f"{taille / 1024:.0f} Ko" if taille < 1024 * 1024 else f"{taille / 1024 / 1024:.1f} Mo"
@@ -75,39 +97,46 @@ if docs:
 
         col1, col2, col3 = st.columns([4, 2, 1])
         col1.markdown(f"{icon} **{nom}**")
-        col2.caption(f"{doc_famille} — {taille_str} — {date}")
+        col2.caption(f"{doc_famille} - {taille_str} - {date}")
 
         # Téléchargement
         storage_path = doc.get("storage_path", "")
-        if storage_path and col3.button("📥", key=f"dl_{doc.get('id', '')}", help="Télécharger"):
+        if storage_path and col3.button("\U0001f4e5", key=f"dl_{doc.get('id', '')}", help="Télécharger"):
             try:
                 url = storage.get_signed_url(storage_path)
                 if url:
-                    st.markdown(f"[🔗 Télécharger le document]({url})")
+                    st.markdown(f"[\U0001f4e5 Télécharger le document]({url})")
                 else:
-                    st.warning("Fichier non disponible dans le stockage.")
-            except Exception:
-                st.warning("Erreur lors de la génération du lien.")
+                    st.warning("Impossible de générer le lien.")
+            except Exception as e:
+                st.error(f"Erreur : {str(e)[:100]}")
 else:
-    hint = " Essayez de modifier le filtre." if filter_type != "Tous" else ""
-    st.info(f"Aucun document pour ce chantier.{hint}")
+    st.warning("Aucun document pour ce chantier.")
 
-# ─── Usage stockage ───────────────────────────────────────────────────────
+# --- Utilisation stockage ---
 st.markdown("---")
-st.subheader("💾 Utilisation du stockage")
-try:
-    usage = storage.get_storage_usage(user_id)
-    if usage:
-        plan = (db.get_profile(user_id) or {}).get("subscription_plan", "free")
-        limit_mb = {"free": 50, "pro": 5120, "team": 20480}.get(plan, 50)
-        used_mb = usage.get("total_bytes", 0) / 1024 / 1024
-        pct = min(used_mb / limit_mb, 1.0) if limit_mb > 0 else 0
+st.subheader("\U0001f4be Utilisation du stockage")
 
-        c1, c2 = st.columns(2)
-        c1.metric("📂 Documents", usage.get("nb_documents", 0))
-        c2.metric("💾 Espace utilisé", f"{used_mb:.1f} Mo / {limit_mb} Mo")
-        st.progress(pct, text=f"{used_mb:.1f} Mo utilisés sur {limit_mb} Mo ({pct*100:.0f}%)")
-    else:
-        st.info("Aucune donnée de stockage disponible.")
+try:
+    usage = storage.get_storage_usage(user_id=user_id)
+    total_docs = usage.get("total_documents", 0)
+    total_bytes = usage.get("total_size_bytes", 0)
+    total_mb = total_bytes / 1024 / 1024
+
+    profile = db.get_user_profile(user_id) or {}
+    plan = profile.get("subscription_plan", "free")
+    limits = {"free": 1024, "pro": 5120, "team": 20480}
+    limit_mb = limits.get(plan, 1024)
+
+    c1, c2 = st.columns(2)
+    c1.metric("\U0001f4c1 DOCUMENTS", total_docs)
+    c2.metric("\U0001f4be ESPACE UTILISÉ", f"{total_mb:.1f} Mo / {limit_mb} Mo")
+
+    pct = min(total_mb / limit_mb, 1.0) if limit_mb > 0 else 0
+    st.progress(pct)
+    st.caption(f"{total_mb:.1f} Mo utilisés sur {limit_mb} Mo ({pct*100:.0f}%)")
+
+    if pct > 0.9:
+        st.warning("\u26a0\ufe0f Stockage presque plein ! Pensez à mettre à niveau votre abonnement.")
 except Exception as e:
-    st.warning(f"Impossible de charger les statistiques de stockage : {str(e)[:80]}")
+    st.info("Utilisation du stockage non disponible.")
