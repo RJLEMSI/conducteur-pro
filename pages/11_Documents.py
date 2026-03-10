@@ -1,6 +1,6 @@
 """
 Page 11 - Gestion Documentaire
-Upload, tÃÂ©lÃÂ©chargement et organisation des documents par chantier.
+Upload, téléchargement et organisation des documents par chantier.
 Classification automatique intelligente des documents.
 """
 import sys, os
@@ -26,7 +26,7 @@ if not chantier:
 
 
 # --- Classification automatique ---
-CATEGORIES = ["Plan", "DCE", "Devis", "Facture", "ÃÂtude", "Contrat", "PV", "Photo", "MÃÂ©trÃÂ©", "Autre"]
+CATEGORIES = ["Plan", "DCE", "Devis", "Facture", "Étude", "Contrat", "PV", "Photo", "Métré", "Autre"]
 
 KEYWORD_MAP = {
     "devis": "Devis",
@@ -51,16 +51,16 @@ KEYWORD_MAP = {
     "rc": "DCE",
     "reglement": "DCE",
     "bpu": "DCE",
-    "etude": "ÃÂtude",
-    "etudes": "ÃÂtude",
-    "rapport": "ÃÂtude",
-    "diagnostic": "ÃÂtude",
-    "analyse": "ÃÂtude",
-    "thermique": "ÃÂtude",
-    "acoustique": "ÃÂtude",
-    "geotechnique": "ÃÂtude",
-    "beton": "ÃÂtude",
-    "structure": "ÃÂtude",
+    "etude": "Étude",
+    "etudes": "Étude",
+    "rapport": "Étude",
+    "diagnostic": "Étude",
+    "analyse": "Étude",
+    "thermique": "Étude",
+    "acoustique": "Étude",
+    "geotechnique": "Étude",
+    "beton": "Étude",
+    "structure": "Étude",
     "contrat": "Contrat",
     "marche": "Contrat",
     "avenant": "Contrat",
@@ -75,12 +75,12 @@ KEYWORD_MAP = {
     "reunion": "PV",
     "reception": "PV",
     "ope": "PV",
-    "metre": "MÃÂ©trÃÂ©",
-    "metr": "MÃÂ©trÃÂ©",
-    "quantitatif": "MÃÂ©trÃÂ©",
-    "quantite": "MÃÂ©trÃÂ©",
-    "dqe": "MÃÂ©trÃÂ©",
-    "bordereau": "MÃÂ©trÃÂ©",
+    "metre": "Métré",
+    "metr": "Métré",
+    "quantitatif": "Métré",
+    "quantite": "Métré",
+    "dqe": "Métré",
+    "bordereau": "Métré",
     "photo": "Photo",
     "img": "Photo",
     "image": "Photo",
@@ -100,7 +100,7 @@ def classify_file(filename: str) -> str:
 
     # 1. Images -> Photo
     if ext in IMAGE_EXTENSIONS:
-        # Sauf si le nom contient un mot-clÃÂ© spÃÂ©cifique
+        # Sauf si le nom contient un mot-clé spécifique
         for kw, cat in KEYWORD_MAP.items():
             if kw in name_lower and cat != "Photo":
                 return cat
@@ -110,7 +110,7 @@ def classify_file(filename: str) -> str:
     if ext in PLAN_EXTENSIONS:
         return "Plan"
 
-    # 3. Recherche par mots-clÃÂ©s dans le nom
+    # 3. Recherche par mots-clés dans le nom
     # Nettoyer le nom : retirer extension, remplacer separateurs
     name_clean = name_lower.replace(ext, "")
     name_clean = name_clean.replace("-", " ").replace("_", " ").replace(".", " ")
@@ -129,7 +129,7 @@ st.subheader("\U0001f4e4 Importer des documents")
 auto_classify = st.toggle(
     "\U0001f916 Classification automatique",
     value=True,
-    help="Quand activÃÂ©, les documents sont automatiquement classÃÂ©s (Devis, Facture, Plan, ÃÂtude, MÃÂ©trÃÂ©...) selon leur nom de fichier.",
+    help="Quand activé, les documents sont automatiquement classés (Devis, Facture, Plan, Étude, Métré...) selon leur nom de fichier.",
 )
 
 if not auto_classify:
@@ -144,30 +144,30 @@ uploaded_files = st.file_uploader(
     type=["pdf", "docx", "xlsx", "csv", "png", "jpg", "jpeg", "txt", "dwg", "dxf", "zip"],
     accept_multiple_files=True,
     key="doc_upload",
-    help="Glissez-dÃÂ©posez tous vos fichiers d'un coup. La classification se fait automatiquement.",
+    help="Glissez-déposez tous vos fichiers d'un coup. La classification se fait automatiquement.",
 )
 
 if uploaded_files:
     nb = len(uploaded_files)
 
     if auto_classify:
-        # Classifier chaque fichier et afficher un aperÃÂªu
+        # Classifier chaque fichier et afficher un aperêu
         classifications = {}
         for f in uploaded_files:
             cat = classify_file(f.name)
             classifications[f.name] = cat
 
-        # Grouper par catÃÂ©gorie pour l'aperÃÂªu
+        # Grouper par catégorie pour l'aperêu
         by_cat = {}
         for fname, cat in classifications.items():
             by_cat.setdefault(cat, []).append(fname)
 
-        st.markdown(f"**\U0001f4ce {nb} fichier{'s' if nb > 1 else ''} dÃÂ©tectÃÂ©{'s' if nb > 1 else ''} :**")
+        st.markdown(f"**\U0001f4ce {nb} fichier{'s' if nb > 1 else ''} détecté{'s' if nb > 1 else ''} :**")
 
         CAT_ICONS = {
             "Plan": "\U0001f4d0", "DCE": "\U0001f4d1", "Devis": "\U0001f4b0",
-            "Facture": "\U0001f9fe", "ÃÂtude": "\U0001f4d6", "Contrat": "\U0001f4dc",
-            "PV": "\U0001f4dd", "Photo": "\U0001f4f7", "MÃÂ©trÃÂ©": "\U0001f4cf",
+            "Facture": "\U0001f9fe", "Étude": "\U0001f4d6", "Contrat": "\U0001f4dc",
+            "PV": "\U0001f4dd", "Photo": "\U0001f4f7", "Métré": "\U0001f4cf",
             "Autre": "\U0001f4c4",
         }
 
@@ -210,19 +210,19 @@ if uploaded_files:
                         success_count += 1
                     else:
                         error_count += 1
-                        st.warning(f"\u26a0\ufe0f ÃÂchec pour '{uploaded.name}'")
+                        st.warning(f"\u26a0\ufe0f Échec pour '{uploaded.name}'")
                 except Exception as e:
                     error_count += 1
                     st.error(f"Erreur pour '{uploaded.name}' : {str(e)[:100]}")
-            progress.progress(1.0, text="TerminÃÂ© !")
+            progress.progress(1.0, text="Terminé !")
             if success_count > 0:
-                st.success(f"\u2705 {success_count} fichier{'s' if success_count > 1 else ''} classÃÂ©{'s' if success_count > 1 else ''} et uploadÃÂ©{'s' if success_count > 1 else ''} avec succÃÂ¨s !")
+                st.success(f"\u2705 {success_count} fichier{'s' if success_count > 1 else ''} classé{'s' if success_count > 1 else ''} et uploadé{'s' if success_count > 1 else ''} avec succès !")
             if error_count > 0:
                 st.error(f"{error_count} fichier{'s' if error_count > 1 else ''} en erreur.")
             st.rerun()
     else:
         # Mode manuel - un seul type pour tous les fichiers
-        st.info(f"\U0001f4ce {nb} fichier{'s' if nb > 1 else ''} sÃÂ©lectionnÃÂ©{'s' if nb > 1 else ''} -> {doc_type}")
+        st.info(f"\U0001f4ce {nb} fichier{'s' if nb > 1 else ''} sélectionné{'s' if nb > 1 else ''} -> {doc_type}")
         if st.button(f"\U0001f4e4 Uploader {nb} fichier{'s' if nb > 1 else ''}", type="primary"):
             progress = st.progress(0, text="Upload en cours...")
             success_count = 0
@@ -241,13 +241,13 @@ if uploaded_files:
                         success_count += 1
                     else:
                         error_count += 1
-                        st.warning(f"\u26a0\ufe0f ÃÂchec pour '{uploaded.name}'")
+                        st.warning(f"\u26a0\ufe0f Échec pour '{uploaded.name}'")
                 except Exception as e:
                     error_count += 1
                     st.error(f"Erreur pour '{uploaded.name}' : {str(e)[:100]}")
-            progress.progress(1.0, text="TerminÃÂ© !")
+            progress.progress(1.0, text="Terminé !")
             if success_count > 0:
-                st.success(f"\u2705 {success_count} fichier{'s' if success_count > 1 else ''} uploadÃÂ©{'s' if success_count > 1 else ''} avec succÃÂ¨s.")
+                st.success(f"\u2705 {success_count} fichier{'s' if success_count > 1 else ''} uploadé{'s' if success_count > 1 else ''} avec succès.")
             if error_count > 0:
                 st.error(f"{error_count} fichier{'s' if error_count > 1 else ''} en erreur.")
             st.rerun()
@@ -269,8 +269,8 @@ if docs:
 
     CAT_ICONS = {
         "Plan": "\U0001f4d0", "DCE": "\U0001f4d1", "Devis": "\U0001f4b0",
-        "Facture": "\U0001f9fe", "ÃÂtude": "\U0001f4d6", "Contrat": "\U0001f4dc",
-        "PV": "\U0001f4dd", "Photo": "\U0001f4f7", "MÃÂ©trÃÂ©": "\U0001f4cf",
+        "Facture": "\U0001f9fe", "Étude": "\U0001f4d6", "Contrat": "\U0001f4dc",
+        "PV": "\U0001f4dd", "Photo": "\U0001f4f7", "Métré": "\U0001f4cf",
         "Autre": "\U0001f4c4",
     }
 
@@ -287,13 +287,13 @@ if docs:
         col2.caption(f"{doc_famille} - {taille_str} - {date}")
 
         storage_path = doc.get("storage_path", "")
-        if storage_path and col3.button("\U0001f4e5", key=f"dl_{doc.get('id', '')}", help="TÃÂ©lÃÂ©charger"):
+        if storage_path and col3.button("\U0001f4e5", key=f"dl_{doc.get('id', '')}", help="Télécharger"):
             try:
                 url = storage.get_signed_url(storage_path)
                 if url:
-                    st.markdown(f"[\U0001f4e5 TÃÂ©lÃÂ©charger le document]({url})")
+                    st.markdown(f"[\U0001f4e5 Télécharger le document]({url})")
                 else:
-                    st.warning("Impossible de gÃÂ©nÃÂ©rer le lien.")
+                    st.warning("Impossible de générer le lien.")
             except Exception as e:
                 st.error(f"Erreur : {str(e)[:100]}")
 else:
@@ -316,13 +316,13 @@ try:
 
     c1, c2 = st.columns(2)
     c1.metric("\U0001f4c1 DOCUMENTS", total_docs)
-    c2.metric("\U0001f4be ESPACE UTILISÃÂ", f"{total_mb:.1f} Mo / {limit_mb} Mo")
+    c2.metric("\U0001f4be ESPACE UTILISÉ", f"{total_mb:.1f} Mo / {limit_mb} Mo")
 
     pct = min(total_mb / limit_mb, 1.0) if limit_mb > 0 else 0
     st.progress(pct)
-    st.caption(f"{total_mb:.1f} Mo utilisÃÂ©s sur {limit_mb} Mo ({pct*100:.0f}%)")
+    st.caption(f"{total_mb:.1f} Mo utilisés sur {limit_mb} Mo ({pct*100:.0f}%)")
 
     if pct > 0.9:
-        st.warning("\u26a0\ufe0f Stockage presque plein ! Pensez ÃÂ  mettre ÃÂ  niveau votre abonnement.")
+        st.warning("\u26a0\ufe0f Stockage presque plein ! Pensez à mettre à niveau votre abonnement.")
 except Exception as e:
     st.info("Utilisation du stockage non disponible.")
