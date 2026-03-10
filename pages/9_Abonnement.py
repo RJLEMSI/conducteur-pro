@@ -21,7 +21,7 @@ plan_info = get_plan_display(current_plan)
 # --- Plan actuel ---
 st.subheader("Plan actuel: " + plan_info["name"])
 st.markdown("**Prix:** " + plan_info["price"])
-st.markdown("**Fonctionnalites incluses:**")
+st.markdown("**Fonctionnalités incluses:**")
 for f in plan_info["features"]:
     st.markdown(f"- {f}")
 
