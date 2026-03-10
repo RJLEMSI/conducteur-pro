@@ -1,77 +1,291 @@
-import sys, os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-
 import streamlit as st
-from datetime import datetime
-from lib.helpers import page_setup, render_saas_sidebar
-from lib import db
-from lib.auth import get_plan_display, PLAN_LIMITS
-from utils import GLOBAL_CSS
+import os, json
 
-user_id = page_setup(title="Abonnement", icon="*")
-st.markdown(GLOBAL_CSS, unsafe_allow_html=True)
-render_saas_sidebar(user_id)
+st.set_page_config(page_title="ConducteurPro Abonnement", page_icon="\u2b50", layout="wide")
 
-st.title("Mon Abonnement")
+from lib.auth import require_auth, get_plan_display, PLAN_LIMITS
+from lib.db import get_profile
 
-profile = db.get_profile(user_id)
-current_plan = profile.get("subscription_plan", "free") if profile else "free"
+user = require_auth()
+if not user:
+    st.stop()
+
+profile = get_profile(user.id)
+current_plan = (profile or {}).get("subscription_plan", "free")
 plan_info = get_plan_display(current_plan)
 
-# --- Plan actuel ---
-st.subheader("Plan actuel: " + plan_info["name"])
-st.markdown("**Prix:** " + plan_info["price"])
-st.markdown("**Fonctionnalités incluses:**")
-for f in plan_info["features"]:
-    st.markdown(f"- {f}")
+# --- CSS ---
+st.markdown("""
+<style>
+.pricing-container {
+    display: flex; gap: 24px; justify-content: center;
+    flex-wrap: wrap; margin: 30px 0;
+}
+.pricing-card {
+    background: white; border-radius: 16px; padding: 32px 28px;
+    width: 300px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    border: 2px solid #e8ecf1; position: relative;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+.pricing-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+}
+.pricing-card.popular {
+    border-color: #1B4F72;
+    background: linear-gradient(180deg, #f0f7ff 0%, white 30%);
+}
+.popular-badge {
+    position: absolute; top: -14px; left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, #1B4F72, #2E86C1);
+    color: white; padding: 6px 20px; border-radius: 20px;
+    font-size: 13px; font-weight: 600; white-space: nowrap;
+}
+.current-badge {
+    position: absolute; top: -14px; right: 20px;
+    background: #27AE60; color: white;
+    padding: 4px 14px; border-radius: 12px;
+    font-size: 12px; font-weight: 600;
+}
+.plan-icon { font-size: 40px; margin-bottom: 8px; }
+.plan-name {
+    font-size: 22px; font-weight: 700;
+    color: #1B4F72; margin: 4px 0;
+}
+.plan-price {
+    font-size: 36px; font-weight: 800;
+    color: #2C3E50; margin: 12px 0 4px;
+}
+.plan-price .period {
+    font-size: 16px; font-weight: 400; color: #7f8c8d;
+}
+.plan-price .currency {
+    font-size: 20px; vertical-align: super;
+}
+.feature-list { list-style: none; padding: 0; margin: 20px 0; }
+.feature-list li {
+    padding: 8px 0; font-size: 14px; color: #34495e;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex; align-items: center; gap: 8px;
+}
+.feature-list li:last-child { border-bottom: none; }
+.feat-yes { color: #27AE60; font-weight: bold; }
+.feat-no { color: #e74c3c; }
+.section-title {
+    text-align: center; font-size: 32px; font-weight: 700;
+    color: #1B4F72; margin-bottom: 8px;
+}
+.section-subtitle {
+    text-align: center; font-size: 16px;
+    color: #7f8c8d; margin-bottom: 30px;
+}
+.guarantee-box {
+    background: linear-gradient(135deg, #f8f9fa, #e8f4f8);
+    border-radius: 12px; padding: 24px;
+    text-align: center; margin: 40px auto;
+    max-width: 700px; border: 1px solid #d5e8f0;
+}
+</style>
+""", unsafe_allow_html=True)
 
-st.divider()
+# --- Header ---
+st.markdown('<p class="section-title">Choisissez votre formule</p>', unsafe_allow_html=True)
+st.markdown('<p class="section-subtitle">Des outils professionnels pour piloter vos chantiers efficacement</p>', unsafe_allow_html=True)
 
-# --- Plans disponibles ---
-st.subheader("Plans disponibles")
+# Current plan banner
+plan_names = {"free": "Decouverte", "pro": "Pro", "team": "Equipe"}
+plan_icons = {"free": "\U0001f331", "pro": "\u2b50", "team": "\U0001f680"}
+plan_colors = {"free": "#95a5a6", "pro": "#1B4F72", "team": "#8E44AD"}
 
+banner_name = plan_names.get(current_plan, "Decouverte")
+banner_icon = plan_icons.get(current_plan, "\U0001f331")
+banner_color = plan_colors.get(current_plan, "#95a5a6")
+
+st.markdown(f"""
+<div style="background: linear-gradient(135deg, {banner_color}15, {banner_color}08);
+    border-left: 4px solid {banner_color}; border-radius: 8px;
+    padding: 16px 24px; margin-bottom: 30px;">
+    <span style="font-size: 18px;">{banner_icon} Votre abonnement actuel : <strong style="color: {banner_color};">{banner_name}</strong></span>
+</div>
+""", unsafe_allow_html=True)
+
+# --- Plans data ---
+plans = [
+    {
+        "key": "free", "name": "Decouverte", "icon": "\U0001f331",
+        "price": "0", "period": "", "popular": False,
+        "subtitle": "Pour tester la plateforme",
+        "features": [
+            ("\u2713", True, "3 chantiers maximum"),
+            ("\u2713", True, "500 Mo de stockage"),
+            ("\u2713", True, "Generation de devis PDF"),
+            ("\u2713", True, "Planning basique"),
+            ("\u2717", False, "Import de donnees"),
+            ("\u2717", False, "Facturation avancee"),
+            ("\u2717", False, "Analyse IA"),
+            ("\u2717", False, "Support prioritaire"),
+        ]
+    },
+    {
+        "key": "pro", "name": "Pro", "icon": "\u2b50",
+        "price": "65,90", "period": "/mois", "popular": True,
+        "subtitle": "Pour les independants",
+        "features": [
+            ("\u2713", True, "50 chantiers"),
+            ("\u2713", True, "100 Go de stockage"),
+            ("\u2713", True, "Toutes les fonctionnalites"),
+            ("\u2713", True, "Facturation professionnelle"),
+            ("\u2713", True, "Import CSV / Excel"),
+            ("\u2713", True, "Analyse IA illimitee"),
+            ("\u2713", True, "Export PDF complet"),
+            ("\u2717", False, "Multi-utilisateurs"),
+        ]
+    },
+    {
+        "key": "team", "name": "Equipe", "icon": "\U0001f680",
+        "price": "119,60", "period": "/mois", "popular": False,
+        "subtitle": "Pour les equipes jusqu'a 4",
+        "features": [
+            ("\u2713", True, "500 chantiers"),
+            ("\u2713", True, "500 Go de stockage"),
+            ("\u2713", True, "Toutes les fonctionnalites"),
+            ("\u2713", True, "4 utilisateurs simultanes"),
+            ("\u2713", True, "Facturation avancee"),
+            ("\u2713", True, "Analyse IA illimitee"),
+            ("\u2713", True, "Support prioritaire"),
+            ("\u2713", True, "Tableau de bord equipe"),
+        ]
+    }
+]
+
+# --- Render cards ---
+cards_html = '<div class="pricing-container">'
+for p in plans:
+    popular_cls = " popular" if p["popular"] else ""
+    popular_badge = '<div class="popular-badge">Le plus populaire</div>' if p["popular"] else ""
+    current_badge = '<div class="current-badge">Actuel</div>' if p["key"] == current_plan else ""
+    
+    features_html = ""
+    for icon, is_yes, text in p["features"]:
+        cls = "feat-yes" if is_yes else "feat-no"
+        features_html += f'<li><span class="{cls}">{icon}</span> {text}</li>'
+    
+    price_display = f'{p["price"]}' if p["price"] == "0" else f'{p["price"]}\u20ac'
+    period_display = f'<span class="period">{p["period"]}</span>' if p["period"] else '<span class="period">Gratuit</span>'
+    
+    cards_html += f"""
+    <div class="pricing-card{popular_cls}">
+        {popular_badge}{current_badge}
+        <div class="plan-icon">{p["icon"]}</div>
+        <div class="plan-name">{p["name"]}</div>
+        <div style="color: #7f8c8d; font-size: 14px;">{p["subtitle"]}</div>
+        <div class="plan-price">{price_display} {period_display}</div>
+        <ul class="feature-list">{features_html}</ul>
+    </div>"""
+
+cards_html += '</div>'
+st.markdown(cards_html, unsafe_allow_html=True)
+
+# --- Action buttons ---
+st.markdown("---")
 col1, col2, col3 = st.columns(3)
-plans = ["free", "pro", "team"]
 
-for i, (col, plan_key) in enumerate(zip([col1, col2, col3], plans)):
-    info = get_plan_display(plan_key)
-    with col:
-        is_current = plan_key == current_plan
-        st.markdown("### " + info["name"])
-        st.markdown("**" + info["price"] + "**")
-        for feat in info["features"]:
-            st.markdown(f"- {feat}")
-        
-        if is_current:
-            st.success("Plan actuel")
-        elif plan_key == "free":
-            if st.button("Retrograder", key=f"plan_{plan_key}"):
-                st.warning("Contactez le support pour retrograder.")
-        else:
-            if st.button("Passer au plan " + info["name"], key=f"plan_{plan_key}", type="primary"):
+stripe_key = os.environ.get("STRIPE_SECRET_KEY", "")
+price_pro = os.environ.get("STRIPE_PRICE_PRO", "")
+price_team = os.environ.get("STRIPE_PRICE_TEAM", "")
+
+with col1:
+    if current_plan != "free":
+        if st.button("\u2b07\ufe0f  Revenir au gratuit", use_container_width=True):
+            st.warning("Contactez le support pour reclasser votre abonnement.")
+
+with col2:
+    if current_plan != "pro":
+        label = "\u2b50 Passer au Pro - 65,90\u20ac/mois"
+        if st.button(label, use_container_width=True, type="primary"):
+            if stripe_key and price_pro:
                 try:
                     import stripe
-                    stripe.api_key = st.secrets["STRIPE_SECRET_KEY"]
-                    
-                    price_id = st.secrets.get(f"STRIPE_PRICE_{plan_key.upper()}", "")
-                    if not price_id:
-                        st.error("Configuration Stripe manquante.")
-                        st.stop()
-                    
+                    stripe.api_key = stripe_key
                     session = stripe.checkout.Session.create(
                         payment_method_types=["card"],
-                        line_items=[{"price": price_id, "quantity": 1}],
+                        line_items=[{"price": price_pro, "quantity": 1}],
                         mode="subscription",
-                        success_url=st.secrets.get("APP_URL", "https://deva8r5poktveiufcmdppb.streamlit.app") + "?payment=success",
-                        cancel_url=st.secrets.get("APP_URL", "https://deva8r5poktveiufcmdppb.streamlit.app") + "?payment=cancel",
-                        client_reference_id=user_id,
-                        metadata={"user_id": user_id, "plan": plan_key}
+                        success_url="https://deva8r5poktveiufcmdppb.streamlit.app/Abonnement?success=true",
+                        cancel_url="https://deva8r5poktveiufcmdppb.streamlit.app/Abonnement?cancel=true",
+                        client_reference_id=str(user.id),
+                        customer_email=user.email,
                     )
-                    
-                    st.markdown(f'<a href="{session.url}" target="_blank"><button style="background:#0066cc;color:white;padding:10px 20px;border:none;border-radius:5px;cursor:pointer;">Finaliser le paiement</button></a>', unsafe_allow_html=True)
-                    
+                    st.markdown(f'<meta http-equiv="refresh" content="0;url={session.url}">', unsafe_allow_html=True)
                 except Exception as e:
-                    st.error(f"Erreur Stripe: {str(e)}")
+                    st.error(f"Erreur Stripe : {e}")
+            else:
+                st.info("Paiement Stripe en cours de configuration.")
+    else:
+        st.success("\u2713 Vous etes sur le plan Pro")
 
-st.divider()
-st.caption("Les paiements sont sécurisés par Stripe. Vous pouvez annuler à tout moment.")
+with col3:
+    if current_plan != "team":
+        label = "\U0001f680 Passer a Equipe - 119,60\u20ac/mois"
+        if st.button(label, use_container_width=True):
+            if stripe_key and price_team:
+                try:
+                    import stripe
+                    stripe.api_key = stripe_key
+                    session = stripe.checkout.Session.create(
+                        payment_method_types=["card"],
+                        line_items=[{"price": price_team, "quantity": 1}],
+                        mode="subscription",
+                        success_url="https://deva8r5poktveiufcmdppb.streamlit.app/Abonnement?success=true",
+                        cancel_url="https://deva8r5poktveiufcmdppb.streamlit.app/Abonnement?cancel=true",
+                        client_reference_id=str(user.id),
+                        customer_email=user.email,
+                    )
+                    st.markdown(f'<meta http-equiv="refresh" content="0;url={session.url}">', unsafe_allow_html=True)
+                except Exception as e:
+                    st.error(f"Erreur Stripe : {e}")
+            else:
+                st.info("Paiement Stripe en cours de configuration.")
+    else:
+        st.success("\u2713 Vous etes sur le plan Equipe")
+
+# Success / Cancel messages
+params = st.query_params
+if params.get("success"):
+    st.balloons()
+    st.success("\U0001f389 Paiement reussi ! Votre abonnement est maintenant actif.")
+elif params.get("cancel"):
+    st.warning("Paiement annule. Vous pouvez reessayer a tout moment.")
+
+# --- FAQ ---
+st.markdown("---")
+st.markdown('<p class="section-title" style="font-size: 24px;">Questions frequentes</p>', unsafe_allow_html=True)
+
+with st.expander("Puis-je changer de formule a tout moment ?"):
+    st.write("Oui, vous pouvez upgrader ou downgrader votre abonnement quand vous le souhaitez. Le changement prend effet immediatement et le montant est ajuste au prorata.")
+
+with st.expander("Mes donnees sont-elles en securite ?"):
+    st.write("Absolument. Tous vos fichiers sont chiffres (AES-256) et stockes sur des serveurs securises en Europe. Chaque compte est isole et vos donnees ne sont jamais partagees.")
+
+with st.expander("Comment fonctionne la periode d'essai ?"):
+    st.write("La formule Decouverte est gratuite et sans limite de temps. Vous pouvez tester les fonctionnalites de base avec 3 chantiers avant de passer a un plan payant.")
+
+with st.expander("Quels moyens de paiement acceptez-vous ?"):
+    st.write("Nous acceptons les cartes bancaires (Visa, Mastercard, Amex) via notre partenaire de paiement securise Stripe.")
+
+with st.expander("Puis-je obtenir une facture pour mon entreprise ?"):
+    st.write("Oui, une facture est automatiquement generee pour chaque paiement. Vous pouvez la telecharger depuis votre espace Stripe ou nous contacter.")
+
+# --- Guarantee ---
+st.markdown("""
+<div class="guarantee-box">
+    <div style="font-size: 32px; margin-bottom: 8px;">\U0001f6e1\ufe0f</div>
+    <div style="font-size: 18px; font-weight: 600; color: #1B4F72; margin-bottom: 8px;">
+        Satisfaction garantie
+    </div>
+    <div style="color: #5a6c7d; font-size: 14px;">
+        Chiffrement SSL | Stripe certifie PCI-DSS | Donnees hebergees en Europe
+    </div>
+</div>
+""", unsafe_allow_html=True)
