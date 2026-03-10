@@ -27,7 +27,7 @@ def register_user(email: str, password: str, display_name: str = "", company_nam
         })
 
         if not result.user:
-            return {"success": False, "message": "Echec de l'inscription. Verifiez vos informations.", "user_id": None}
+            return {"success": False, "message": "Echec de l'inscription. Vérifiéz vos informations.", "user_id": None}
 
         user_id = result.user.id
 
@@ -50,7 +50,7 @@ def register_user(email: str, password: str, display_name: str = "", company_nam
 
         return {
             "success": True,
-            "message": "Compte cree ! Verifiez votre email pour confirmer votre inscription.",
+            "message": "Compte cree ! Vérifiéz votre email pour confirmer votre inscription.",
             "user_id": user_id,
         }
 
@@ -63,7 +63,7 @@ def register_user(email: str, password: str, display_name: str = "", company_nam
 
 # --- Connexion ---
 def login_user(email: str, password: str) -> dict:
-    """Connecte un utilisateur via Supabase Auth."""
+    """Connecté un utilisateur via Supabase Auth."""
     client = get_supabase_client()
     if not client:
         return {"success": False, "message": "Service indisponible.", "user_id": None}
@@ -137,9 +137,9 @@ def _load_user_profile(client, user_id: str, email: str):
         st.session_state.subscription_active = False
 
 
-# --- Deconnexion ---
+# --- Déconnexion ---
 def logout_user():
-    """Deconnecte l'utilisateur."""
+    """Deconnecté l'utilisateur."""
     client = get_supabase_client()
     if client:
         try:
@@ -161,14 +161,14 @@ def logout_user():
 
 # --- Reset password ---
 def reset_password(email: str) -> dict:
-    """Envoie un email de reinitialisation du mot de passe."""
+    """Envoie un email de réinitialisation du mot de passe."""
     client = get_supabase_client()
     if not client:
         return {"success": False, "message": "Service indisponible."}
 
     try:
         client.auth.reset_password_email(email)
-        return {"success": True, "message": "Email de reinitialisation envoye."}
+        return {"success": True, "message": "Email de réinitialisation envoye."}
     except Exception as e:
         return {"success": False, "message": f"Erreur : {str(e)}"}
 
@@ -231,7 +231,7 @@ PLAN_LIMITS = {
 
 
 def check_feature(feature: str) -> bool:
-    """Verifie si l'utilisateur a acces a une fonctionnalite."""
+    """Vérifié si l'utilisateur a acces a une fonctionnalite."""
     plan = st.session_state.get("user_plan", "free")
     limits = PLAN_LIMITS.get(plan, PLAN_LIMITS["free"])
 
@@ -265,9 +265,9 @@ def show_upgrade_message(feature_name: str = "cette fonctionnalite"):
     with col2:
         st.markdown("""
         <div style="background:#f8f9fa;padding:15px;border-radius:8px;text-align:center;">
-            <h4>Plan Equipe</h4>
+            <h4>Plan Équipe</h4>
             <p>118,90 EUR/mois</p>
-            <p>Jusqu'a 4 utilisateurs</p>
+            <p>Jusqu'à 4 utilisateurs</p>
         </div>
         """, unsafe_allow_html=True)
     if st.button("Voir les plans", type="primary"):
@@ -276,9 +276,9 @@ def show_upgrade_message(feature_name: str = "cette fonctionnalite"):
 # --- Garde de page (a appeler en haut de chaque page protegee) ---
 def require_auth():
     """
-    Verifie que l'utilisateur est connecte.
+    Vérifié que l'utilisateur est connecté.
     Redirige vers la page de connexion sinon.
-    Retourne True si authentifie.
+    Retourne True si authentifié.
     """
     init_supabase_session()
 
@@ -289,9 +289,9 @@ def require_auth():
     if refresh_session():
         return True
 
-    # Non connecte - rediriger
-    st.warning("Veuillez vous connecter pour acceder a cette page.")
-    if st.button("Se connecter", type="primary", use_container_width=True):
+    # Non connecté - rediriger
+    st.warning("Veuillez vous connectér pour acceder a cette page.")
+    if st.button("Se connectér", type="primary", use_container_width=True):
         st.switch_page("pages/00_Connexion.py")
     st.stop()
     return False
@@ -324,23 +324,23 @@ def get_plan_display(plan: str = None) -> dict:
             "color": "#0066cc",
             "price": "69,90 EUR/mois",
             "features": [
-                "Chantiers illimites",
-                "Analyses IA illimitees",
-                "Import de donnees",
+                "Chantiers illimités",
+                "Analyses IA illimitées",
+                "Import de données",
                 "Export PDF",
-                "Planning avance",
+                "Planning avancé",
                 "Support prioritaire",
                 "Stockage 5 Go",
             ]
         },
         "team": {
-            "name": "Equipe",
+            "name": "Équipe",
             "icon": "*",
             "color": "#28a745",
             "price": "118,90 EUR/mois",
             "features": [
                 "Tout Pro +",
-                "Jusqu'a 4 utilisateurs",
+                "Jusqu'à 4 utilisateurs",
                 "Partage de chantiers",
                 "Formation dediee (1h)",
                 "Stockage 20 Go",
