@@ -93,7 +93,7 @@ with tab1:
                 st.success("Profil mis a jour avec succes !")
                 st.rerun()
             except Exception as e:
-                st.error(f"Erreur lors de la mise a jour : {e}")
+                st.error("Erreur lors de la mise a jour : Veuillez réessayer.")
 
 with tab2:
     st.markdown('<p class="section-label">Modifier le mot de passe</p>', unsafe_allow_html=True)
