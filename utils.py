@@ -587,7 +587,7 @@ def generate_devis_pdf(entreprise: dict, devis: dict, lignes, logo_b64: str = No
     pdf.cell(90, 6, entreprise.get("nom", ""), ln=True)
     pdf.set_font("Helvetica", "", 8.5)
     pdf.set_text_color(70, 70, 70)
-    for field in ["adresse", "code_postal", "ville", "telephone", "email", "siret"]:
+    for field in ["adresse", "code_postal", "ville", "téléphone", "email", "siret"]:
         val = entreprise.get(field, "")
         if val:
             label = "SIRET : " if field == "siret" else ""
