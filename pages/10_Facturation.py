@@ -59,7 +59,7 @@ with st.form("new_facture"):
 
     col5, col6 = st.columns(2)
     statut = col5.selectbox("Statut", ["En attente", "Envoyée", "Payée", "En retard", "Annulée"])
-    date_echeance = col6.date_input("Échéance", datetime.now() + timedelta(days=30))
+    date_échéance = col6.date_input("Échéance", datetime.now() + timedelta(days=30))
 
     objet = st.text_input("Objet de la facture", value=chantier.get("nom", ""))
     description = st.text_area("Détails / lignes supplémentaires")
@@ -76,7 +76,7 @@ with st.form("new_facture"):
             "objet": objet,
             "statut": statut.lower().replace(" ", "_").replace("é", "e"),
             "date_facture": date_emission.isoformat(),
-            "date_echeance": date_echeance.isoformat(),
+            "date_échéance": date_échéance.isoformat(),
         }
         result = db.save_facture(user_id, chantier["id"], facture_data)
         if result:
@@ -106,7 +106,7 @@ if factures:
         mt = float(fac.get("montant_ttc", 0) or 0)
         stat = fac.get("statut", "")
         date_f = str(fac.get("date_facture", ""))[:10]
-        date_e = str(fac.get("date_echeance", ""))[:10]
+        date_e = str(fac.get("date_échéance", ""))[:10]
 
         # Icône statut
         stat_icon = {"en_attente": "⏳", "envoyée": "📨", "payee": "✅", "en_retard": "⚠️", "annulee": "❌"}.get(stat, "📄")
