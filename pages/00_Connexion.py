@@ -252,7 +252,7 @@ with tab_register:
 
         reg_email = st.text_input("Email professionnel", placeholder="jean@btpdupont.fr", key="reg_email")
         reg_pwd = st.text_input("Mot de passe", type="password", placeholder="Minimum 8 caractères", key="reg_pwd")
-        reg_pwd2 = st.text_input("Confirmer le mot de passe", type="password", placeholder="Retapez votre mot de passe", key="reg_pwd2")
+        reg_pwd2 = st.text_input("Confirmer le mot de passe", type="password", placeholder="Rétapez votre mot de passe", key="reg_pwd2")
 
         st.markdown("""
         <div style="font-size:0.8rem;color:#6B7280;margin:0.5rem 0;">
