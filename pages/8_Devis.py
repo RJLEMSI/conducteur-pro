@@ -68,7 +68,7 @@ if st.button("Générer un devis IA", type="primary", disabled=not desc_travaux)
             response = client.messages.create(
                 model="claude-sonnet-4-20250514", max_tokens=3000,
                 messages=[{"role": "user", "content": f"""Génère un devis détaillé pour ces travaux BTP:
-Chantier: {chantier.get('nom', 'N/A')}
+Chantier: {chantier.get('nom', 'Sans nom')}
 Travaux: {desc_travaux}
 Métrés disponibles: {metres_ctx}
 
@@ -85,8 +85,8 @@ devis = db.get_devis(chantier_id=chantier["id"])
 if devis:
     for d in devis:
         status_icon = {"brouillon": "📝", "envoye": "📤", "accepte": "✅", "refuse": "❌", "Brouillon": "📝", "Envoyé": "📤", "Accepté": "✅", "Refusé": "❌"}.get(d.get("statut", ""), "📄")
-        with st.expander(f"{status_icon} {d.get('objet', d.get('titre', 'N/A'))} — {d.get('montant_ttc', 0):,.2f} € TTC"):
-            st.write(f"**Statut:** {d.get('statut', 'N/A')}")
+        with st.expander(f"{status_icon} {d.get('objet', d.get('titre', 'Sans titre'))} — {d.get('montant_ttc', 0):,.2f} € TTC"):
+            st.write(f"**Statut:** {d.get('statut', '—')}")
             st.write(f"**Montant HT:** {d.get('montant_ht', 0):,.2f} €")
             st.write(f"**TVA:** {d.get('tva', 20)}%")
             st.write(f"**Date:** {d.get('created_at', '')[:10]}")
