@@ -73,7 +73,7 @@ La résiliation prend effet à la fin de la période d'abonnement en cours.
 
 **Article 7 - Responsabilite**  
 ConducteurPro s'engage a fournir un service conforme aux descriptions. 
-Les analyses generees par l'intelligence artificielle sont fournies a titre indicatif 
+Les analyses générées par l'intelligence artificielle sont fournies a titre indicatif 
 et ne se substituent pas a l'expertise professionnelle du conducteur de travaux.
 
 **Article 8 - Protection des données**  
@@ -144,16 +144,16 @@ Conformément au RGPD, vous disposez des droits suivants :
 
 Pour exercer vos droits : **contact@conducteurpro.fr**
 
-**9. Securite**  
+**9. Sécurité**  
 Nous mettons en oeuvre des mesures techniques et organisationnelles appropriees :
 - Chiffrement des données en transit (HTTPS/TLS)
 - Chiffrement des documents stockes (AES-256)
 - Isolation des données par utilisateur (Row Level Security)
-- Authentification securisee via Supabase Auth
+- Authentification sécurisée via Supabase Auth
 
 **10. Cookies**  
-ConducteurPro utilise uniquement des cookies techniques nécessaires au fonctionnement 
-du service. Aucun cookie publicitaire ou de tracking n'est utilise.
+ConducteurPro utilisé uniquement des cookies techniques nécessaires au fonctionnement 
+du service. Aucun cookie publicitaire ou de tracking n'est utilisé.
 
 **11. Contact DPO**  
 Pour toute question relative a la protection de vos données :  
