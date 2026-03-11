@@ -98,8 +98,8 @@ with tab1:
         
         # Répartition par statut (pie chart)
         if "statut" in df.columns:
-            df["statut_display"] = df["statut"].apply(_fmt_statut)
-            fig = px.pie(df, names="statut_display", title="Répartition par statut", color_discrete_sequence=px.colors.qualitative.Set2)
+            df["Statut"] = df["statut"].apply(_fmt_statut)
+            fig = px.pie(df, names="Statut", title="Répartition par statut", color_discrete_sequence=px.colors.qualitative.Set2)
             fig.update_layout(margin=dict(t=40, b=10, l=10, r=10), height=300)
             st.plotly_chart(fig, use_container_width=True)
     else:
