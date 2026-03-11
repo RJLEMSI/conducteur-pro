@@ -91,4 +91,4 @@ Donne les étapes avec nom, durée estimée, dépendances. Format: tableau markd
             )
             st.markdown(response.content[0].text)
         except Exception as e:
-            st.error(f"Erreur: {e}")
+            st.error("Erreur: Veuillez réessayer.")
