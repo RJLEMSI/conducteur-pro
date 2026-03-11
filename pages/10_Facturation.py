@@ -100,7 +100,7 @@ if factures:
 
     # Tableau des factures avec boutons PDF
     for i, fac in enumerate(factures):
-        num = fac.get("numero", "N/A")
+        num = fac.get("numero", "—")
         client = fac.get("client_nom", "")
         obj = fac.get("objet", "")
         mt = float(fac.get("montant_ttc", 0) or 0)
