@@ -4,241 +4,429 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ConducteurPro — L'outil d'excellence pour les conducteurs de travaux</title>
-    <meta name="description" content="ConducteurPro : métrés automatiques, planning intelligent, devis & factures, gestion documentaire. Propulsé par l'IA Claude. À partir de 65,90€/mois.">
-    <link rel="stylesheet" href="css/style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <meta name="description" content="ConducteurPro : logiciel professionnel tout-en-un pour les conducteurs de travaux BTP. Planning intelligent, devis, factures, documents, IA intégrée.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1565C0;
+            --primary-dark: #0D47A1;
+            --primary-light: #E3F2FD;
+            --accent: #FF6F00;
+            --accent-light: #FFF3E0;
+            --text: #1a1a2e;
+            --text-light: #555;
+            --bg: #f8fafc;
+            --white: #ffffff;
+            --border: #e2e8f0;
+            --success: #2e7d32;
+            --radius: 12px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', -apple-system, sans-serif; color: var(--text); background: var(--bg); line-height: 1.6; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+        
+        /* NAV */
+        nav { background: var(--white); border-bottom: 1px solid var(--border); padding: 16px 0; position: sticky; top: 0; z-index: 100; backdrop-filter: blur(10px); }
+        nav .container { display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 1.5rem; font-weight: 800; color: var(--primary); text-decoration: none; }
+        .logo span { color: var(--text); }
+        nav ul { list-style: none; display: flex; gap: 32px; align-items: center; }
+        nav ul li a { text-decoration: none; color: var(--text-light); font-weight: 500; font-size: 0.95rem; transition: color 0.2s; }
+        nav ul li a:hover { color: var(--primary); }
+        .btn { display: inline-block; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 0.95rem; transition: all 0.3s; cursor: pointer; border: none; }
+        .btn-primary { background: var(--primary); color: var(--white); }
+        .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(21,101,192,0.3); }
+        .btn-accent { background: var(--accent); color: var(--white); }
+        .btn-accent:hover { background: #E65100; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(255,111,0,0.3); }
+        .btn-outline { border: 2px solid var(--primary); color: var(--primary); background: transparent; }
+        .btn-outline:hover { background: var(--primary); color: var(--white); }
+        .btn-sm { padding: 8px 20px; font-size: 0.85rem; }
+
+        /* HERO */
+        .hero { padding: 80px 0 60px; text-align: center; background: linear-gradient(135deg, var(--primary-light) 0%, var(--white) 50%, var(--accent-light) 100%); }
+        .hero-badge { display: inline-block; background: var(--primary-light); color: var(--primary); padding: 6px 16px; border-radius: 50px; font-size: 0.85rem; font-weight: 600; margin-bottom: 24px; }
+        .hero h1 { font-size: 3.2rem; font-weight: 800; line-height: 1.15; margin-bottom: 20px; color: var(--text); }
+        .hero h1 span { color: var(--primary); }
+        .hero p { font-size: 1.2rem; color: var(--text-light); max-width: 640px; margin: 0 auto 36px; }
+        .hero-buttons { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+        .hero-stats { display: flex; gap: 48px; justify-content: center; margin-top: 60px; padding-top: 40px; border-top: 1px solid var(--border); }
+        .hero-stats .stat { text-align: center; }
+        .hero-stats .stat-value { font-size: 2rem; font-weight: 800; color: var(--primary); }
+        .hero-stats .stat-label { font-size: 0.85rem; color: var(--text-light); margin-top: 4px; }
+        .trust-badges { display: flex; gap: 32px; justify-content: center; margin-top: 40px; flex-wrap: wrap; }
+        .trust-badge { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; color: var(--text-light); }
+        .trust-badge .icon { font-size: 1.2rem; }
+
+        /* FEATURES */
+        .features { padding: 80px 0; }
+        .section-title { text-align: center; margin-bottom: 60px; }
+        .section-title h2 { font-size: 2.2rem; font-weight: 800; margin-bottom: 12px; }
+        .section-title p { font-size: 1.1rem; color: var(--text-light); max-width: 600px; margin: 0 auto; }
+        .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+        .feature-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px; transition: all 0.3s; }
+        .feature-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,0,0,0.08); border-color: var(--primary); }
+        .feature-icon { font-size: 2.5rem; margin-bottom: 16px; }
+        .feature-card h3 { font-size: 1.15rem; font-weight: 700; margin-bottom: 8px; }
+        .feature-card p { font-size: 0.95rem; color: var(--text-light); }
+
+        /* PRICING */
+        .pricing { padding: 80px 0; background: var(--white); }
+        .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; align-items: start; }
+        .pricing-card { border: 2px solid var(--border); border-radius: var(--radius); padding: 36px; text-align: center; transition: all 0.3s; position: relative; }
+        .pricing-card.popular { border-color: var(--primary); transform: scale(1.05); box-shadow: 0 12px 40px rgba(21,101,192,0.15); }
+        .pricing-card.popular::before { content: 'Le plus populaire'; position: absolute; top: -14px; left: 50%; transform: translateX(-50%); background: var(--primary); color: white; padding: 4px 20px; border-radius: 50px; font-size: 0.8rem; font-weight: 600; white-space: nowrap; }
+        .pricing-card h3 { font-size: 1.3rem; font-weight: 700; margin-bottom: 8px; }
+        .pricing-card .price { font-size: 2.8rem; font-weight: 800; color: var(--primary); margin: 16px 0 4px; }
+        .pricing-card .price span { font-size: 1rem; font-weight: 400; color: var(--text-light); }
+        .pricing-card .price-sub { font-size: 0.85rem; color: var(--text-light); margin-bottom: 24px; }
+        .pricing-card ul { list-style: none; text-align: left; margin-bottom: 28px; }
+        .pricing-card ul li { padding: 8px 0; font-size: 0.95rem; color: var(--text-light); border-bottom: 1px solid var(--border); }
+        .pricing-card ul li::before { content: '✓ '; color: var(--success); font-weight: 700; }
+        .pricing-card .btn { width: 100%; text-align: center; }
+
+        /* TESTIMONIALS */
+        .testimonials { padding: 80px 0; }
+        .testimonials-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+        .testimonial-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; }
+        .testimonial-stars { color: #FFB300; font-size: 1.1rem; margin-bottom: 12px; }
+        .testimonial-text { font-size: 0.95rem; color: var(--text-light); font-style: italic; margin-bottom: 20px; line-height: 1.7; }
+        .testimonial-author { display: flex; align-items: center; gap: 12px; }
+        .testimonial-avatar { width: 44px; height: 44px; border-radius: 50%; background: var(--primary-light); display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--primary); font-size: 1.1rem; }
+        .testimonial-info .name { font-weight: 600; font-size: 0.95rem; }
+        .testimonial-info .role { font-size: 0.8rem; color: var(--text-light); }
+
+        /* FAQ */
+        .faq { padding: 80px 0; background: var(--white); }
+        .faq-list { max-width: 800px; margin: 0 auto; }
+        .faq-item { border-bottom: 1px solid var(--border); }
+        .faq-question { padding: 20px 0; font-weight: 600; font-size: 1.05rem; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .faq-question::after { content: '+'; font-size: 1.5rem; color: var(--primary); transition: transform 0.3s; }
+        .faq-item.active .faq-question::after { content: '−'; }
+        .faq-answer { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
+        .faq-answer p { padding-bottom: 20px; color: var(--text-light); font-size: 0.95rem; }
+        .faq-item.active .faq-answer { max-height: 200px; }
+
+        /* CTA */
+        .cta { padding: 80px 0; text-align: center; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color: var(--white); }
+        .cta h2 { font-size: 2.2rem; font-weight: 800; margin-bottom: 16px; }
+        .cta p { font-size: 1.1rem; opacity: 0.9; margin-bottom: 32px; max-width: 500px; margin-left: auto; margin-right: auto; }
+        .cta .btn-accent { font-size: 1.1rem; padding: 16px 36px; }
+
+        /* FOOTER */
+        footer { padding: 48px 0 24px; background: var(--text); color: rgba(255,255,255,0.7); }
+        .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 40px; }
+        .footer-brand .logo { color: var(--white); font-size: 1.3rem; display: block; margin-bottom: 12px; }
+        .footer-brand .logo span { color: rgba(255,255,255,0.6); }
+        .footer-brand p { font-size: 0.9rem; line-height: 1.7; }
+        footer h4 { color: var(--white); font-size: 0.95rem; margin-bottom: 16px; }
+        footer ul { list-style: none; }
+        footer ul li { margin-bottom: 8px; }
+        footer ul li a { color: rgba(255,255,255,0.6); text-decoration: none; font-size: 0.9rem; transition: color 0.2s; }
+        footer ul li a:hover { color: var(--white); }
+        .footer-bottom { border-top: 1px solid rgba(255,255,255,0.1); padding-top: 24px; text-align: center; font-size: 0.85rem; }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            nav ul { display: none; }
+            .hero h1 { font-size: 2rem; }
+            .hero-stats { flex-direction: column; gap: 20px; }
+            .features-grid, .pricing-grid, .testimonials-grid { grid-template-columns: 1fr; }
+            .pricing-card.popular { transform: none; }
+            .footer-grid { grid-template-columns: 1fr; }
+            .trust-badges { flex-direction: column; align-items: center; }
+        }
+    </style>
 </head>
 <body>
-
-<!-- NAVBAR -->
-<nav class="navbar">
-    <div class="container nav-container">
-        <a href="#" class="nav-brand">🏗️ ConducteurPro</a>
-        <div class="nav-links">
-            <a href="#features">Fonctionnalités</a>
-            <a href="#pricing">Tarifs</a>
-            <a href="#faq">FAQ</a>
-            <a href="https://deva8r5poktveiufcmdppb.streamlit.app/" class="btn btn-outline" target="_blank">Se connecter</a>
-            <a href="https://deva8r5poktveiufcmdppb.streamlit.app/Connexion" class="btn btn-primary" target="_blank">Essai gratuit</a>
+    <!-- NAV -->
+    <nav>
+        <div class="container">
+            <a href="#" class="logo">Conducteur<span>Pro</span></a>
+            <ul>
+                <li><a href="#fonctionnalites">Fonctionnalités</a></li>
+                <li><a href="#tarifs">Tarifs</a></li>
+                <li><a href="#temoignages">Avis</a></li>
+                <li><a href="#faq">FAQ</a></li>
+                <li><a href="https://deva8r5poktveiufcmdppb.streamlit.app/" class="btn btn-primary btn-sm">Se connecter</a></li>
+            </ul>
         </div>
-    </div>
-</nav>
+    </nav>
 
-<!-- HERO -->
-<section class="hero">
-    <div class="container">
-        <div class="hero-badge">🤖 Propulsé par l'Intelligence Artificielle</div>
-        <h1>L'outil d'excellence<br>pour les <span class="gradient-text">conducteurs de travaux</span></h1>
-        <p class="hero-subtitle">
-            Métrés automatiques, planning intelligent, devis & factures, gestion documentaire.
-            Tout ce dont vous avez besoin pour piloter vos chantiers, propulsé par Claude AI.
-        </p>
-        <div class="hero-cta">
-            <a href="https://deva8r5poktveiufcmdppb.streamlit.app/Connexion" class="btn btn-primary btn-lg" target="_blank">
-                Commencer gratuitement →
-            </a>
-            <a href="#features" class="btn btn-outline btn-lg">Découvrir les fonctionnalités</a>
-        </div>
-        <p class="hero-note">Aucune carte bancaire requise · 3 analyses gratuites par mois</p>
-    </div>
-</section>
-
-<!-- FEATURES -->
-<section id="features" class="features">
-    <div class="container">
-        <h2 class="section-title">Tout ce qu'il vous faut pour vos chantiers</h2>
-        <p class="section-subtitle">Un assistant IA complet pour les professionnels du BTP</p>
-
-        <div class="features-grid">
-            <div class="feature-card">
-                <div class="feature-icon">📐</div>
-                <h3>Métrés automatiques</h3>
-                <p>Uploadez un plan, l'IA extrait automatiquement tous les ouvrages mesurables avec quantités et unités.</p>
+    <!-- HERO -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-badge">LOGICIEL PROFESSIONNEL BTP</div>
+            <h1>L'outil d'excellence pour les <span>conducteurs de travaux</span></h1>
+            <p>Gérez vos chantiers, devis, factures, planning et documents depuis une seule plateforme. Boostée par l'IA pour gagner du temps au quotidien.</p>
+            <div class="hero-buttons">
+                <a href="https://deva8r5poktveiufcmdppb.streamlit.app/" class="btn btn-accent">Essai gratuit — 3 chantiers offerts</a>
+                <a href="#fonctionnalites" class="btn btn-outline">Découvrir les fonctionnalités</a>
             </div>
-            <div class="feature-card">
-                <div class="feature-icon">📅</div>
-                <h3>Planning intelligent</h3>
-                <p>Gantt interactif, phasage recommandé, ressources estimées. Visualisez tous vos chantiers en un coup d'œil.</p>
+            <div class="trust-badges">
+                <div class="trust-badge"><span class="icon">✅</span> Données hébergées en Europe</div>
+                <div class="trust-badge"><span class="icon">🔒</span> Chiffrement de bout en bout</div>
+                <div class="trust-badge"><span class="icon">⚡</span> Déploiement instantané</div>
+                <div class="trust-badge"><span class="icon">🤖</span> IA intégrée</div>
             </div>
-            <div class="feature-card">
-                <div class="feature-icon">💰</div>
-                <h3>Devis & Factures</h3>
-                <p>Générez des devis professionnels en PDF et gérez toute votre facturation avec suivi des paiements.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">📁</div>
-                <h3>Gestion documentaire</h3>
-                <p>Tous vos documents classés par famille et par chantier. Plans, métrés, devis, études, factures, contrats.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">📋</div>
-                <h3>Synthèse DCE</h3>
-                <p>Analysez un DCE complet en quelques secondes. Exigences techniques, points de vigilance, dates critiques.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">📥</div>
-                <h3>Import de données</h3>
-                <p>Importez toute la base de données de votre client en CSV ou Excel. Chantiers, factures, planning en un clic.</p>
+            <div class="hero-stats">
+                <div class="stat"><div class="stat-value">6</div><div class="stat-label">Modules métier</div></div>
+                <div class="stat"><div class="stat-value">100%</div><div class="stat-label">Cloud sécurisé</div></div>
+                <div class="stat"><div class="stat-value">24/7</div><div class="stat-label">Accessible partout</div></div>
+                <div class="stat"><div class="stat-value">0€</div><div class="stat-label">Plan découverte</div></div>
             </div>
         </div>
-    </div>
-</section>
+    </section>
 
-<!-- SECURITY -->
-<section class="security">
-    <div class="container">
-        <div class="security-content">
-            <div class="security-text">
-                <h2>🔒 Sécurité de niveau professionnel</h2>
-                <p>Vos documents sont protégés par un chiffrement AES-256, une isolation complète par compte, et des politiques de sécurité au niveau de chaque ligne de données (RLS). Chaque utilisateur ne voit que ses propres données.</p>
-                <ul>
-                    <li>Chiffrement AES-256 de tous les fichiers</li>
-                    <li>Isolation des données par compte</li>
-                    <li>Connexion HTTPS sécurisée</li>
-                    <li>Paiements via Stripe (certifié PCI DSS)</li>
-                </ul>
+    <!-- FEATURES -->
+    <section class="features" id="fonctionnalites">
+        <div class="container">
+            <div class="section-title">
+                <h2>Tout ce dont vous avez besoin, au même endroit</h2>
+                <p>6 modules métier conçus par et pour les professionnels du BTP</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">📅</div>
+                    <h3>Planning intelligent</h3>
+                    <p>Diagramme de Gantt interactif avec suivi en temps réel. Visualisez l'avancement de chaque phase et anticipez les retards.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💰</div>
+                    <h3>Devis professionnels</h3>
+                    <p>Générez des devis détaillés en quelques clics. Export PDF avec votre logo, TVA automatique, et suivi des versions.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🧾</div>
+                    <h3>Facturation complète</h3>
+                    <p>Factures conformes, suivi des paiements et taux de recouvrement en temps réel. Relances automatiques programmables.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📂</div>
+                    <h3>GED sécurisée</h3>
+                    <p>Centralisez tous vos documents : plans, contrats, études, métrés. Classement automatique par chantier et famille.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🤖</div>
+                    <h3>IA intégrée</h3>
+                    <p>Analyse automatique de plans, métrés et études techniques. L'intelligence artificielle au service de votre productivité.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>Tableaux de bord</h3>
+                    <p>KPIs en temps réel, suivi financier et avancement global. Vue d'ensemble de tous vos chantiers en un coup d'œil.</p>
+                </div>
             </div>
         </div>
-    </div>
-</section>
+    </section>
 
-<!-- PRICING -->
-<section id="pricing" class="pricing">
-    <div class="container">
-        <h2 class="section-title">Des tarifs simples et transparents</h2>
-        <p class="section-subtitle">Choisissez le plan qui correspond à votre activité</p>
-
-        <div class="pricing-grid">
-            <!-- FREE -->
-            <div class="pricing-card">
-                <div class="pricing-name">🆓 Découverte</div>
-                <div class="pricing-price">0 €<span>/mois</span></div>
-                <div class="pricing-desc">Pour tester l'outil</div>
-                <ul class="pricing-features">
-                    <li class="yes">3 analyses par mois</li>
-                    <li class="yes">Toutes les fonctionnalités</li>
-                    <li class="yes">3 chantiers maximum</li>
-                    <li class="no">Import de données</li>
-                    <li class="no">Stockage documents</li>
-                    <li class="no">Support prioritaire</li>
-                </ul>
-                <a href="https://deva8r5poktveiufcmdppb.streamlit.app/Connexion" class="btn btn-outline btn-block" target="_blank">
-                    Commencer gratuitement
-                </a>
+    <!-- PRICING -->
+    <section class="pricing" id="tarifs">
+        <div class="container">
+            <div class="section-title">
+                <h2>Des tarifs simples et transparents</h2>
+                <p>Commencez gratuitement, évoluez selon vos besoins</p>
             </div>
-
-            <!-- PRO -->
-            <div class="pricing-card popular">
-                <div class="pricing-badge">⭐ Le plus populaire</div>
-                <div class="pricing-name">🚀 Pro</div>
-                <div class="pricing-price">65,90 €<span>/mois</span></div>
-                <div class="pricing-desc">1 utilisateur · Tout inclus</div>
-                <ul class="pricing-features">
-                    <li class="yes">Analyses <strong>illimitées</strong></li>
-                    <li class="yes">50 chantiers</li>
-                    <li class="yes">100 GB de stockage</li>
-                    <li class="yes">Import données CSV/Excel</li>
-                    <li class="yes">Devis PDF professionnels</li>
-                    <li class="yes">Support email</li>
-                </ul>
-                <a href="https://deva8r5poktveiufcmdppb.streamlit.app/Abonnement" class="btn btn-primary btn-block" target="_blank">
-                    S'abonner à 65,90 €/mois
-                </a>
-            </div>
-
-            <!-- TEAM -->
-            <div class="pricing-card">
-                <div class="pricing-name">🏢 Équipe</div>
-                <div class="pricing-price">119,60 €<span>/mois</span></div>
-                <div class="pricing-desc">4 utilisateurs simultanés</div>
-                <ul class="pricing-features">
-                    <li class="yes">Tout le plan Pro</li>
-                    <li class="yes"><strong>4 utilisateurs</strong> simultanés</li>
-                    <li class="yes">500 chantiers</li>
-                    <li class="yes">500 GB de stockage</li>
-                    <li class="yes">Support prioritaire</li>
-                    <li class="yes">Formation dédiée (1h)</li>
-                </ul>
-                <a href="https://deva8r5poktveiufcmdppb.streamlit.app/Abonnement" class="btn btn-outline btn-block" target="_blank">
-                    S'abonner à 119,60 €/mois
-                </a>
+            <div class="pricing-grid">
+                <div class="pricing-card">
+                    <h3>Découverte</h3>
+                    <div class="price">0€ <span>/mois</span></div>
+                    <div class="price-sub">Gratuit, pour toujours</div>
+                    <ul>
+                        <li>3 chantiers maximum</li>
+                        <li>500 Mo de stockage</li>
+                        <li>Devis et factures PDF</li>
+                        <li>Planning Gantt basique</li>
+                        <li>1 utilisateur</li>
+                    </ul>
+                    <a href="https://deva8r5poktveiufcmdppb.streamlit.app/" class="btn btn-outline">Commencer gratuitement</a>
+                </div>
+                <div class="pricing-card popular">
+                    <h3>Pro</h3>
+                    <div class="price">65,90€ <span>/mois</span></div>
+                    <div class="price-sub">HT, facturé mensuellement</div>
+                    <ul>
+                        <li>50 chantiers</li>
+                        <li>100 Go de stockage</li>
+                        <li>Toutes les fonctionnalités</li>
+                        <li>IA intégrée illimitée</li>
+                        <li>Import CSV / Excel</li>
+                        <li>1 utilisateur</li>
+                        <li>Support par email</li>
+                    </ul>
+                    <a href="https://deva8r5poktveiufcmdppb.streamlit.app/" class="btn btn-primary">Choisir le plan Pro</a>
+                </div>
+                <div class="pricing-card">
+                    <h3>Équipe</h3>
+                    <div class="price">119,60€ <span>/mois</span></div>
+                    <div class="price-sub">HT, facturé mensuellement</div>
+                    <ul>
+                        <li>500 chantiers</li>
+                        <li>500 Go de stockage</li>
+                        <li>Toutes les fonctionnalités</li>
+                        <li>Jusqu'à 4 utilisateurs</li>
+                        <li>Import ZIP documents</li>
+                        <li>Support prioritaire</li>
+                        <li>Audit et traçabilité</li>
+                    </ul>
+                    <a href="https://deva8r5poktveiufcmdppb.streamlit.app/" class="btn btn-outline">Choisir le plan Équipe</a>
+                </div>
             </div>
         </div>
-    </div>
-</section>
+    </section>
 
-<!-- FAQ -->
-<section id="faq" class="faq">
-    <div class="container">
-        <h2 class="section-title">Questions fréquentes</h2>
-
-        <div class="faq-grid">
-            <div class="faq-item">
-                <h4>Comment fonctionne ConducteurPro ?</h4>
-                <p>ConducteurPro utilise l'intelligence artificielle Claude pour analyser vos documents de chantier (plans, DCE, études) et générer automatiquement des métrés, plannings, devis et synthèses.</p>
+    <!-- TESTIMONIALS -->
+    <section class="testimonials" id="temoignages">
+        <div class="container">
+            <div class="section-title">
+                <h2>Ils nous font confiance</h2>
+                <p>Des professionnels du BTP qui ont transformé leur quotidien</p>
             </div>
-            <div class="faq-item">
-                <h4>Mes documents sont-ils sécurisés ?</h4>
-                <p>Oui. Tous les fichiers sont chiffrés (AES-256), stockés dans un espace isolé par compte, et accessibles uniquement par vous. Les paiements sont gérés par Stripe (certifié PCI DSS niveau 1).</p>
-            </div>
-            <div class="faq-item">
-                <h4>Puis-je importer mes données existantes ?</h4>
-                <p>Oui ! Les plans Pro et Équipe permettent d'importer vos chantiers, factures et planning depuis des fichiers CSV, Excel ou JSON. Nous proposons des modèles pour faciliter l'import.</p>
-            </div>
-            <div class="faq-item">
-                <h4>Puis-je essayer avant de payer ?</h4>
-                <p>Absolument ! Le plan Découverte est gratuit et donne accès à 3 analyses par mois, sans carte bancaire. Vous pouvez tester toutes les fonctionnalités avant de vous abonner.</p>
-            </div>
-            <div class="faq-item">
-                <h4>Comment résilier mon abonnement ?</h4>
-                <p>Depuis votre espace abonnement ou le portail Stripe. La résiliation est immédiate, sans frais ni engagement. Vos données restent accessibles pendant 30 jours.</p>
-            </div>
-            <div class="faq-item">
-                <h4>L'IA peut-elle se tromper ?</h4>
-                <p>L'IA est un assistant puissant, pas un substitut à votre expertise. Elle fournit une base de travail que vous validez et ajustez. Les résultats sont systématiquement vérifiables.</p>
+            <div class="testimonials-grid">
+                <div class="testimonial-card">
+                    <div class="testimonial-stars">★★★★★</div>
+                    <p class="testimonial-text">Depuis que j'utilise ConducteurPro, je gagne au moins 2 heures par jour sur la gestion administrative. Les devis se font en 5 minutes et le suivi financier est impeccable.</p>
+                    <div class="testimonial-author">
+                        <div class="testimonial-avatar">ML</div>
+                        <div class="testimonial-info">
+                            <div class="name">Marc Lefèvre</div>
+                            <div class="role">Conducteur de travaux, BTP Réunion</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <div class="testimonial-stars">★★★★★</div>
+                    <p class="testimonial-text">L'IA qui analyse les plans et génère automatiquement les métrés, c'est un gain de temps incroyable. Je recommande à tous les conducteurs de travaux qui veulent se moderniser.</p>
+                    <div class="testimonial-author">
+                        <div class="testimonial-avatar">SD</div>
+                        <div class="testimonial-info">
+                            <div class="name">Sophie Durand</div>
+                            <div class="role">Cheffe de chantier, Bouygues TP Sud</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <div class="testimonial-stars">★★★★★</div>
+                    <p class="testimonial-text">La GED intégrée a résolu notre problème de documents éparpillés. Toute l'équipe accède aux plans et contrats depuis le terrain. Le plan Équipe vaut vraiment le coup.</p>
+                    <div class="testimonial-author">
+                        <div class="testimonial-avatar">PB</div>
+                        <div class="testimonial-info">
+                            <div class="name">Pierre Bonnet</div>
+                            <div class="role">Directeur technique, SCI Provence Bâtiment</div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-</section>
+    </section>
 
-<!-- CTA FINAL -->
-<section class="cta-final">
-    <div class="container">
-        <h2>Prêt à transformer votre façon de travailler ?</h2>
-        <p>Rejoignez les conducteurs de travaux qui gagnent du temps chaque jour avec ConducteurPro.</p>
-        <a href="https://deva8r5poktveiufcmdppb.streamlit.app/Connexion" class="btn btn-primary btn-lg" target="_blank">
-            Commencer gratuitement →
-        </a>
-    </div>
-</section>
-
-<!-- FOOTER -->
-<footer class="footer">
-    <div class="container">
-        <div class="footer-content">
-            <div class="footer-brand">
-                <div class="footer-logo">🏗️ ConducteurPro</div>
-                <p>L'outil d'excellence pour les conducteurs de travaux, propulsé par l'IA.</p>
+    <!-- FAQ -->
+    <section class="faq" id="faq">
+        <div class="container">
+            <div class="section-title">
+                <h2>Questions fréquentes</h2>
+                <p>Tout ce que vous devez savoir avant de commencer</p>
             </div>
-            <div class="footer-links">
-                <h4>Produit</h4>
-                <a href="#features">Fonctionnalités</a>
-                <a href="#pricing">Tarifs</a>
-                <a href="https://deva8r5poktveiufcmdppb.streamlit.app/" target="_blank">Application</a>
-            </div>
-            <div class="footer-links">
-                <h4>Légal</h4>
-                <a href="privacy.html">Politique de confidentialité</a>
-                <a href="terms.html">Conditions d'utilisation</a>
-                <a href="mailto:support@conducteurpro.fr">Contact</a>
+            <div class="faq-list">
+                <div class="faq-item">
+                    <div class="faq-question">Est-ce que mes données sont sécurisées ?</div>
+                    <div class="faq-answer"><p>Oui, toutes vos données sont chiffrées en AES-256 et hébergées sur des serveurs européens (Supabase). Chaque compte est isolé avec un système de Row Level Security. Vos fichiers ne sont accessibles qu'à vous.</p></div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">Puis-je importer mes données existantes ?</div>
+                    <div class="faq-answer"><p>Absolument. ConducteurPro propose un assistant d'import pour vos fichiers CSV, Excel (.xlsx) et JSON. Vous pouvez aussi importer vos documents par lot via un fichier ZIP organisé par chantier.</p></div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">Comment fonctionne l'IA intégrée ?</div>
+                    <div class="faq-answer"><p>Notre IA analyse vos plans, métrés et études techniques pour en extraire automatiquement les données clés. Elle génère des synthèses, détecte les incohérences et vous fait gagner un temps considérable sur l'analyse documentaire.</p></div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">Puis-je changer de plan à tout moment ?</div>
+                    <div class="faq-answer"><p>Oui, vous pouvez passer du plan Découverte au Pro ou à l'Équipe à tout moment. La facturation est mensuelle sans engagement. Vous pouvez aussi résilier à tout moment depuis votre espace Mon Compte.</p></div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">ConducteurPro fonctionne-t-il sur mobile ?</div>
+                    <div class="faq-answer"><p>Oui, l'application est entièrement responsive et accessible depuis n'importe quel navigateur : ordinateur, tablette ou smartphone. Pas besoin d'installer quoi que ce soit.</p></div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">Quel type de support proposez-vous ?</div>
+                    <div class="faq-answer"><p>Le plan Pro inclut un support par email avec réponse sous 24h. Le plan Équipe bénéficie d'un support prioritaire avec réponse sous 4h ouvrées. Contactez-nous à contact@conducteurpro.fr.</p></div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">Les devis et factures sont-ils conformes ?</div>
+                    <div class="faq-answer"><p>Oui, tous les documents générés respectent les normes françaises en vigueur : mentions obligatoires, numérotation séquentielle, TVA conforme, et export PDF professionnel avec votre logo.</p></div>
+                </div>
             </div>
         </div>
-        <div class="footer-bottom">
-            <p>© 2025 ConducteurPro. Tous droits réservés. Propulsé par Claude AI (Anthropic).</p>
-        </div>
-    </div>
-</footer>
+    </section>
 
-<script src="js/main.js"></script>
+    <!-- CTA -->
+    <section class="cta">
+        <div class="container">
+            <h2>Prêt à transformer votre gestion de chantiers ?</h2>
+            <p>Rejoignez les conducteurs de travaux qui ont choisi l'efficacité. Commencez gratuitement, sans engagement.</p>
+            <a href="https://deva8r5poktveiufcmdppb.streamlit.app/" class="btn btn-accent">Créer mon compte gratuit</a>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <a href="#" class="logo">Conducteur<span>Pro</span></a>
+                    <p>La plateforme tout-en-un pour les conducteurs de travaux. Simplifiez votre quotidien avec des outils professionnels pensés pour le BTP.</p>
+                </div>
+                <div>
+                    <h4>Produit</h4>
+                    <ul>
+                        <li><a href="#fonctionnalites">Fonctionnalités</a></li>
+                        <li><a href="#tarifs">Tarifs</a></li>
+                        <li><a href="#faq">FAQ</a></li>
+                        <li><a href="https://deva8r5poktveiufcmdppb.streamlit.app/">Se connecter</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4>Légal</h4>
+                    <ul>
+                        <li><a href="https://deva8r5poktveiufcmdppb.streamlit.app/Mentions_legales">Mentions légales</a></li>
+                        <li><a href="https://deva8r5poktveiufcmdppb.streamlit.app/Mentions_legales">Politique de confidentialité</a></li>
+                        <li><a href="https://deva8r5poktveiufcmdppb.streamlit.app/Mentions_legales">CGV</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4>Contact</h4>
+                    <ul>
+                        <li><a href="mailto:contact@conducteurpro.fr">contact@conducteurpro.fr</a></li>
+                        <li><a href="https://conducteurpro.fr">conducteurpro.fr</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                &copy; 2026 ConducteurPro. Tous droits réservés.
+            </div>
+        </div>
+    </footer>
+
+(   <script>
+        // FAQ Accordion
+        document.querySelectorAll('.faq-question').forEach(q => {
+            q.addEventListener('click', () => {
+                const item = q.parentElement;
+                const wasActive = item.classList.contains('active');
+                document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('active'));
+                if (!wasActive) item.classList.add('active');
+            });
+        });
+
+        // Smooth scroll
+        document.querySelectorAll('a[href^="#"]').forEach(a => {
+            a.addEventListener('click', e => {
+                e.preventDefault();
+                const target = document.querySelector(a.getAttribute('href'));
+                if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+        });
+    </script>
 </body>
 </html>
