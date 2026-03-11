@@ -308,7 +308,7 @@ with tab_reset:
 st.markdown("---")
 st.markdown("""
 <div style="text-align:center;color:#9CA3AF;font-size:0.8rem;">
-    ConducteurPro v3.0  Propulsé par Claude AI   2025 ConducteurPro
+    ConducteurPro v3.0  Propulsé par Claude AI   2026 ConducteurPro
 </div>
 """, unsafe_allow_html=True)
 
