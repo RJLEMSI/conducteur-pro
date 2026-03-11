@@ -47,7 +47,7 @@ if st.button("🤖 Générer l'étude", type="primary", disabled=not sujet):
                 model="claude-sonnet-4-20250514",
                 max_tokens=4000,
                 messages=[{"role": "user", "content": f"""Réalise une {type_etude} pour un chantier BTP.
-Chantier: {chantier.get('nom', 'N/A')} - {chantier.get('adresse', '')}
+Chantier: {chantier.get('nom', 'Sans nom')} - {chantier.get('adresse', '')}
 Sujet: {sujet}
 {context}
 
@@ -68,7 +68,7 @@ st.subheader("📜 Historique des études")
 etudes = db.get_etudes(chantier_id=chantier["id"])
 if etudes:
     for e in etudes:
-        with st.expander(f"📝 {e.get('titre', 'N/A')} — {e.get('created_at', '')[:10]}"):
+        with st.expander(f"📝 {e.get('titre', 'Sans titre')} — {e.get('created_at', '')[:10]}"):
             st.markdown(e.get("contenu", ""))
             st.download_button("💾 Télécharger (.txt)", e.get("contenu", ""), file_name=f"etude_{e.get('id', '')[:8]}.txt")
 else:
