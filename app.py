@@ -43,21 +43,20 @@ if is_authenticated():
     pages = {
         "Général": [
             st.Page("pages/0_Tableau_de_bord.py", title="Tableau de bord", icon="📊", default=True),
-            st.Page("pages/01_Import_Données.py", title="Import Données", icon="📥"),
+            st.Page("pages/01_Import_Donnees.py", title="Import Données", icon="📥"),
         ],
         "Analyses": [
             st.Page("pages/1_Metres.py", title="Métrés", icon="📐"),
             st.Page("pages/2_DCE.py", title="DCE", icon="📑"),
             st.Page("pages/3_Etudes.py", title="Études", icon="🔬"),
+            st.Page("pages/4_Planning.py", title="Planning", icon="📅"),
+            st.Page("pages/5_PLU.py", title="PLU", icon="🏗️"),
+            st.Page("pages/6_Synthese.py", title="Synthèse", icon="📊"),
         ],
         "Documents": [
-            st.Page("pages/4_Devis.py", title="Devis", icon="📋"),
-            st.Page("pages/5_Factures.py", title="Factures", icon="💰"),
-            st.Page("pages/6_Rapports.py", title="Rapports", icon="📄"),
-        ],
-        "IA & Outils": [
-            st.Page("pages/7_IA_Assistant.py", title="IA Assistant", icon="🤖"),
-            st.Page("pages/8_Export_PDF.py", title="Export PDF", icon="📄"),
+            st.Page("pages/8_Devis.py", title="Devis", icon="📋"),
+            st.Page("pages/10_Facturation.py", title="Facturation", icon="💰"),
+            st.Page("pages/11_Documents.py", title="Documents", icon="📂"),
         ],
         "Compte": [
             st.Page("pages/9_Abonnement.py", title="Abonnement", icon="💳"),
