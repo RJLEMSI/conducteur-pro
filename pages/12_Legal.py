@@ -50,7 +50,7 @@ ConducteurPro, plateforme SaaS destinee aux conducteurs de travaux.
 
 **Article 2 - Services proposes**  
 ConducteurPro propose trois formules d'abonnement :
-- **Decouverte (Gratuit)** : 3 analyses/mois, 3 chantiers max, stockage 50 Mo
+- **Découverte (Gratuit)** : 3 analyses/mois, 3 chantiers max, stockage 50 Mo
 - **Pro (69,90\u20ac/mois)** : Chantiers et analyses illimites, stockage 5 Go, support prioritaire
 - **Équipe (118,90\u20ac/mois)** : Tout Pro + jusqu'à 4 utilisateurs, partage de chantiers, stockage 20 Go
 
@@ -76,7 +76,7 @@ ConducteurPro s'engage a fournir un service conforme aux descriptions.
 Les analyses generees par l'intelligence artificielle sont fournies a titre indicatif 
 et ne se substituent pas a l'expertise professionnelle du conducteur de travaux.
 
-**Article 8 - Protection des donnees**  
+**Article 8 - Protection des données**  
 Les données personnelles sont traitées conformêment a notre Politique de Confidentialité 
 et au Reglement General sur la Protection des Donnees (RGPD).
 
@@ -99,14 +99,14 @@ ConducteurPro est responsable du traitement des données personnelles collectée
 dans le cadre de l'utilisation de ses services.
 
 **2. Donnees collectées**  
-Nous collectons les donnees suivantes :
+Nous collectons les données suivantes :
 - **Donnees d'identification** : nom, prenom, adresse email, nom de société
 - **Donnees de connexion** : adresse IP, logs de connexion
 - **Donnees d'utilisation** : chantiers, documents uploades, analyses effectuees
-- **Donnees de paiement** : traitées exclusivement par Stripe (nous ne stockons pas vos coordonnees bancaires)
+- **Donnees de paiement** : traitées exclusivement par Stripe (nous ne stockons pas vos coordonnées bancaires)
 
 **3. Finalites du traitement**  
-Vos donnees sont utilisées pour :
+Vos données sont utilisées pour :
 - Fournir et ameliorer nos services
 - Gerer votre compte et votre abonnement
 - Assurer le support technique
@@ -122,11 +122,11 @@ Vos donnees sont utilisées pour :
 - Donnees de facturation : 10 ans (obligation legale)
 - Logs de connexion : 12 mois
 
-**6. Destinataires des donnees**  
-Vos donnees peuvent etre transmises a :
-- **Supabase** (hébergement et base de donnees)
+**6. Destinataires des données**  
+Vos données peuvent etre transmises a :
+- **Supabase** (hébergement et base de données)
 - **Stripe** (traitement des paiements)
-- **Anthropic** (traitement IA - donnees anonymisees)
+- **Anthropic** (traitement IA - données anonymisees)
 - **Streamlit/Snowflake** (hébergement de l'application)
 
 **7. Transferts hors UE**  
@@ -146,9 +146,9 @@ Pour exercer vos droits : **contact@conducteurpro.fr**
 
 **9. Securite**  
 Nous mettons en oeuvre des mesures techniques et organisationnelles appropriees :
-- Chiffrement des donnees en transit (HTTPS/TLS)
+- Chiffrement des données en transit (HTTPS/TLS)
 - Chiffrement des documents stockes (AES-256)
-- Isolation des donnees par utilisateur (Row Level Security)
+- Isolation des données par utilisateur (Row Level Security)
 - Authentification securisee via Supabase Auth
 
 **10. Cookies**  
