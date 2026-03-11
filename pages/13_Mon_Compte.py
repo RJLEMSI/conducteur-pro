@@ -37,9 +37,9 @@ company = profile.get("company_name", "") or ""
 initials = "".join([w[0].upper() for w in display_name.split()[:2]]) if display_name else "?"
 plan_info = get_plan_display(current_plan)
 plan_colors = {"free": "#95a5a6", "pro": "#1B4F72", "team": "#8E44AD"}
-plan_names = {"free": "Decouverte", "pro": "Pro", "team": "Equipe"}
+plan_names = {"free": "Découverte", "pro": "Pro", "team": "Equipe"}
 pc = plan_colors.get(current_plan, "#95a5a6")
-pn = plan_names.get(current_plan, "Decouverte")
+pn = plan_names.get(current_plan, "Découverte")
 
 st.markdown(f'<div class="account-header"><div class="avatar-circle">{initials}</div><div><div class="account-name">{display_name}</div><div class="account-email">{user_email}</div><span class="plan-badge" style="background:{pc}20;color:{pc};">Plan {pn}</span></div></div>', unsafe_allow_html=True)
 
@@ -108,7 +108,7 @@ with tab2:
     
     st.markdown("---")
     st.markdown('<p class="section-label" style="color:#e74c3c;">Zone dangereuse</p>', unsafe_allow_html=True)
-    st.warning("La suppression du compte est irreversible et entrainera la perte de toutes vos donnees.")
+    st.warning("La suppression du compte est irreversible et entrainera la perte de toutes vos données.")
     if st.button("Supprimer mon compte", type="secondary"):
         st.error("Pour supprimer votre compte, contactez le support a contact@conducteurpro.fr")
 
