@@ -36,9 +36,9 @@ company = profile.get("company_name", "") or ""
 initials = "".join([w[0].upper() for w in display_name.split()[:2]]) if display_name else "?"
 plan_info = get_plan_display(current_plan)
 plan_colors = {"free": "#95a5a6", "pro": "#1B4F72", "team": "#8E44AD"}
-plan_names = {"free": "DÃ©couverte", "pro": "Pro", "team": "Ãquipe"}
+plan_names = {"free": "Découverte", "pro": "Pro", "team": "Équipe"}
 pc = plan_colors.get(current_plan, "#95a5a6")
-pn = plan_names.get(current_plan, "DÃ©couverte")
+pn = plan_names.get(current_plan, "Découverte")
 
 st.markdown(f'<div class="account-header"><div class="avatar-circle">{initials}</div><div><div class="account-name">{display_name}</div><div class="account-email">{user_email}</div><span class="plan-badge" style="background:{pc}20;color:{pc};">Plan {pn}</span></div></div>', unsafe_allow_html=True)
 
@@ -58,12 +58,12 @@ try:
 except Exception:
     nb_chantiers = 0
 
-st.markdown(f'<div class="stat-row"><div class="stat-box"><div class="stat-value">{nb_chantiers}</div><div class="stat-label">Chantiers</div></div><div class="stat-box"><div class="stat-value">{nb_docs}</div><div class="stat-label">Documents</div></div><div class="stat-box"><div class="stat-value">{total_mb:.1f} Mo</div><div class="stat-label">Stockage utilisÃ©</div></div><div class="stat-box"><div class="stat-value">{pn}</div><div class="stat-label">Abonnement</div></div></div>', unsafe_allow_html=True)
+st.markdown(f'<div class="stat-row"><div class="stat-box"><div class="stat-value">{nb_chantiers}</div><div class="stat-label">Chantiers</div></div><div class="stat-box"><div class="stat-value">{nb_docs}</div><div class="stat-label">Documents</div></div><div class="stat-box"><div class="stat-value">{total_mb:.1f} Mo</div><div class="stat-label">Stockage utilisé</div></div><div class="stat-box"><div class="stat-value">{pn}</div><div class="stat-label">Abonnement</div></div></div>', unsafe_allow_html=True)
 
 st.markdown("")
 
 # --- Tabs ---
-tab1, tab2, tab3 = st.tabs(["Profil & Entreprise", "SÃ©curitÃ©", "Abonnement"])
+tab1, tab2, tab3 = st.tabs(["Profil & Entreprise", "Sécurité", "Abonnement"])
 
 with tab1:
     st.markdown('<p class="section-label">Informations personnelles</p>', unsafe_allow_html=True)
@@ -71,11 +71,11 @@ with tab1:
         col1, col2 = st.columns(2)
         with col1:
             display_name_input = st.text_input("Nom complet", value=profile.get("display_name", "") or "")
-            phone = st.text_input("TÃ©lÃ©phone", value=profile.get("phone", "") or "")
+            phone = st.text_input("Téléphone", value=profile.get("phone", "") or "")
         with col2:
             company_name = st.text_input("Nom de l entreprise", value=profile.get("company_name", "") or "")
             siret = st.text_input("SIRET", value=profile.get("siret", "") or "")
-        address = st.text_input("Adresse complÃ¨te", value=profile.get("address", "") or "")
+        address = st.text_input("Adresse complète", value=profile.get("address", "") or "")
         
         submitted = st.form_submit_button("Enregistrer les modifications", type="primary", use_container_width=True)
         if submitted:
@@ -92,12 +92,12 @@ with tab1:
                 st.success("Profil mis a jour avec succes !")
                 st.rerun()
             except Exception as e:
-                st.error("Erreur lors de la mise a jour : Veuillez rÃ©essayer.")
+                st.error("Erreur lors de la mise a jour : Veuillez réessayer.")
 
 with tab2:
     st.markdown('<p class="section-label">Modifier le mot de passe</p>', unsafe_allow_html=True)
-    st.info("Pour modifier votre mot de passe, utilisÃ©z la fonction \"Mot de passe oublie\" sur la page de connexion.")
-    if st.button("Aller Ã  la page de connexion", use_container_width=True):
+    st.info("Pour modifier votre mot de passe, utiliséz la fonction \"Mot de passe oublie\" sur la page de connexion.")
+    if st.button("Aller à la page de connexion", use_container_width=True):
         st.switch_page("pages/00_Connexion.py")
     
     st.markdown("---")
@@ -107,9 +107,9 @@ with tab2:
     
     st.markdown("---")
     st.markdown('<p class="section-label" style="color:#e74c3c;">Zone dangereuse</p>', unsafe_allow_html=True)
-    st.warning("La suppression du compte est irreversible et entrainera la perte de toutes vos donnÃ©es.")
+    st.warning("La suppression du compte est irreversible et entrainera la perte de toutes vos données.")
     if st.button("Supprimer mon compte", type="secondary"):
-        st.error("Pour supprimÃ©r votre compte, contactez le support a contact@conducteurpro.fr")
+        st.error("Pour supprimér votre compte, contactez le support a contact@conducteurpro.fr")
 
 with tab3:
     st.markdown('<p class="section-label">Votre abonnement</p>', unsafe_allow_html=True)
@@ -128,7 +128,7 @@ with tab3:
         if st.button("Passer au Pro", type="primary", use_container_width=True):
             st.switch_page("pages/9_Abonnement.py")
     elif current_plan == "pro":
-        if st.button("Passer a Ãquipe", type="primary", use_container_width=True):
+        if st.button("Passer a Équipe", type="primary", use_container_width=True):
             st.switch_page("pages/9_Abonnement.py")
     else:
         st.success("Vous avez le plan le plus complet !")
@@ -136,30 +136,28 @@ with tab3:
     st.markdown("")
     st.caption("Gerez votre abonnement et vos paiements sur la page Abonnement.")
 
-st.markdown("---")
-st.caption("Debug: code reached post-tabs section")
-# --- Section RGPD (DonnÃ©es personnelles) ---
+# --- Section RGPD (Données personnelles) ---
 try:
     from lib.rgpd import render_rgpd_section
     from lib.supabase_client import get_supabase_client
     st.markdown("---")
-    st.subheader("ð¡ï¸ Vos donnÃ©es personnelles (RGPD)")
+    st.subheader("🛡️ Vos données personnelles (RGPD)")
     supabase = get_supabase_client()
     user_id = st.session_state.get("user_id")
     if user_id:
         render_rgpd_section(supabase, user_id)
 except Exception as e:
-    st.info(f"Section RGPD bientot disponible. ({type(e).__name__}: {e}) bientÃ´t disponible.")
+    st.info("Section RGPD bientôt disponible.")
 
 # --- Section Logo entreprise (Branding PDF) ---
 try:
     from lib.pdf_branding import render_logo_upload_section
     st.markdown("---")
-    st.subheader("ð¨ Logo de votre entreprise")
-    st.caption("Ce logo apparaÃ®tra sur vos devis, factures et rapports PDF.")
+    st.subheader("🎨 Logo de votre entreprise")
+    st.caption("Ce logo apparaîtra sur vos devis, factures et rapports PDF.")
     supabase = get_supabase_client()
     user_id = st.session_state.get("user_id")
     if user_id:
         render_logo_upload_section(supabase, user_id)
 except Exception as e:
-    st.info(f"Section logo bientot disponible. ({type(e).__name__}: {e}) bientÃ´t disponible.")
+    st.info("Section logo bientôt disponible.")
