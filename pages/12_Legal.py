@@ -74,11 +74,11 @@ La résiliation prend effet à la fin de la période d'abonnement en cours.
 **Article 7 - Responsabilite**  
 ConducteurPro s'engage a fournir un service conforme aux descriptions. 
 Les analyses générées par l'intelligence artificielle sont fournies a titre indicatif 
-et ne se substituent pas a l'expertise professionnelle du conducteur de travaux.
+et ne se substituent pas à l'expertise professionnelle du conducteur de travaux.
 
 **Article 8 - Protection des données**  
 Les données personnelles sont traitées conformêment a notre Politique de Confidentialité 
-et au Reglement General sur la Protection des Donnees (RGPD).
+et au Reglement General sur la Protection des Données (RGPD).
 
 **Article 9 - Droit applicable**  
 Les présentes CGV sont soumises au droit francais. En cas de litige, les tribunaux 
@@ -98,12 +98,12 @@ with tab3:
 ConducteurPro est responsable du traitement des données personnelles collectées 
 dans le cadre de l'utilisation de ses services.
 
-**2. Donnees collectées**  
+**2. Données collectées**  
 Nous collectons les données suivantes :
-- **Donnees d'identification** : nom, prenom, adresse email, nom de société
-- **Donnees de connexion** : adresse IP, logs de connexion
-- **Donnees d'utilisation** : chantiers, documents uploades, analyses effectuees
-- **Donnees de paiement** : traitées exclusivement par Stripe (nous ne stockons pas vos coordonnées bancaires)
+- **Données d'identification** : nom, prenom, adresse email, nom de société
+- **Données de connexion** : adresse IP, logs de connexion
+- **Données d'utilisation** : chantiers, documents uploades, analyses effectuees
+- **Données de paiement** : traitées exclusivement par Stripe (nous ne stockons pas vos coordonnées bancaires)
 
 **3. Finalites du traitement**  
 Vos données sont utilisées pour :
@@ -118,8 +118,8 @@ Vos données sont utilisées pour :
 - Interet legitime (amelioration du service, sécurité)
 
 **5. Duree de conservation**  
-- Donnees de compte : pendant la durée de l'abonnement + 3 ans
-- Donnees de facturation : 10 ans (obligation legale)
+- Données de compte : pendant la durée de l'abonnement + 3 ans
+- Données de facturation : 10 ans (obligation legale)
 - Logs de connexion : 12 mois
 
 **6. Destinataires des données**  
@@ -137,10 +137,10 @@ par les clauses contractuelles types de la Commission europeenne.
 Conformément au RGPD, vous disposez des droits suivants :
 - Droit d'acces a vos données
 - Droit de rectification
-- Droit a l'effacement (droit a l'oubli)
-- Droit a la portabilité
+- Droit à l'effacement (droit à l'oubli)
+- Droit à la portabilité
 - Droit d'opposition
-- Droit a la limitation du traitement
+- Droit à la limitation du traitement
 
 Pour exercer vos droits : **contact@conducteurpro.fr**
 
@@ -156,7 +156,7 @@ ConducteurPro utilisé uniquement des cookies techniques nécessaires au fonctio
 du service. Aucun cookie publicitaire ou de tracking n'est utilisé.
 
 **11. Contact DPO**  
-Pour toute question relative a la protection de vos données :  
+Pour toute question relative à la protection de vos données :  
 **contact@conducteurpro.fr**
     """)
 
