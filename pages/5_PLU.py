@@ -102,7 +102,7 @@ if st.button("🚀 Analyser le PLU", use_container_width=True,
             # Save to Supabase
             if chantier:
                 etude_data = {
-                    "titre": f"Analyse PLU — {zone_plu or adresse or 'N/A'}",
+                    "titre": f"Analyse PLU — {zone_plu or adresse or '—'}",
                     "type_etude": "PLU",
                     "synthese": result[:5000],
                     "chantier_id": chantier["id"],
