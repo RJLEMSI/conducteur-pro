@@ -39,9 +39,9 @@ if etapes:
     st.subheader("📋 Liste des étapes")
     for i, e in enumerate(etapes):
         cols = st.columns([3, 2, 2, 1, 1])
-        cols[0].write(f"**{e.get('nom', 'N/A')}**")
-        cols[1].write(f"📅 {e.get('date_debut', 'N/A')}")
-        cols[2].write(f"→ {e.get('date_fin', 'N/A')}")
+        cols[0].write(f"**{e.get('nom', 'Sans nom')}**")
+        cols[1].write(f"📅 {e.get('date_debut', '—')}")
+        cols[2].write(f"→ {e.get('date_fin', '—')}")
         cols[3].write(e.get("statut", "—"))
         if cols[4].button("🗑️", key=f"del_etape_{i}"):
             db.delete_etape(e["id"])
@@ -84,7 +84,7 @@ if st.button("🤖 Générer un planning IA", type="primary"):
             response = client.messages.create(
                 model="claude-sonnet-4-20250514", max_tokens=3000,
                 messages=[{"role": "user", "content": f"""Génère un planning réaliste pour ce chantier BTP:
-Nom: {chantier.get('nom', 'N/A')}
+Nom: {chantier.get('nom', 'Sans nom')}
 Adresse: {chantier.get('adresse', '')}
 
 Donne les étapes avec nom, durée estimée, dépendances. Format: tableau markdown."""}]
