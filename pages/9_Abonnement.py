@@ -8,8 +8,7 @@ try:
 except Exception:
     pass
 
-st.set_page_config(page_title="ConducteurPro Abonnement", page_icon="\u2b50", layout="wide")
-
+# set_page_config handled by app.py
 from lib.auth import require_auth, get_plan_display, PLAN_LIMITS
 from lib.db import get_profile
 
