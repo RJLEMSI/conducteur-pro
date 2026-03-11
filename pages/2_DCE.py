@@ -72,7 +72,7 @@ st.subheader("📜 Historique des analyses DCE")
 etudes = db.get_etudes(chantier_id=chantier["id"], etude_type="DCE")
 if etudes:
     for e in etudes:
-        with st.expander(f"📋 {e.get('titre', 'N/A')} — {e.get('created_at', '')[:10]}"):
+        with st.expander(f"📋 {e.get('titre', 'Sans titre')} — {e.get('created_at', '')[:10]}"):
             st.markdown(e.get("contenu", ""))
 else:
     st.info("Aucune analyse DCE pour ce chantier.")
