@@ -136,3 +136,29 @@ with tab3:
     
     st.markdown("")
     st.caption("Gerez votre abonnement et vos paiements sur la page Abonnement.")
+
+# --- Section RGPD (Données personnelles) ---
+try:
+    from lib.rgpd import render_rgpd_section
+    from lib.supabase_client import get_supabase_client
+    st.markdown("---")
+    st.subheader("🛡️ Vos données personnelles (RGPD)")
+    supabase = get_supabase_client()
+    user_id = st.session_state.get("user_id")
+    if user_id:
+        render_rgpd_section(supabase, user_id)
+except Exception as e:
+    st.info("Section RGPD bientôt disponible.")
+
+# --- Section Logo entreprise (Branding PDF) ---
+try:
+    from lib.pdf_branding import render_logo_upload_section
+    st.markdown("---")
+    st.subheader("🎨 Logo de votre entreprise")
+    st.caption("Ce logo apparaîtra sur vos devis, factures et rapports PDF.")
+    supabase = get_supabase_client()
+    user_id = st.session_state.get("user_id")
+    if user_id:
+        render_logo_upload_section(supabase, user_id)
+except Exception as e:
+    st.info("Section logo bientôt disponible.")
