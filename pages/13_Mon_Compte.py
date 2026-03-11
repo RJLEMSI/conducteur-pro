@@ -37,7 +37,7 @@ company = profile.get("company_name", "") or ""
 initials = "".join([w[0].upper() for w in display_name.split()[:2]]) if display_name else "?"
 plan_info = get_plan_display(current_plan)
 plan_colors = {"free": "#95a5a6", "pro": "#1B4F72", "team": "#8E44AD"}
-plan_names = {"free": "Découverte", "pro": "Pro", "team": "Equipe"}
+plan_names = {"free": "Découverte", "pro": "Pro", "team": "Équipe"}
 pc = plan_colors.get(current_plan, "#95a5a6")
 pn = plan_names.get(current_plan, "Découverte")
 
@@ -97,7 +97,7 @@ with tab1:
 
 with tab2:
     st.markdown('<p class="section-label">Modifier le mot de passe</p>', unsafe_allow_html=True)
-    st.info("Pour modifiér votre mot de passe, utiliséz la fonction \"Mot de passe oublie\" sur la page de connexion.")
+    st.info("Pour modifier votre mot de passe, utiliséz la fonction \"Mot de passe oublie\" sur la page de connexion.")
     if st.button("Aller a la page de connexion", use_container_width=True):
         st.switch_page("pages/00_Connexion.py")
     
@@ -129,7 +129,7 @@ with tab3:
         if st.button("Passer au Pro", type="primary", use_container_width=True):
             st.switch_page("pages/9_Abonnement.py")
     elif current_plan == "pro":
-        if st.button("Passer a Equipe", type="primary", use_container_width=True):
+        if st.button("Passer a Équipe", type="primary", use_container_width=True):
             st.switch_page("pages/9_Abonnement.py")
     else:
         st.success("Vous avez le plan le plus complet !")
