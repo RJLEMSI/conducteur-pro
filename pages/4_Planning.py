@@ -20,11 +20,11 @@ if not chantier:
     st.stop()
 
 # ─── Étapes existantes ────────────────────────────────────────────────────────
-etapes = db.get_etapes(chantier["id"])
+étapes = db.get_étapes(chantier["id"])
 
-if etapes:
+if étapes:
     st.subheader("📊 Diagramme de Gantt")
-    df = pd.DataFrame(etapes)
+    df = pd.DataFrame(étapes)
     
     if all(c in df.columns for c in ["nom", "date_debut", "date_fin"]):
         df["date_debut"] = pd.to_datetime(df["date_debut"])
@@ -37,14 +37,14 @@ if etapes:
         st.plotly_chart(fig, use_container_width=True)
     
     st.subheader("📋 Liste des étapes")
-    for i, e in enumerate(etapes):
+    for i, e in enumerate(étapes):
         cols = st.columns([3, 2, 2, 1, 1])
         cols[0].write(f"**{e.get('nom', 'Sans nom')}**")
         cols[1].write(f"📅 {e.get('date_debut', '—')}")
         cols[2].write(f"→ {e.get('date_fin', '—')}")
         cols[3].write(e.get("statut", "—"))
-        if cols[4].button("🗑️", key=f"del_etape_{i}"):
-            db.delete_etape(e["id"])
+        if cols[4].button("🗑️", key=f"del_étape_{i}"):
+            db.delete_étape(e["id"])
             st.rerun()
 else:
     st.info("Aucune étape définie. Ajoutez-en ci-dessous.")
@@ -52,7 +52,7 @@ else:
 # ─── Ajouter une étape ────────────────────────────────────────────────────────
 st.markdown("---")
 st.subheader("➕ Ajouter une étape")
-with st.form("new_etape"):
+with st.form("new_étape"):
     col1, col2 = st.columns(2)
     nom = col1.text_input("Nom de l'étape *")
     statut = col2.selectbox("Statut", ["À faire", "En cours", "Terminé"])
@@ -60,10 +60,10 @@ with st.form("new_etape"):
     date_debut = col3.date_input("Date de début", datetime.now())
     date_fin = col4.date_input("Date de fin", datetime.now() + timedelta(days=14))
     description = st.text_area("Description")
-    ordre = st.number_input("Ordre", min_value=1, value=len(etapes) + 1)
+    ordre = st.number_input("Ordre", min_value=1, value=len(étapes) + 1)
     
     if st.form_submit_button("Ajouter") and nom:
-        result = db.save_etape(user_id, chantier["id"], {
+        result = db.save_étape(user_id, chantier["id"], {
             "nom": nom, "statut": statut,
             "date_debut": date_debut.isoformat(), "date_fin": date_fin.isoformat(),
             "description": description, "ordre": ordre
