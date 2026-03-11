@@ -1,6 +1,13 @@
 import streamlit as st
 import os
 
+# --- Import configuration Stripe production ---
+try:
+    from lib.stripe_config import init_stripe, get_stripe_mode, create_customer_portal
+    init_stripe()
+except Exception:
+    pass
+
 st.set_page_config(page_title="ConducteurPro Abonnement", page_icon="\u2b50", layout="wide")
 
 from lib.auth import require_auth, get_plan_display, PLAN_LIMITS
@@ -159,3 +166,15 @@ with st.expander("Puis-je obtenir une facture pour mon entreprise ?"):
     st.write("Oui, une facture est automatiquement générée pour chaque paiement.")
 
 st.markdown('<div class="guarantee-box"><div style="font-size:32px;margin-bottom:8px;">\U0001f6e1\ufe0f</div><div style="font-size:18px;font-weight:600;color:#1B4F72;margin-bottom:8px;">Satisfaction garantie</div><div style="color:#5a6c7d;font-size:14px;">Chiffrement SSL | Stripe certifié PCI-DSS | Données hébergées en Europe</div></div>', unsafe_allow_html=True)
+
+# --- Vérification production Stripe ---
+try:
+    from lib.stripe_config import check_production_readiness, get_stripe_mode
+    with st.sidebar:
+        mode = get_stripe_mode()
+        if mode == "test":
+            st.sidebar.warning("⚠️ Mode TEST Stripe")
+        else:
+            st.sidebar.success("✅ Mode PRODUCTION Stripe")
+except Exception:
+    pass
