@@ -158,16 +158,16 @@ with tab3:
         fc3.metric("Impayé", f"{total_ttc - payees:,.0f} €")
         
         df = pd.DataFrame(factures)
-        cols_display = [c for c in ["numero", "client_nom", "objet", "montant_ttc", "statut", "date_facture", "date_echeance"] if c in df.columns]
+        cols_display = [c for c in ["numero", "client_nom", "objet", "montant_ttc", "statut", "date_facture", "date_échéance"] if c in df.columns]
         df_display = df[cols_display].copy() if cols_display else df.copy()
         if "statut" in df_display.columns:
             df_display["statut"] = df_display["statut"].apply(_fmt_statut)
-        for dc in ["date_facture", "date_echeance"]:
+        for dc in ["date_facture", "date_échéance"]:
             if dc in df_display.columns:
                 df_display[dc] = df_display[dc].apply(_fmt_date)
         if "montant_ttc" in df_display.columns:
             df_display["montant_ttc"] = df_display["montant_ttc"].apply(lambda x: f"{float(x or 0):,.2f} €")
-        rename = {"numero": "N°", "client_nom": "Client", "objet": "Objet", "montant_ttc": "Montant TTC", "statut": "Statut", "date_facture": "Date", "date_echeance": "Échéance"}
+        rename = {"numero": "N°", "client_nom": "Client", "objet": "Objet", "montant_ttc": "Montant TTC", "statut": "Statut", "date_facture": "Date", "date_échéance": "Échéance"}
         df_display.columns = [rename.get(c, c) for c in df_display.columns]
         st.dataframe(df_display, use_container_width=True, hide_index=True)
     else:
