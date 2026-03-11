@@ -64,7 +64,7 @@ DCE:\n{text[:15000]}"""}]
                 db.save_etude(user_id, chantier["id"], "DCE", f"Analyse DCE - {uploaded.name}", result)
                 st.success("Analyse sauvegardée.")
             except Exception as e:
-                st.error(f"Erreur d'analyse: {e}")
+                st.error("Erreur d'analyse: Veuillez réessayer.")
 
 # ─── Historique ───────────────────────────────────────────────────────────────
 st.markdown("---")
