@@ -12,7 +12,7 @@ from utils import GLOBAL_CSS, render_sidebar
 from lib.auth import require_auth, check_feature, show_upgrade_message
 from lib.import_manager import (
     get_template_csv, parse_file, import_chantiers,
-    import_factures, import_etapes, build_chantier_map,
+    import_factures, import_étapes, build_chantier_map,
     import_json_full,
 )
 
@@ -35,7 +35,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 #  Onglets d'import 
-tab_chantiers, tab_factures, tab_etapes, tab_json, tab_templates = st.tabs([
+tab_chantiers, tab_factures, tab_étapes, tab_json, tab_templates = st.tabs([
     " Chantiers",
     " Factures",
     "Étapes / Planning",
@@ -121,13 +121,13 @@ with tab_factures:
                             st.markdown(d)
 
 #  IMPORT TAPES 
-with tab_etapes:
+with tab_étapes:
     st.markdown("### Importer des étapes de planning")
 
     file_e = st.file_uploader(
         "Fichier CSV ou Excel",
         type=["csv", "xlsx", "xls"],
-        key="import_etapes_file"
+        key="import_étapes_file"
     )
 
     if file_e:
@@ -143,7 +143,7 @@ with tab_etapes:
             else:
                 if st.button(" Importer les étapes", type="primary", key="btn_import_e"):
                     with st.spinner("Import en cours..."):
-                        results = import_etapes(df_e, chantier_map)
+                        results = import_étapes(df_e, chantier_map)
                     st.markdown(f"**Rsultat : {results['success']} importes, {results['errors']} erreurs**")
 
 #  IMPORT JSON COMPLET 
@@ -151,7 +151,7 @@ with tab_json:
     st.markdown("### Import complet depuis un export ConducteurPro")
     st.markdown("""
     Importez un fichier JSON export depuis ConducteurPro (ou au format compatible).
-    Le fichier peut contenir : `chantiers`, `etapes`, `factures`.
+    Le fichier peut contenir : `chantiers`, `étapes`, `factures`.
     """)
 
     file_j = st.file_uploader(
@@ -163,7 +163,7 @@ with tab_json:
     if file_j:
         try:
             data = json.loads(file_j.read().decode("utf-8"))
-            sections = [k for k in ["chantiers", "etapes", "factures"] if k in data]
+            sections = [k for k in ["chantiers", "étapes", "factures"] if k in data]
             st.success(f"Sections dtectes : {', '.join(sections)}")
 
             for section in sections:
@@ -212,9 +212,9 @@ with tab_templates:
     with col3:
         st.markdown("####  tapes")
         st.download_button(
-            " Modle etapes.csv",
-            data=get_template_csv("etapes").encode("utf-8"),
-            file_name="modele_etapes.csv",
+            " Modle étapes.csv",
+            data=get_template_csv("étapes").encode("utf-8"),
+            file_name="modele_étapes.csv",
             mime="text/csv",
             use_container_width=True,
         )
