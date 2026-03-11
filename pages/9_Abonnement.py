@@ -103,7 +103,7 @@ with col2:
                     )
                     st.markdown(f'<meta http-equiv="refresh" content="0;url={session.url}">', unsafe_allow_html=True)
                 except Exception as e:
-                    st.error(f"Erreur Stripe : {e}")
+                    st.error("Une erreur est survenue lors du paiement. Veuillez réessayer ou contacter le support.")
             else:
                 st.info("Paiement Stripe en cours de configuration.")
     else:
@@ -127,7 +127,7 @@ with col3:
                     )
                     st.markdown(f'<meta http-equiv="refresh" content="0;url={session.url}">', unsafe_allow_html=True)
                 except Exception as e:
-                    st.error(f"Erreur Stripe : {e}")
+                    st.error("Une erreur est survenue lors du paiement. Veuillez réessayer ou contacter le support.")
             else:
                 st.info("Paiement Stripe en cours de configuration.")
     else:
