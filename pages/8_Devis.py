@@ -76,7 +76,7 @@ Format: tableau avec Poste, Désignation, Unité, Quantité, PU HT, Total HT. Te
             )
             st.markdown(response.content[0].text)
         except Exception as e:
-            st.error(f"Erreur: {e}")
+            st.error("Erreur: Veuillez réessayer.")
 
 # ─── Liste devis existants ────────────────────────────────────────────────────
 st.markdown("---")
