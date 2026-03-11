@@ -94,15 +94,15 @@ def assemble_context(chantier_data: dict) -> str:
         parts.append("")
 
     # Étapes / Planning
-    etapes = db.get_etapes(chantier_id=cid)
-    if etapes:
+    étapes = db.get_étapes(chantier_id=cid)
+    if étapes:
         parts.append("## Planning / Étapes")
-        for et in etapes:
-            parts.append(f"- {et.get('nom', '')} — {et.get('statut', '')} — Échéance : {et.get('date_echeance', '—')}")
+        for et in étapes:
+            parts.append(f"- {et.get('nom', '')} — {et.get('statut', '')} — Échéance : {et.get('date_échéance', '—')}")
         parts.append("")
 
     # Session state fallbacks (for data generated in current session but not yet saved)
-    if st.session_state.get("planning_result") and not etapes:
+    if st.session_state.get("planning_result") and not étapes:
         parts.append("## Planning (session en cours)")
         parts.append(str(st.session_state["planning_result"])[:2000])
         parts.append("")
