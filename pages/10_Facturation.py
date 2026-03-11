@@ -109,8 +109,8 @@ if factures:
         date_e = str(fac.get("date_echeance", ""))[:10]
 
         # Icône statut
-        stat_icon = {"en_attente": "⏳", "envoyee": "📨", "payee": "✅", "en_retard": "⚠️", "annulee": "❌"}.get(stat, "📄")
-        stat_display = {"en_attente": "En attente", "envoyee": "Envoyée", "payee": "Payée", "en_retard": "En retard", "annulee": "Annulée"}.get(stat, stat)
+        stat_icon = {"en_attente": "⏳", "envoyée": "📨", "payee": "✅", "en_retard": "⚠️", "annulee": "❌"}.get(stat, "📄")
+        stat_display = {"en_attente": "En attente", "envoyée": "Envoyée", "payee": "Payée", "en_retard": "En retard", "annulee": "Annulée"}.get(stat, stat)
 
         with st.container():
             c1, c2, c3, c4, c5 = st.columns([2, 2, 1.5, 1.5, 1.5])
@@ -139,9 +139,9 @@ if factures:
             with c5.popover("✏️ Statut"):
                 new_stat = st.selectbox(
                     "Nouveau statut",
-                    ["en_attente", "envoyee", "payee", "en_retard", "annulee"],
+                    ["en_attente", "envoyée", "payee", "en_retard", "annulee"],
                     key=f"stat_{i}",
-                    index=["en_attente", "envoyee", "payee", "en_retard", "annulee"].index(stat) if stat in ["en_attente", "envoyee", "payee", "en_retard", "annulee"] else 0,
+                    index=["en_attente", "envoyée", "payee", "en_retard", "annulee"].index(stat) if stat in ["en_attente", "envoyée", "payee", "en_retard", "annulee"] else 0,
                 )
                 if st.button("Mettre à jour", key=f"upd_{i}"):
                     db.update_facture(fac["id"], {"statut": new_stat})
