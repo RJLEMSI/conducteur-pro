@@ -231,7 +231,7 @@ PLAN_LIMITS = {
 
 
 def check_feature(feature: str) -> bool:
-    """Vérifié si l'utilisateur a acces a une fonctionnalite."""
+    """Vérifié si l'utilisateur a accès à une fonctionnalité."""
     plan = st.session_state.get("user_plan", "free")
     limits = PLAN_LIMITS.get(plan, PLAN_LIMITS["free"])
 
@@ -244,14 +244,14 @@ def check_feature(feature: str) -> bool:
 
 
 def get_plan_limit(feature: str):
-    """Retourne la limite d'un plan pour une fonctionnalite."""
+    """Retourne la limite d'un plan pour une fonctionnalité."""
     plan = st.session_state.get("user_plan", "free")
     limits = PLAN_LIMITS.get(plan, PLAN_LIMITS["free"])
     return limits.get(feature, 0)
 
 
-def show_upgrade_message(feature_name: str = "cette fonctionnalite"):
-    """Affiche un message incitant a passer a un plan superieur."""
+def show_upgrade_message(feature_name: str = "cette fonctionnalité"):
+    """Affiche un message incitant à passer à un plan supérieur."""
     st.warning(f"**{feature_name}** n'est pas disponible avec votre plan actuel.")
     col1, col2 = st.columns(2)
     with col1:
@@ -259,7 +259,7 @@ def show_upgrade_message(feature_name: str = "cette fonctionnalite"):
         <div style="background:#f8f9fa;padding:15px;border-radius:8px;text-align:center;">
             <h4>Plan Pro</h4>
             <p>65,90 EUR/mois</p>
-            <p>Toutes les fonctionnalites</p>
+            <p>Toutes les fonctionnalités</p>
         </div>
         """, unsafe_allow_html=True)
     with col2:
@@ -290,7 +290,7 @@ def require_auth():
         return True
 
     # Non connecté - rediriger
-    st.warning("Veuillez vous connectér pour acceder a cette page.")
+    st.warning("Veuillez vous connectér pour accéder à cette page.")
     if st.button("Se connectér", type="primary", use_container_width=True):
         st.switch_page("pages/00_Connexion.py")
     st.stop()
