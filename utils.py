@@ -518,8 +518,8 @@ PROJET : {projet_desc}
 Réponds UNIQUEMENT avec un tableau JSON valide, sans markdown, sans explication.
 Format exact :
 [
-  {{"lot": "Lot 01", "designation": "Installation de chantier et clôture de chantier", "unite": "Fft", "quantite": 1, "prix_unitaire_ht": 3500}},
-  {{"lot": "Lot 02", "designation": "Terrassements et fouilles", "unite": "m³", "quantite": 50, "prix_unitaire_ht": 45}}
+  {{"lot": "Lot 01", "designation": "Installation de chantier et clôture de chantier", "unite": "Fft", "quantité": 1, "prix_unitaire_ht": 3500}},
+  {{"lot": "Lot 02", "designation": "Terrassements et fouilles", "unite": "m³", "quantité": 50, "prix_unitaire_ht": 45}}
 ]
 
 Inclure tous les lots standards pour ce type de projet (8 à 15 lots). Prix réalistes France 2024."""
@@ -546,7 +546,7 @@ def generate_devis_pdf(entreprise: dict, devis: dict, lignes, logo_b64: str = No
     import tempfile, os
 
     df = lignes.copy()
-    df["total_ht"] = df["quantite"].fillna(0) * df["prix_unitaire_ht"].fillna(0)
+    df["total_ht"] = df["quantité"].fillna(0) * df["prix_unitaire_ht"].fillna(0)
     total_ht = df["total_ht"].sum()
     tva_taux = float(devis.get("tva_taux", 20.0))
     tva_montant = total_ht * tva_taux / 100
@@ -661,7 +661,7 @@ def generate_devis_pdf(entreprise: dict, devis: dict, lignes, logo_b64: str = No
         vals = [
             str(row.get("lot", ""))[:20],
             str(row.get("designation", ""))[:58],
-            f"{row.get('quantite', 0):.1f}",
+            f"{row.get('quantité', 0):.1f}",
             str(row.get("unite", ""))[:6],
             f"{row.get('prix_unitaire_ht', 0):.2f} \u20ac",
             f"{row.get('total_ht', 0):.2f} \u20ac",
