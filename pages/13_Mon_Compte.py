@@ -98,7 +98,7 @@ with tab1:
 with tab2:
     st.markdown('<p class="section-label">Modifier le mot de passe</p>', unsafe_allow_html=True)
     st.info("Pour modifier votre mot de passe, utiliséz la fonction \"Mot de passe oublie\" sur la page de connexion.")
-    if st.button("Aller a la page de connexion", use_container_width=True):
+    if st.button("Aller à la page de connexion", use_container_width=True):
         st.switch_page("pages/00_Connexion.py")
     
     st.markdown("---")
