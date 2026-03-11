@@ -223,40 +223,40 @@ def update_facture(facture_id: str, data: dict) -> bool:
 
 # ─── Étapes (Planning) ────────────────────────────────────────────────────────
 
-def get_etapes(chantier_id: str) -> list:
+def get_étapes(chantier_id: str) -> list:
     """Récupère les étapes d'un chantier."""
     try:
-        r = _client().table("etapes").select("*").eq("chantier_id", chantier_id).order("ordre").execute()
+        r = _client().table("étapes").select("*").eq("chantier_id", chantier_id).order("ordre").execute()
         return r.data or []
     except Exception:
         return []
 
 
-def save_etape(user_id: str, chantier_id: str, data: dict) -> dict | None:
+def save_étape(user_id: str, chantier_id: str, data: dict) -> dict | None:
     """Sauvegarde une étape."""
     try:
         data["user_id"] = user_id
         data["chantier_id"] = chantier_id
         data["created_at"] = datetime.utcnow().isoformat()
-        r = _client().table("etapes").insert(data).execute()
+        r = _client().table("étapes").insert(data).execute()
         return r.data[0] if r.data else None
     except Exception:
         return None
 
 
-def update_etape(etape_id: str, data: dict) -> bool:
+def update_étape(étape_id: str, data: dict) -> bool:
     """Met à jour une étape."""
     try:
-        _client().table("etapes").update(data).eq("id", etape_id).execute()
+        _client().table("étapes").update(data).eq("id", étape_id).execute()
         return True
     except Exception:
         return False
 
 
-def delete_etape(etape_id: str) -> bool:
+def delete_étape(étape_id: str) -> bool:
     """Supprime une étape."""
     try:
-        _client().table("etapes").delete().eq("id", etape_id).execute()
+        _client().table("étapes").delete().eq("id", étape_id).execute()
         return True
     except Exception:
         return False
@@ -420,4 +420,4 @@ def log_activity(action: str, resource_type: str = "", resource_id: str = "", de
 # ─── Aliases pour compatibilité import_manager ─────────────────────────────
 create_facture = save_facture
 create_devis = save_devis
-create_etape = save_etape
+create_étape = save_étape
