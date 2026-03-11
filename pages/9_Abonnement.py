@@ -138,7 +138,7 @@ if params.get("success"):
     st.balloons()
     st.success("Paiement réussi ! Votre abonnement est maintenant actif.")
 elif params.get("cancel"):
-    st.warning("Paiement annule. Vous pouvez reessayer a tout moment.")
+    st.warning("Paiement annule. Vous pouvez réessayer à tout moment.")
 
 st.markdown("---")
 st.markdown('<p class="section-title" style="font-size:24px;">Questions fréquentes</p>', unsafe_allow_html=True)
