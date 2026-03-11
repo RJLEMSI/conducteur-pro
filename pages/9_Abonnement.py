@@ -52,7 +52,7 @@ st.markdown(f'<div style="background:linear-gradient(135deg,{banner_color}15,{ba
 plans = [
     {"key": "free", "name": "Découverte", "icon": "\U0001f331", "price": "0", "period": "", "popular": False, "subtitle": "Pour tester la plateforme", "features": [("\u2713", True, "3 chantiers maximum"), ("\u2713", True, "500 Mo de stockage"), ("\u2713", True, "Génération de devis PDF"), ("\u2713", True, "Planning basique"), ("\u2717", False, "Import de données"), ("\u2717", False, "Facturation avancée"), ("\u2717", False, "Analyse IA"), ("\u2717", False, "Support prioritaire")]},
     {"key": "pro", "name": "Pro", "icon": "\u2b50", "price": "65,90", "period": "/mois", "popular": True, "subtitle": "Pour les indépendants", "features": [("\u2713", True, "50 chantiers"), ("\u2713", True, "100 Go de stockage"), ("\u2713", True, "Toutes les fonctionnalités"), ("\u2713", True, "Facturation professionnelle"), ("\u2713", True, "Import CSV / Excel"), ("\u2713", True, "Analyse IA illimitee"), ("\u2713", True, "Export PDF complet"), ("\u2717", False, "Multi-utilisateurs")]},
-    {"key": "team", "name": "Équipe", "icon": "\U0001f680", "price": "119,60", "period": "/mois", "popular": False, "subtitle": "Pour les équipes", "features": [("\u2713", True, "500 chantiers"), ("\u2713", True, "500 Go de stockage"), ("\u2713", True, "Toutes les fonctionnalités"), ("\u2713", True, "4 utilisateurs simultanés"), ("\u2713", True, "Facturation avancée"), ("\u2713", True, "Analyse IA illimitee"), ("\u2713", True, "Support prioritaire"), ("\u2713", True, "Tableau de bord equipe")]},
+    {"key": "team", "name": "Équipe", "icon": "\U0001f680", "price": "119,60", "period": "/mois", "popular": False, "subtitle": "Pour les équipes", "features": [("\u2713", True, "500 chantiers"), ("\u2713", True, "500 Go de stockage"), ("\u2713", True, "Toutes les fonctionnalités"), ("\u2713", True, "4 utilisateurs simultanés"), ("\u2713", True, "Facturation avancée"), ("\u2713", True, "Analyse IA illimitee"), ("\u2713", True, "Support prioritaire"), ("\u2713", True, "Tableau de bord équipe")]},
 ]
 
 cards_html = '<div class="pricing-container">'
@@ -136,7 +136,7 @@ with col3:
 params = st.query_params
 if params.get("success"):
     st.balloons()
-    st.success("Paiement reussi ! Votre abonnement est maintenant actif.")
+    st.success("Paiement réussi ! Votre abonnement est maintenant actif.")
 elif params.get("cancel"):
     st.warning("Paiement annule. Vous pouvez reessayer a tout moment.")
 
@@ -146,7 +146,7 @@ st.markdown('<p class="section-title" style="font-size:24px;">Questions frequent
 with st.expander("Puis-je changer de formule a tout moment ?"):
     st.write("Oui, vous pouvez upgrader ou downgrader votre abonnement quand vous le souhaitez. Le changement prend effet immediatement.")
 
-with st.expander("Mes données sont-elles en securite ?"):
+with st.expander("Mes données sont-elles en sécurité ?"):
     st.write("Absolument. Tous vos fichiers sont chiffres (AES-256) et stockes sur des serveurs sécurisés en Europe.")
 
 with st.expander("Comment fonctionne la periode d essai ?"):
@@ -156,6 +156,6 @@ with st.expander("Quels moyens de paiement acceptez-vous ?"):
     st.write("Nous acceptons les cartes bancaires (Visa, Mastercard, Amex) via Stripe.")
 
 with st.expander("Puis-je obtenir une facture pour mon entreprise ?"):
-    st.write("Oui, une facture est automatiquement generee pour chaque paiement.")
+    st.write("Oui, une facture est automatiquement générée pour chaque paiement.")
 
-st.markdown('<div class="guarantee-box"><div style="font-size:32px;margin-bottom:8px;">\U0001f6e1\ufe0f</div><div style="font-size:18px;font-weight:600;color:#1B4F72;margin-bottom:8px;">Satisfaction garantie</div><div style="color:#5a6c7d;font-size:14px;">Chiffrement SSL | Stripe certifie PCI-DSS | Donnees hebergees en Europe</div></div>', unsafe_allow_html=True)
+st.markdown('<div class="guarantee-box"><div style="font-size:32px;margin-bottom:8px;">\U0001f6e1\ufe0f</div><div style="font-size:18px;font-weight:600;color:#1B4F72;margin-bottom:8px;">Satisfaction garantie</div><div style="color:#5a6c7d;font-size:14px;">Chiffrement SSL | Stripe certifie PCI-DSS | Donnees hébergées en Europe</div></div>', unsafe_allow_html=True)
