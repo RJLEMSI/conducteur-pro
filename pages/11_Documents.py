@@ -78,7 +78,7 @@ KEYWORD_MAP = {
     "metre": "Métré",
     "metr": "Métré",
     "quantitatif": "Métré",
-    "quantite": "Métré",
+    "quantité": "Métré",
     "dqe": "Métré",
     "bordereau": "Métré",
     "photo": "Photo",
