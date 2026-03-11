@@ -14,7 +14,7 @@ from utils import GLOBAL_CSS
 STATUT_DISPLAY = {
     "en_cours": "En cours", "termine": "Terminé", "en_attente": "En attente",
     "annule": "Annulé", "brouillon": "Brouillon", "envoye": "Envoyé",
-    "envoyee": "Envoyée", "accepte": "Accepté", "refuse": "Refusé",
+    "envoyée": "Envoyée", "accepte": "Accepté", "refuse": "Refusé",
     "payee": "Payée", "en_retard": "En retard", "validé": "Validé",
 }
 
