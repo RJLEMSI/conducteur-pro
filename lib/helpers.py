@@ -1,4 +1,5 @@
 """
+# v2 chantier_selector format update
 ConducteurPro  Helpers communs pour toutes les pages Streamlit.
 Fournit l'authentification, la configuration de page et la sidebar SaaS.
 """
@@ -91,7 +92,7 @@ def render_saas_sidebar(user_id: str):
 
 #  Slecteur de chantier 
 
-def chantier_selector(key: str = "chantier_select"):
+def chantier_selector(key: str = "chantier_select"):  # updated 2026-03-11T00:12
     """Affiche un sélecteur de chantier et retourne le chantier sélectionné (dict) ou None."""
     from lib import db
     
