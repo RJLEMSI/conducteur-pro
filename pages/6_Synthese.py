@@ -34,10 +34,10 @@ def assemble_context(chantier_data: dict) -> str:
     cid = chantier_data["id"]
 
     # Informations du chantier
-    parts.append(f"# Chantier : {chantier_data.get('nom', 'N/A')}")
-    parts.append(f"Client : {chantier_data.get('client_nom', 'N/A')}")
-    parts.append(f"Budget HT : {chantier_data.get('budget_ht', 'N/A')} €")
-    parts.append(f"Statut : {chantier_data.get('statut', 'N/A')}")
+    parts.append(f"# Chantier : {chantier_data.get('nom', 'Sans nom')}")
+    parts.append(f"Client : {chantier_data.get('client_nom', '—')}")
+    parts.append(f"Budget HT : {chantier_data.get('budget_ht', '—')} €")
+    parts.append(f"Statut : {chantier_data.get('statut', '—')}")
     if chantier_data.get("description"):
         parts.append(f"Description : {chantier_data['description']}")
     parts.append("")
@@ -82,7 +82,7 @@ def assemble_context(chantier_data: dict) -> str:
     if devis_list:
         parts.append("## Devis")
         for d in devis_list:
-            parts.append(f"- Devis {d.get('numero', 'N/A')} : {d.get('montant_ttc', 0):,.2f} € TTC — {d.get('statut', '')}")
+            parts.append(f"- Devis {d.get('numero', '—')} : {d.get('montant_ttc', 0):,.2f} € TTC — {d.get('statut', '')}")
         parts.append("")
 
     # Factures
@@ -90,7 +90,7 @@ def assemble_context(chantier_data: dict) -> str:
     if factures:
         parts.append("## Factures")
         for f in factures:
-            parts.append(f"- Facture {f.get('numero', 'N/A')} : {f.get('montant_ttc', 0):,.2f} € TTC — {f.get('statut', '')}")
+            parts.append(f"- Facture {f.get('numero', '—')} : {f.get('montant_ttc', 0):,.2f} € TTC — {f.get('statut', '')}")
         parts.append("")
 
     # Étapes / Planning
@@ -98,7 +98,7 @@ def assemble_context(chantier_data: dict) -> str:
     if etapes:
         parts.append("## Planning / Étapes")
         for et in etapes:
-            parts.append(f"- {et.get('nom', '')} — {et.get('statut', '')} — Échéance : {et.get('date_echeance', 'N/A')}")
+            parts.append(f"- {et.get('nom', '')} — {et.get('statut', '')} — Échéance : {et.get('date_echeance', '—')}")
         parts.append("")
 
     # Session state fallbacks (for data generated in current session but not yet saved)
