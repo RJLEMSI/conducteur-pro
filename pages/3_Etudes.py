@@ -60,7 +60,7 @@ Structure ton analyse avec: Contexte, Analyse, Recommandations, Conclusion."""}]
             db.save_etude(user_id, chantier["id"], type_etude, f"{type_etude} - {sujet[:50]}", result)
             st.success("Étude sauvegardée.")
         except Exception as e:
-            st.error(f"Erreur: {e}")
+            st.error("Erreur: Veuillez réessayer.")
 
 # ─── Historique ───────────────────────────────────────────────────────────────
 st.markdown("---")
