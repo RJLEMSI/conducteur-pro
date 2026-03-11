@@ -59,12 +59,12 @@ try:
 except Exception:
     nb_chantiers = 0
 
-st.markdown(f'<div class="stat-row"><div class="stat-box"><div class="stat-value">{nb_chantiers}</div><div class="stat-label">Chantiers</div></div><div class="stat-box"><div class="stat-value">{nb_docs}</div><div class="stat-label">Documents</div></div><div class="stat-box"><div class="stat-value">{total_mb:.1f} Mo</div><div class="stat-label">Stockage utilise</div></div><div class="stat-box"><div class="stat-value">{pn}</div><div class="stat-label">Abonnement</div></div></div>', unsafe_allow_html=True)
+st.markdown(f'<div class="stat-row"><div class="stat-box"><div class="stat-value">{nb_chantiers}</div><div class="stat-label">Chantiers</div></div><div class="stat-box"><div class="stat-value">{nb_docs}</div><div class="stat-label">Documents</div></div><div class="stat-box"><div class="stat-value">{total_mb:.1f} Mo</div><div class="stat-label">Stockage utilisé</div></div><div class="stat-box"><div class="stat-value">{pn}</div><div class="stat-label">Abonnement</div></div></div>', unsafe_allow_html=True)
 
 st.markdown("")
 
 # --- Tabs ---
-tab1, tab2, tab3 = st.tabs(["Profil & Entreprise", "Securite", "Abonnement"])
+tab1, tab2, tab3 = st.tabs(["Profil & Entreprise", "Sécurité", "Abonnement"])
 
 with tab1:
     st.markdown('<p class="section-label">Informations personnelles</p>', unsafe_allow_html=True)
@@ -72,11 +72,11 @@ with tab1:
         col1, col2 = st.columns(2)
         with col1:
             display_name_input = st.text_input("Nom complet", value=profile.get("display_name", "") or "")
-            phone = st.text_input("Telephone", value=profile.get("phone", "") or "")
+            phone = st.text_input("Téléphone", value=profile.get("phone", "") or "")
         with col2:
             company_name = st.text_input("Nom de l entreprise", value=profile.get("company_name", "") or "")
             siret = st.text_input("SIRET", value=profile.get("siret", "") or "")
-        address = st.text_input("Adresse complete", value=profile.get("address", "") or "")
+        address = st.text_input("Adresse complète", value=profile.get("address", "") or "")
         
         submitted = st.form_submit_button("Enregistrer les modifications", type="primary", use_container_width=True)
         if submitted:
@@ -97,7 +97,7 @@ with tab1:
 
 with tab2:
     st.markdown('<p class="section-label">Modifier le mot de passe</p>', unsafe_allow_html=True)
-    st.info("Pour modifier votre mot de passe, utilisez la fonction \"Mot de passe oublie\" sur la page de connexion.")
+    st.info("Pour modifiér votre mot de passe, utiliséz la fonction \"Mot de passe oublie\" sur la page de connexion.")
     if st.button("Aller a la page de connexion", use_container_width=True):
         st.switch_page("pages/00_Connexion.py")
     
@@ -110,7 +110,7 @@ with tab2:
     st.markdown('<p class="section-label" style="color:#e74c3c;">Zone dangereuse</p>', unsafe_allow_html=True)
     st.warning("La suppression du compte est irreversible et entrainera la perte de toutes vos données.")
     if st.button("Supprimer mon compte", type="secondary"):
-        st.error("Pour supprimer votre compte, contactez le support a contact@conducteurpro.fr")
+        st.error("Pour supprimér votre compte, contactez le support a contact@conducteurpro.fr")
 
 with tab3:
     st.markdown('<p class="section-label">Votre abonnement</p>', unsafe_allow_html=True)
