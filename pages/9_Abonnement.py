@@ -40,19 +40,19 @@ st.markdown("""<style>
 st.markdown('<p class="section-title">Choisissez votre formule</p>', unsafe_allow_html=True)
 st.markdown('<p class="section-subtitle">Des outils professionnels pour piloter vos chantiers efficacement</p>', unsafe_allow_html=True)
 
-plan_names = {"free": "Decouverte", "pro": "Pro", "team": "Equipe"}
+plan_names = {"free": "Découverte", "pro": "Pro", "team": "Équipe"}
 plan_icons = {"free": "\U0001f331", "pro": "\u2b50", "team": "\U0001f680"}
 plan_colors = {"free": "#95a5a6", "pro": "#1B4F72", "team": "#8E44AD"}
-banner_name = plan_names.get(current_plan, "Decouverte")
+banner_name = plan_names.get(current_plan, "Découverte")
 banner_icon = plan_icons.get(current_plan, "\U0001f331")
 banner_color = plan_colors.get(current_plan, "#95a5a6")
 
 st.markdown(f'<div style="background:linear-gradient(135deg,{banner_color}15,{banner_color}08);border-left:4px solid {banner_color};border-radius:8px;padding:16px 24px;margin-bottom:30px;"><span style="font-size:18px;">{banner_icon} Votre abonnement actuel : <strong style="color:{banner_color};">{banner_name}</strong></span></div>', unsafe_allow_html=True)
 
 plans = [
-    {"key": "free", "name": "Decouverte", "icon": "\U0001f331", "price": "0", "period": "", "popular": False, "subtitle": "Pour tester la plateforme", "features": [("\u2713", True, "3 chantiers maximum"), ("\u2713", True, "500 Mo de stockage"), ("\u2713", True, "Generation de devis PDF"), ("\u2713", True, "Planning basique"), ("\u2717", False, "Import de donnees"), ("\u2717", False, "Facturation avancee"), ("\u2717", False, "Analyse IA"), ("\u2717", False, "Support prioritaire")]},
-    {"key": "pro", "name": "Pro", "icon": "\u2b50", "price": "65,90", "period": "/mois", "popular": True, "subtitle": "Pour les independants", "features": [("\u2713", True, "50 chantiers"), ("\u2713", True, "100 Go de stockage"), ("\u2713", True, "Toutes les fonctionnalites"), ("\u2713", True, "Facturation professionnelle"), ("\u2713", True, "Import CSV / Excel"), ("\u2713", True, "Analyse IA illimitee"), ("\u2713", True, "Export PDF complet"), ("\u2717", False, "Multi-utilisateurs")]},
-    {"key": "team", "name": "Equipe", "icon": "\U0001f680", "price": "119,60", "period": "/mois", "popular": False, "subtitle": "Pour les equipes", "features": [("\u2713", True, "500 chantiers"), ("\u2713", True, "500 Go de stockage"), ("\u2713", True, "Toutes les fonctionnalites"), ("\u2713", True, "4 utilisateurs simultanes"), ("\u2713", True, "Facturation avancee"), ("\u2713", True, "Analyse IA illimitee"), ("\u2713", True, "Support prioritaire"), ("\u2713", True, "Tableau de bord equipe")]},
+    {"key": "free", "name": "Découverte", "icon": "\U0001f331", "price": "0", "period": "", "popular": False, "subtitle": "Pour tester la plateforme", "features": [("\u2713", True, "3 chantiers maximum"), ("\u2713", True, "500 Mo de stockage"), ("\u2713", True, "Génération de devis PDF"), ("\u2713", True, "Planning basique"), ("\u2717", False, "Import de données"), ("\u2717", False, "Facturation avancée"), ("\u2717", False, "Analyse IA"), ("\u2717", False, "Support prioritaire")]},
+    {"key": "pro", "name": "Pro", "icon": "\u2b50", "price": "65,90", "period": "/mois", "popular": True, "subtitle": "Pour les indépendants", "features": [("\u2713", True, "50 chantiers"), ("\u2713", True, "100 Go de stockage"), ("\u2713", True, "Toutes les fonctionnalités"), ("\u2713", True, "Facturation professionnelle"), ("\u2713", True, "Import CSV / Excel"), ("\u2713", True, "Analyse IA illimitee"), ("\u2713", True, "Export PDF complet"), ("\u2717", False, "Multi-utilisateurs")]},
+    {"key": "team", "name": "Équipe", "icon": "\U0001f680", "price": "119,60", "period": "/mois", "popular": False, "subtitle": "Pour les équipes", "features": [("\u2713", True, "500 chantiers"), ("\u2713", True, "500 Go de stockage"), ("\u2713", True, "Toutes les fonctionnalités"), ("\u2713", True, "4 utilisateurs simultanés"), ("\u2713", True, "Facturation avancée"), ("\u2713", True, "Analyse IA illimitee"), ("\u2713", True, "Support prioritaire"), ("\u2713", True, "Tableau de bord equipe")]},
 ]
 
 cards_html = '<div class="pricing-container">'
@@ -111,7 +111,7 @@ with col2:
 
 with col3:
     if current_plan != "team":
-        if st.button("Passer a Equipe - 119,60\u20ac/mois", use_container_width=True):
+        if st.button("Passer a Équipe - 119,60\u20ac/mois", use_container_width=True):
             if stripe_key and price_team:
                 try:
                     import stripe
@@ -131,7 +131,7 @@ with col3:
             else:
                 st.info("Paiement Stripe en cours de configuration.")
     else:
-        st.success("Vous etes sur le plan Equipe")
+        st.success("Vous etes sur le plan Équipe")
 
 params = st.query_params
 if params.get("success"):
@@ -146,11 +146,11 @@ st.markdown('<p class="section-title" style="font-size:24px;">Questions frequent
 with st.expander("Puis-je changer de formule a tout moment ?"):
     st.write("Oui, vous pouvez upgrader ou downgrader votre abonnement quand vous le souhaitez. Le changement prend effet immediatement.")
 
-with st.expander("Mes donnees sont-elles en securite ?"):
-    st.write("Absolument. Tous vos fichiers sont chiffres (AES-256) et stockes sur des serveurs securises en Europe.")
+with st.expander("Mes données sont-elles en securite ?"):
+    st.write("Absolument. Tous vos fichiers sont chiffres (AES-256) et stockes sur des serveurs sécurisés en Europe.")
 
 with st.expander("Comment fonctionne la periode d essai ?"):
-    st.write("La formule Decouverte est gratuite et sans limite de temps. Vous pouvez tester avec 3 chantiers.")
+    st.write("La formule Découverte est gratuite et sans limite de temps. Vous pouvez tester avec 3 chantiers.")
 
 with st.expander("Quels moyens de paiement acceptez-vous ?"):
     st.write("Nous acceptons les cartes bancaires (Visa, Mastercard, Amex) via Stripe.")
