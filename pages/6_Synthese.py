@@ -72,7 +72,7 @@ def assemble_context(chantier_data: dict) -> str:
                 try:
                     ouvrages = json.loads(m["ouvrages"]) if isinstance(m["ouvrages"], str) else m["ouvrages"]
                     for o in ouvrages[:10]:
-                        parts.append(f"- {o.get('designation', '')} : {o.get('quantite', '')} {o.get('unite', '')}")
+                        parts.append(f"- {o.get('designation', '')} : {o.get('quantité', '')} {o.get('unite', '')}")
                 except Exception:
                     pass
             parts.append("")
