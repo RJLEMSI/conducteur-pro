@@ -41,7 +41,7 @@ class InvoicePDF(FPDF):
                 self.add_font("DejaVu", "B", bold, uni=True)
 
     def _font(self, style="", size=10):
-        """Set font - utilise DejaVu si disponible, sinon Helvetica."""
+        """Set font - utilisé DejaVu si disponible, sinon Helvetica."""
         name = "DejaVu" if self._use_dejavu else "Helvetica"
         self.set_font(name, style, size)
 
@@ -127,10 +127,10 @@ def generate_invoice_pdf(
     pdf._font("", 10)
     pdf.set_text_color(80, 90, 100)
     date_facture = facture.get("date_facture", datetime.now().strftime("%Y-%m-%d"))
-    date_echeance = facture.get("date_echeance", "")
+    date_échéance = facture.get("date_échéance", "")
     pdf.cell(0, 6, f"Date : {date_facture}", ln=True)
-    if date_echeance:
-        pdf.cell(0, 6, f"Échéance : {date_echeance}", ln=True)
+    if date_échéance:
+        pdf.cell(0, 6, f"Échéance : {date_échéance}", ln=True)
     pdf.ln(6)
 
     # BLOC CLIENT
@@ -202,7 +202,7 @@ def generate_invoice_pdf(
             else:
                 pdf.set_fill_color(255, 255, 255)
             desc = str(ligne.get("description", ""))[:55]
-            qte = str(ligne.get("quantite", 1))
+            qte = str(ligne.get("quantité", 1))
             pu = f"{float(ligne.get('prix_unitaire', 0)):,.2f} {euro}"
             mt = f"{float(ligne.get('montant', 0)):,.2f} {euro}"
             pdf.cell(col_widths[0], 7, desc, fill=True)
@@ -264,8 +264,8 @@ def generate_invoice_pdf(
     pdf._font("", 8)
     pdf.set_text_color(100, 110, 120)
 
-    if date_echeance:
-        pdf.cell(0, 5, f"Paiement attendu avant le {date_echeance}.", ln=True)
+    if date_échéance:
+        pdf.cell(0, 5, f"Paiement attendu avant le {date_échéance}.", ln=True)
     else:
         pdf.cell(0, 5, "Paiement à 30 jours à compter de la date de facturation.", ln=True)
 
