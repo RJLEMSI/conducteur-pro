@@ -213,7 +213,7 @@ if uploaded_files:
                         st.warning(f"\u26a0\ufe0f Échec pour '{uploaded.name}'")
                 except Exception as e:
                     error_count += 1
-                    st.error(f"Erreur pour '{uploaded.name}' : {str(e)[:100]}")
+                    st.error(f"Erreur lors de l'import de '{uploaded.name}'. Vérifiez le format du fichier.")
             progress.progress(1.0, text="Terminé !")
             if success_count > 0:
                 st.success(f"\u2705 {success_count} fichier{'s' if success_count > 1 else ''} classé{'s' if success_count > 1 else ''} et uploadé{'s' if success_count > 1 else ''} avec succès !")
@@ -244,7 +244,7 @@ if uploaded_files:
                         st.warning(f"\u26a0\ufe0f Échec pour '{uploaded.name}'")
                 except Exception as e:
                     error_count += 1
-                    st.error(f"Erreur pour '{uploaded.name}' : {str(e)[:100]}")
+                    st.error(f"Erreur lors de l'import de '{uploaded.name}'. Vérifiez le format du fichier.")
             progress.progress(1.0, text="Terminé !")
             if success_count > 0:
                 st.success(f"\u2705 {success_count} fichier{'s' if success_count > 1 else ''} uploadé{'s' if success_count > 1 else ''} avec succès.")
@@ -295,7 +295,7 @@ if docs:
                 else:
                     st.warning("Impossible de générer le lien.")
             except Exception as e:
-                st.error(f"Erreur : {str(e)[:100]}")
+                st.error("Une erreur est survenue. Veuillez réessayer.")
 else:
     st.warning("Aucun document pour ce chantier.")
 
