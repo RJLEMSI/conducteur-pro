@@ -1,7 +1,8 @@
 """
-storage.py  Gestion du stockage de fichiers dans Supabase Storage.
+storage.py  Gestion du stockage de fichiers dans Supabase Storage.
 Upload, download, suppression, signed URLs, chiffrement AES-256.
 """
+
 import io
 import hashlib
 import streamlit as st
@@ -10,42 +11,48 @@ from cryptography.fernet import Fernet
 from lib.supabase_client import get_supabase_client
 from lib.db import create_document, log_activity
 
-
-#  Configuration 
+# Configuration
 BUCKET_NAME = "conducteurpro-files"
 
+# Mapping categories -> dossiers storage (correspond aux CATEGORIES de 11_Documents.py)
 FAMILLE_FOLDERS = {
+    "Plan": "plans",
     "Plans": "plans",
-    "Métrés": "metres",
+    "DCE": "dce",
     "Devis": "devis",
-    "Documents techniques": "documents_techniques",
-    "Études": "etudes",
+    "Facture": "factures",
     "Factures": "factures",
+    "Etude": "etudes",
+    "Etudes": "etudes",
+    "Contrat": "contrats",
     "Contrats": "contrats",
+    "PV": "pv",
+    "Photo": "photos",
+    "Metre": "metres",
+    "Autre": "autres",
+    # Accented versions
+    "Mettre": "metres",
+    # Legacy plural/accented versions
+    "Documents techniques": "documents_techniques",
 }
 
 
-#  Chiffrement 
+# Chiffrement
 
 def _get_encryption_key() -> bytes:
-    """
-    Récupère ou génère la clé de chiffrement depuis les secrets Streamlit.
-    Chaque déploiement utilise une clé fixe pour pouvoir déchiffrer les fichiers.
-    """
     key = st.secrets.get("ENCRYPTION_KEY", "")
     if key:
         return key.encode()
-    # Fallback : générer une clé déterministe basée sur la clé Supabase
     seed = st.secrets.get("SUPABASE_SERVICE_KEY", "default-seed-key")
-    return Fernet.generate_key()  # En prod, utiliser une clé fixe dans secrets
+    return Fernet.generate_key()
 
 
 def encrypt_bytes(data: bytes) -> bytes:
-    """Chiffre des données avec Fernet (AES-256)."""
+    """Chiffre des donnees avec Fernet (AES-256)."""
     try:
         key = st.secrets.get("ENCRYPTION_KEY", "")
         if not key:
-            return data  # Pas de chiffrement si pas de clé
+            return data
         f = Fernet(key.encode())
         return f.encrypt(data)
     except Exception:
@@ -53,7 +60,7 @@ def encrypt_bytes(data: bytes) -> bytes:
 
 
 def decrypt_bytes(data: bytes) -> bytes:
-    """Déchiffre des données avec Fernet (AES-256)."""
+    """Dechiffre des donnees avec Fernet (AES-256)."""
     try:
         key = st.secrets.get("ENCRYPTION_KEY", "")
         if not key:
@@ -64,7 +71,7 @@ def decrypt_bytes(data: bytes) -> bytes:
         return data
 
 
-#  Upload de fichiers 
+# Upload de fichiers
 
 def _build_storage_path(user_id: str, chantier_id: str, famille: str, filename: str) -> str:
     """Construit le chemin de stockage dans le bucket."""
@@ -80,33 +87,21 @@ def upload_file(
     chantier_id: str,
     famille: str,
     doc_type: str = "",
-    statut: str = "Validé",
+    statut: str = "Valide",
     metadata: dict = None,
     encrypt: bool = True,
 ) -> dict:
     """
-    Upload un fichier dans Supabase Storage et crée l'enregistrement document.
-
-    Args:
-        file_bytes: Contenu du fichier en bytes
-        filename: Nom du fichier
-        chantier_id: ID du chantier associé
-        famille: Famille de document (Plans, Métrés, Devis, etc.)
-        doc_type: Type spécifique (ex: "Plan d'exécution")
-        statut: Statut du document
-        metadata: Métadonnées supplémentaires (JSONB)
-        encrypt: Chiffrer le fichier avant upload
-
-    Returns:
-        dict: Enregistrement du document créé, ou {} en cas d'erreur
+    Upload un fichier dans Supabase Storage et cree l'enregistrement document.
     """
     client = get_supabase_client()
     uid = st.session_state.get("user_id")
+
     if not client or not uid:
-        st.error("Non connecté. Impossible d'uploader le fichier.")
+        st.error("Non connecte. Impossible d'uploader le fichier.")
         return {}
 
-    # Chiffrer si demandé
+    # Chiffrer si demande
     data_to_upload = encrypt_bytes(file_bytes) if encrypt else file_bytes
     is_encrypted = encrypt and bool(st.secrets.get("ENCRYPTION_KEY", ""))
 
@@ -116,7 +111,7 @@ def upload_file(
     # Calculer le hash
     file_hash = hashlib.sha256(file_bytes).hexdigest()
 
-    # Déterminer le content-type
+    # Determiner le content-type
     ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
     content_types = {
         "pdf": "application/pdf",
@@ -125,8 +120,13 @@ def upload_file(
         "jpeg": "image/jpeg",
         "xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         "docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
         "csv": "text/csv",
         "json": "application/json",
+        "txt": "text/plain",
+        "dwg": "application/acad",
+        "dxf": "application/dxf",
+        "zip": "application/zip",
     }
     content_type = content_types.get(ext, "application/octet-stream")
 
@@ -138,11 +138,11 @@ def upload_file(
             file_options={"content-type": content_type}
         )
 
-        # Créer l'enregistrement document en DB
+        # Creer l'enregistrement document en DB
         doc_record = create_document({
             "chantier_id": chantier_id,
             "nom": filename,
-            "type": doc_type or famille,
+            "type": famille,
             "famille": famille,
             "statut": statut,
             "storage_path": storage_path,
@@ -152,7 +152,7 @@ def upload_file(
             "metadata": metadata or {},
         })
 
-        # Logger l'activité
+        # Logger l'activite
         log_activity(
             action="document_uploaded",
             resource_type="document",
@@ -176,8 +176,7 @@ def upload_generated_document(
     metadata: dict = None,
 ) -> dict:
     """
-    Stocke un document GéNéRé par l'application (devis PDF, facture PDF, etc.).
-    Méme logique que upload_file mais avec statut "Généré" et log spécifique.
+    Stocke un document genere par l'application (devis PDF, facture PDF, etc.).
     """
     doc = upload_file(
         file_bytes=file_bytes,
@@ -185,10 +184,9 @@ def upload_generated_document(
         chantier_id=chantier_id,
         famille=famille,
         doc_type=doc_type,
-        statut="Validé",
+        statut="Valide",
         metadata=metadata or {"generated": True, "generated_at": datetime.now().isoformat()},
     )
-
     if doc:
         log_activity(
             action="document_generated",
@@ -196,37 +194,30 @@ def upload_generated_document(
             resource_id=doc.get("id", ""),
             details={"filename": filename, "type": doc_type}
         )
-
     return doc
 
 
-#  Download / Signed URL 
+# Download / Signed URL
 
 def get_signed_url(storage_path: str, expires_in: int = 900) -> str:
-    """
-    Génére une URL signée temporaire pour accéder é un fichier.
-    Expire aprés 15 minutes par défaut.
-    """
+    """Genere une URL signee temporaire pour acceder a un fichier."""
     client = get_supabase_client()
     if not client or not storage_path:
         return ""
-
     try:
         result = client.storage.from_(BUCKET_NAME).create_signed_url(storage_path, expires_in)
-        return result.get("signedURL", "") if isinstance(result, dict) else ""
+        if isinstance(result, dict):
+            return result.get("signedURL", result.get("signedUrl", ""))
+        return ""
     except Exception:
         return ""
 
 
 def download_file(storage_path: str, is_encrypted: bool = False) -> bytes:
-    """
-    Télécharge un fichier depuis Supabase Storage.
-    Déchiffre si nécessaire.
-    """
+    """Telecharge un fichier depuis Supabase Storage."""
     client = get_supabase_client()
     if not client or not storage_path:
         return b""
-
     try:
         data = client.storage.from_(BUCKET_NAME).download(storage_path)
         if is_encrypted:
@@ -236,14 +227,13 @@ def download_file(storage_path: str, is_encrypted: bool = False) -> bytes:
         return b""
 
 
-#  Suppression 
+# Suppression
 
 def delete_file(storage_path: str) -> bool:
     """Supprime un fichier du storage."""
     client = get_supabase_client()
     if not client or not storage_path:
         return False
-
     try:
         client.storage.from_(BUCKET_NAME).remove([storage_path])
         return True
@@ -251,10 +241,10 @@ def delete_file(storage_path: str) -> bool:
         return False
 
 
-#  Utilitaires 
+# Utilitaires
 
 def get_storage_usage(user_id: str = None) -> dict:
-    """Calcule l'espace de stockage utilisé par l'utilisateur."""
+    """Calcule l'espace de stockage utilise par l'utilisateur."""
     from lib.db import get_documents
     docs = get_documents(user_id=user_id) if user_id else get_documents()
     total_bytes = sum(d.get("taille", d.get("file_size_bytes", 0)) or 0 for d in docs)
