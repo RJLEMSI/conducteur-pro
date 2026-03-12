@@ -1,7 +1,9 @@
 """
-ConducteurPro — Module de base de données (Supabase PostgreSQL).
-Fournit toutes les opérations CRUD pour les tables métier.
+ConducteurPro - Module de base de donnees (Supabase PostgreSQL).
+Fournit toutes les operations CRUD pour les tables metier.
 """
+
+import streamlit as st
 from lib.supabase_client import get_supabase_client
 from datetime import datetime
 
@@ -10,10 +12,9 @@ def _client():
     return get_supabase_client()
 
 
-# ─── Profils ──────────────────────────────────────────────────────────────────
+# --- Profils ---
 
 def get_profile(user_id: str) -> dict | None:
-    """Récupère le profil utilisateur."""
     try:
         r = _client().table("user_profiles").select("*").eq("user_id", user_id).single().execute()
         return r.data
@@ -22,7 +23,6 @@ def get_profile(user_id: str) -> dict | None:
 
 
 def update_profile(user_id: str, data: dict) -> bool:
-    """Met à jour le profil utilisateur."""
     try:
         _client().table("user_profiles").update(data).eq("user_id", user_id).execute()
         return True
@@ -30,10 +30,9 @@ def update_profile(user_id: str, data: dict) -> bool:
         return False
 
 
-# ─── Chantiers ────────────────────────────────────────────────────────────────
+# --- Chantiers ---
 
 def get_chantiers(user_id: str) -> list:
-    """Récupère tous les chantiers de l'utilisateur."""
     try:
         r = _client().table("chantiers").select("*").eq("user_id", user_id).order("created_at", desc=True).execute()
         return r.data or []
@@ -42,7 +41,6 @@ def get_chantiers(user_id: str) -> list:
 
 
 def get_chantier(chantier_id: str) -> dict | None:
-    """Récupère un chantier par ID."""
     try:
         r = _client().table("chantiers").select("*").eq("id", chantier_id).single().execute()
         return r.data
@@ -51,7 +49,6 @@ def get_chantier(chantier_id: str) -> dict | None:
 
 
 def create_chantier(user_id: str, data: dict) -> dict | None:
-    """Crée un nouveau chantier."""
     try:
         data["user_id"] = user_id
         data["created_at"] = datetime.utcnow().isoformat()
@@ -62,7 +59,6 @@ def create_chantier(user_id: str, data: dict) -> dict | None:
 
 
 def update_chantier(chantier_id: str, data: dict) -> bool:
-    """Met à jour un chantier."""
     try:
         _client().table("chantiers").update(data).eq("id", chantier_id).execute()
         return True
@@ -71,7 +67,6 @@ def update_chantier(chantier_id: str, data: dict) -> bool:
 
 
 def delete_chantier(chantier_id: str) -> bool:
-    """Supprime un chantier et ses données associées."""
     try:
         _client().table("chantiers").delete().eq("id", chantier_id).execute()
         return True
@@ -79,10 +74,9 @@ def delete_chantier(chantier_id: str) -> bool:
         return False
 
 
-# ─── Études / Analyses ────────────────────────────────────────────────────────
+# --- Etudes / Analyses ---
 
 def get_etudes(user_id: str = None, chantier_id: str = None, etude_type: str = None) -> list:
-    """Récupère les études, avec filtrage optionnel."""
     try:
         q = _client().table("etudes").select("*")
         if user_id:
@@ -98,7 +92,6 @@ def get_etudes(user_id: str = None, chantier_id: str = None, etude_type: str = N
 
 
 def save_etude(user_id: str, chantier_id: str, etude_type: str, titre: str, contenu: str, metadata: dict = None) -> dict | None:
-    """Sauvegarde une nouvelle étude/analyse."""
     try:
         data = {
             "user_id": user_id,
@@ -116,7 +109,6 @@ def save_etude(user_id: str, chantier_id: str, etude_type: str, titre: str, cont
 
 
 def delete_etude(etude_id: str) -> bool:
-    """Supprime une étude."""
     try:
         _client().table("etudes").delete().eq("id", etude_id).execute()
         return True
@@ -124,10 +116,9 @@ def delete_etude(etude_id: str) -> bool:
         return False
 
 
-# ─── Métrés ───────────────────────────────────────────────────────────────────
+# --- Metres ---
 
 def get_metres(chantier_id: str) -> list:
-    """Récupère les métrés d'un chantier."""
     try:
         r = _client().table("metres").select("*").eq("chantier_id", chantier_id).order("created_at", desc=True).execute()
         return r.data or []
@@ -136,7 +127,6 @@ def get_metres(chantier_id: str) -> list:
 
 
 def save_metre(user_id: str, chantier_id: str, data: dict) -> dict | None:
-    """Sauvegarde un métré."""
     try:
         data["user_id"] = user_id
         data["chantier_id"] = chantier_id
@@ -147,10 +137,9 @@ def save_metre(user_id: str, chantier_id: str, data: dict) -> dict | None:
         return None
 
 
-# ─── Devis ────────────────────────────────────────────────────────────────────
+# --- Devis ---
 
 def get_devis(chantier_id: str = None, user_id: str = None) -> list:
-    """Récupère les devis."""
     try:
         q = _client().table("devis").select("*")
         if chantier_id:
@@ -164,7 +153,6 @@ def get_devis(chantier_id: str = None, user_id: str = None) -> list:
 
 
 def save_devis(user_id: str, chantier_id: str, data: dict) -> dict | None:
-    """Sauvegarde un devis."""
     try:
         data["user_id"] = user_id
         data["chantier_id"] = chantier_id
@@ -176,7 +164,6 @@ def save_devis(user_id: str, chantier_id: str, data: dict) -> dict | None:
 
 
 def update_devis(devis_id: str, data: dict) -> bool:
-    """Met à jour un devis."""
     try:
         _client().table("devis").update(data).eq("id", devis_id).execute()
         return True
@@ -184,10 +171,9 @@ def update_devis(devis_id: str, data: dict) -> bool:
         return False
 
 
-# ─── Factures ─────────────────────────────────────────────────────────────────
+# --- Factures ---
 
 def get_factures(chantier_id: str = None, user_id: str = None) -> list:
-    """Récupère les factures."""
     try:
         q = _client().table("factures").select("*")
         if chantier_id:
@@ -201,7 +187,6 @@ def get_factures(chantier_id: str = None, user_id: str = None) -> list:
 
 
 def save_facture(user_id: str, chantier_id: str, data: dict) -> dict | None:
-    """Sauvegarde une facture."""
     try:
         data["user_id"] = user_id
         data["chantier_id"] = chantier_id
@@ -213,7 +198,6 @@ def save_facture(user_id: str, chantier_id: str, data: dict) -> dict | None:
 
 
 def update_facture(facture_id: str, data: dict) -> bool:
-    """Met à jour une facture."""
     try:
         _client().table("factures").update(data).eq("id", facture_id).execute()
         return True
@@ -221,52 +205,46 @@ def update_facture(facture_id: str, data: dict) -> bool:
         return False
 
 
-# ─── Étapes (Planning) ────────────────────────────────────────────────────────
+# --- Etapes (Planning) ---
 
-def get_étapes(chantier_id: str) -> list:
-    """Récupère les étapes d'un chantier."""
+def get_etapes(chantier_id: str) -> list:
     try:
-        r = _client().table("étapes").select("*").eq("chantier_id", chantier_id).order("ordre").execute()
+        r = _client().table("etapes").select("*").eq("chantier_id", chantier_id).order("ordre").execute()
         return r.data or []
     except Exception:
         return []
 
 
-def save_étape(user_id: str, chantier_id: str, data: dict) -> dict | None:
-    """Sauvegarde une étape."""
+def save_etape(user_id: str, chantier_id: str, data: dict) -> dict | None:
     try:
         data["user_id"] = user_id
         data["chantier_id"] = chantier_id
         data["created_at"] = datetime.utcnow().isoformat()
-        r = _client().table("étapes").insert(data).execute()
+        r = _client().table("etapes").insert(data).execute()
         return r.data[0] if r.data else None
     except Exception:
         return None
 
 
-def update_étape(étape_id: str, data: dict) -> bool:
-    """Met à jour une étape."""
+def update_etape(etape_id: str, data: dict) -> bool:
     try:
-        _client().table("étapes").update(data).eq("id", étape_id).execute()
+        _client().table("etapes").update(data).eq("id", etape_id).execute()
         return True
     except Exception:
         return False
 
 
-def delete_étape(étape_id: str) -> bool:
-    """Supprime une étape."""
+def delete_etape(etape_id: str) -> bool:
     try:
-        _client().table("étapes").delete().eq("id", étape_id).execute()
+        _client().table("etapes").delete().eq("id", etape_id).execute()
         return True
     except Exception:
         return False
 
 
-# ─── Documents ────────────────────────────────────────────────────────────────
-
+# --- Documents ---
 
 def save_document(user_id: str, chantier_id: str, data: dict) -> dict | None:
-    """Sauvegarde un document."""
     try:
         data["user_id"] = user_id
         data["chantier_id"] = chantier_id
@@ -277,76 +255,8 @@ def save_document(user_id: str, chantier_id: str, data: dict) -> dict | None:
         return None
 
 
-def delete_document(doc_id: str) -> bool:
-    """Supprime un document."""
-    try:
-        _client().table("documents").delete().eq("id", doc_id).execute()
-        return True
-    except Exception:
-        return False
-
-
-# ─── Abonnements ──────────────────────────────────────────────────────────────
-
-def get_subscription(user_id: str) -> dict | None:
-    """Récupère l'abonnement actif de l'utilisateur."""
-    try:
-        r = _client().table("subscriptions").select("*").eq("user_id", user_id).eq("active", True).single().execute()
-        return r.data
-    except Exception:
-        return None
-
-
-def update_subscription(user_id: str, data: dict) -> bool:
-    """Met à jour l'abonnement."""
-    try:
-        _client().table("subscriptions").upsert({**data, "user_id": user_id}).execute()
-        return True
-    except Exception:
-        return False
-
-
-# ─── Statistiques Dashboard ───────────────────────────────────────────────────
-
-def get_dashboard_stats(user_id: str) -> dict:
-    """Calcule les statistiques pour le tableau de bord."""
-    try:
-        chantiers = get_chantiers(user_id)
-        devis = get_devis(user_id=user_id)
-        factures = get_factures(user_id=user_id)
-        
-        # Montants
-        total_devis = sum(float(d.get("montant_ht", 0) or 0) for d in devis)
-        total_factures = sum(float(f.get("montant_ttc", 0) or 0) for f in factures)
-        factures_payees = [f for f in factures if f.get("statut") == "payée"]
-        total_paye = sum(float(f.get("montant_ttc", 0) or 0) for f in factures_payees)
-        
-        return {
-            "nb_chantiers": len(chantiers),
-            "nb_chantiers_actifs": len([c for c in chantiers if c.get("statut") == "en_cours"]),
-            "nb_devis": len(devis),
-            "total_devis_ht": total_devis,
-            "nb_factures": len(factures),
-            "total_factures_ttc": total_factures,
-            "total_paye": total_paye,
-            "taux_recouvrement": (total_paye / total_factures * 100) if total_factures > 0 else 0,
-            "chantiers": chantiers,
-            "devis": devis,
-            "factures": factures,
-        }
-    except Exception:
-        return {
-            "nb_chantiers": 0, "nb_chantiers_actifs": 0,
-            "nb_devis": 0, "total_devis_ht": 0,
-            "nb_factures": 0, "total_factures_ttc": 0,
-            "total_paye": 0, "taux_recouvrement": 0,
-            "chantiers": [], "devis": [], "factures": [],
-        }
-
-# ─── Documents ──────────────────────────────────────────────────────────────
-
 def create_document(data: dict) -> dict:
-    """Crée un enregistrement de document dans la table documents."""
+    """Cree un enregistrement de document dans la table documents."""
     client = _client()
     if not client:
         return data
@@ -354,6 +264,7 @@ def create_document(data: dict) -> dict:
         user_id = st.session_state.get("user_id")
         if user_id:
             data["user_id"] = user_id
+        data["created_at"] = datetime.utcnow().isoformat()
         result = client.table("documents").insert(data).execute()
         if result.data and len(result.data) > 0:
             return result.data[0]
@@ -363,7 +274,7 @@ def create_document(data: dict) -> dict:
 
 
 def get_documents(user_id: str = None, chantier_id: str = None, famille: str = None, doc_type: str = None) -> list:
-    """Récupère les documents avec filtres optionnels."""
+    """Recupere les documents avec filtres optionnels."""
     client = _client()
     if not client:
         return []
@@ -395,10 +306,64 @@ def delete_document(document_id: str) -> bool:
         return False
 
 
-# ─── Activity Log ───────────────────────────────────────────────────────────
+# --- Abonnements ---
+
+def get_subscription(user_id: str) -> dict | None:
+    try:
+        r = _client().table("subscriptions").select("*").eq("user_id", user_id).eq("active", True).single().execute()
+        return r.data
+    except Exception:
+        return None
+
+
+def update_subscription(user_id: str, data: dict) -> bool:
+    try:
+        _client().table("subscriptions").upsert({**data, "user_id": user_id}).execute()
+        return True
+    except Exception:
+        return False
+
+
+# --- Statistiques Dashboard ---
+
+def get_dashboard_stats(user_id: str) -> dict:
+    try:
+        chantiers = get_chantiers(user_id)
+        devis = get_devis(user_id=user_id)
+        factures = get_factures(user_id=user_id)
+
+        total_devis = sum(float(d.get("montant_ht", 0) or 0) for d in devis)
+        total_factures = sum(float(f.get("montant_ttc", 0) or 0) for f in factures)
+        factures_payees = [f for f in factures if f.get("statut") == "payee"]
+        total_paye = sum(float(f.get("montant_ttc", 0) or 0) for f in factures_payees)
+
+        return {
+            "nb_chantiers": len(chantiers),
+            "nb_chantiers_actifs": len([c for c in chantiers if c.get("statut") == "en_cours"]),
+            "nb_devis": len(devis),
+            "total_devis_ht": total_devis,
+            "nb_factures": len(factures),
+            "total_factures_ttc": total_factures,
+            "total_paye": total_paye,
+            "taux_recouvrement": (total_paye / total_factures * 100) if total_factures > 0 else 0,
+            "chantiers": chantiers,
+            "devis": devis,
+            "factures": factures,
+        }
+    except Exception:
+        return {
+            "nb_chantiers": 0, "nb_chantiers_actifs": 0,
+            "nb_devis": 0, "total_devis_ht": 0,
+            "nb_factures": 0, "total_factures_ttc": 0,
+            "total_paye": 0, "taux_recouvrement": 0,
+            "chantiers": [], "devis": [], "factures": [],
+        }
+
+
+# --- Activity Log ---
 
 def log_activity(action: str, resource_type: str = "", resource_id: str = "", details: dict = None):
-    """Enregistre une action dans le journal d'activité."""
+    """Enregistre une action dans le journal d'activite."""
     client = _client()
     if not client:
         return
@@ -414,10 +379,57 @@ def log_activity(action: str, resource_type: str = "", resource_id: str = "", de
             "details": details or {},
         }).execute()
     except Exception:
-        pass  # Ne pas bloquer l'app si le logging échoue
+        pass
 
 
-# ─── Aliases pour compatibilité import_manager ─────────────────────────────
+# --- Reunions ---
+
+def get_reunions(user_id: str = None, chantier_id: str = None) -> list:
+    """Recupere les reunions."""
+    client = _client()
+    if not client:
+        return []
+    try:
+        query = client.table("reunions").select("*")
+        if user_id:
+            query = query.eq("user_id", user_id)
+        if chantier_id:
+            query = query.eq("chantier_id", chantier_id)
+        result = query.order("date_reunion", desc=True).execute()
+        return result.data or []
+    except Exception:
+        return []
+
+
+def save_reunion(user_id: str, chantier_id: str, data: dict) -> dict | None:
+    """Sauvegarde une reunion."""
+    try:
+        data["user_id"] = user_id
+        data["chantier_id"] = chantier_id
+        data["created_at"] = datetime.utcnow().isoformat()
+        r = _client().table("reunions").insert(data).execute()
+        return r.data[0] if r.data else None
+    except Exception:
+        return None
+
+
+def delete_reunion(reunion_id: str) -> bool:
+    """Supprime une reunion."""
+    try:
+        _client().table("reunions").delete().eq("id", reunion_id).execute()
+        return True
+    except Exception:
+        return False
+
+
+# --- Aliases pour compatibilite import_manager ---
 create_facture = save_facture
 create_devis = save_devis
-create_étape = save_étape
+create_etape = save_etape
+
+# Aliases accentes pour compatibilite fichiers git clone
+get_étapes = get_etapes
+save_étape = save_etape
+update_étape = update_etape
+delete_étape = delete_etape
+create_étape = save_etape
