@@ -51,50 +51,111 @@ KEYWORD_MAP = {
 
 IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff", ".webp"}
 PLAN_EXTENSIONS = {".dwg", ".dxf", ".dwf"}
-
-# Extensions visualisables dans le navigateur
 VIEWABLE_EXTENSIONS = {".pdf", ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp", ".txt", ".csv"}
 
 CAT_ICONS = {
-    "Plan": "📐", "DCE": "📑", "Devis": "💰", "Facture": "🧾",
-    "Etude": "📖", "Contrat": "📜", "PV": "📝", "Photo": "📷",
-    "Metre": "📏", "Autre": "📄",
+    "Plan": "\U0001f4d0", "DCE": "\U0001f4d1", "Devis": "\U0001f4b0",
+    "Facture": "\U0001f9fe", "Etude": "\U0001f4d6", "Contrat": "\U0001f4dc",
+    "PV": "\U0001f4dd", "Photo": "\U0001f4f7", "Metre": "\U0001f4cf", "Autre": "\U0001f4c4",
 }
-
 
 def classify_file(filename: str) -> str:
     """Classifie un fichier selon son nom et son extension."""
     name_lower = filename.lower()
     _, ext = os.path.splitext(name_lower)
-
-    # 1. Images -> Photo
     if ext in IMAGE_EXTENSIONS:
         for kw, cat in KEYWORD_MAP.items():
             if kw in name_lower and cat != "Photo":
                 return cat
         return "Photo"
-
-    # 2. Fichiers CAO -> Plan
     if ext in PLAN_EXTENSIONS:
         return "Plan"
-
-    # 3. Recherche par mots-cles dans le nom
     name_clean = name_lower.replace(ext, "")
     name_clean = name_clean.replace("-", " ").replace("_", " ").replace(".", " ")
-
     for kw, cat in KEYWORD_MAP.items():
         if kw in name_clean:
             return cat
-
-    # 4. Pas de correspondance
     return "Autre"
-
 
 def can_view_in_browser(filename: str) -> bool:
     """Verifie si le fichier peut etre visualise dans le navigateur."""
     _, ext = os.path.splitext(filename.lower())
     return ext in VIEWABLE_EXTENSIONS
 
+def format_size(size_bytes):
+    """Formate une taille en octets en Ko/Mo."""
+    if not size_bytes:
+        return "0 Ko"
+    if size_bytes < 1024:
+        return f"{size_bytes} o"
+    if size_bytes < 1024 * 1024:
+        return f"{size_bytes / 1024:.0f} Ko"
+    return f"{size_bytes / 1024 / 1024:.1f} Mo"
+
+def render_document_row(doc, prefix=""):
+    """Affiche une ligne de document avec actions."""
+    doc_famille = doc.get("famille", doc.get("type", "Autre"))
+    icon = CAT_ICONS.get(doc_famille, "\U0001f4c4")
+    nom = doc.get("nom", doc.get("filename", "Sans nom"))
+    if not nom:
+        nom = "Sans nom"
+    taille = doc.get("file_size_bytes", doc.get("taille", 0)) or 0
+    taille_str = format_size(taille)
+    date = str(doc.get("created_at", ""))[:10]
+    storage_path = doc.get("storage_path", "")
+    doc_id = doc.get("id", "")
+
+    col1, col2, col3, col4 = st.columns([4, 2, 1, 1])
+    col1.markdown(f"{icon} **{nom}**")
+    col2.caption(f"{doc_famille} \u2022 {taille_str} \u2022 {date}")
+
+    # Bouton visualiser
+    if storage_path and can_view_in_browser(nom):
+        if col3.button("\U0001f441\ufe0f", key=f"{prefix}view_{doc_id}", help="Visualiser"):
+            try:
+                url = storage.get_signed_url(storage_path, expires_in=1800)
+                if url:
+                    st.session_state[f"{prefix}viewing_{doc_id}"] = url
+                else:
+                    st.warning("Impossible de generer le lien de visualisation.")
+            except Exception:
+                st.error("Erreur lors de la generation du lien.")
+    else:
+        col3.write("")
+
+    # Bouton telecharger
+    if storage_path:
+        if col4.button("\U0001f4e5", key=f"{prefix}dl_{doc_id}", help="Telecharger"):
+            try:
+                url = storage.get_signed_url(storage_path)
+                if url:
+                    st.markdown(f"[\U0001f4e5 Telecharger {nom}]({url})")
+                else:
+                    st.warning("Impossible de generer le lien.")
+            except Exception:
+                st.error("Erreur lors du telechargement.")
+    else:
+        col4.write("")
+
+    # Afficher la visionneuse si active
+    view_key = f"{prefix}viewing_{doc_id}"
+    if st.session_state.get(view_key):
+        url = st.session_state[view_key]
+        _, ext = os.path.splitext(nom.lower())
+        if ext == ".pdf":
+            st.markdown(f'<iframe src="{url}" width="100%" height="600" style="border: 1px solid #ddd; border-radius: 8px;"></iframe>', unsafe_allow_html=True)
+        elif ext in {".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp"}:
+            st.image(url, caption=nom, use_container_width=True)
+        elif ext in {".txt", ".csv"}:
+            try:
+                file_data = storage.download_file(storage_path, is_encrypted=doc.get("is_encrypted", False))
+                if file_data:
+                    st.code(file_data.decode("utf-8", errors="replace"), language="text")
+            except Exception:
+                st.markdown(f"[Ouvrir dans le navigateur]({url})")
+        if st.button("Fermer", key=f"{prefix}close_{doc_id}"):
+            del st.session_state[view_key]
+            st.rerun()
 
 # --- Upload ---
 st.subheader("Importer des documents")
@@ -106,11 +167,7 @@ auto_classify = st.toggle(
 )
 
 if not auto_classify:
-    doc_type = st.selectbox(
-        "Type de document",
-        CATEGORIES,
-        key="doc_type_upload",
-    )
+    doc_type = st.selectbox("Type de document", CATEGORIES, key="doc_type_upload")
 
 uploaded_files = st.file_uploader(
     "Fichiers",
@@ -124,13 +181,11 @@ if uploaded_files:
     nb = len(uploaded_files)
 
     if auto_classify:
-        # Classifier chaque fichier
         classifications = {}
         for f in uploaded_files:
             cat = classify_file(f.name)
             classifications[f.name] = cat
 
-        # Grouper par categorie
         by_cat = {}
         for fname, cat in classifications.items():
             by_cat.setdefault(cat, []).append(fname)
@@ -139,13 +194,12 @@ if uploaded_files:
 
         for cat in CATEGORIES:
             if cat in by_cat:
-                icon = CAT_ICONS.get(cat, "📄")
+                icon = CAT_ICONS.get(cat, "\U0001f4c4")
                 files_list = by_cat[cat]
                 with st.expander(f"{icon} **{cat}** ({len(files_list)} fichier{'s' if len(files_list) > 1 else ''})", expanded=False):
                     for fname in files_list:
                         st.caption(f"  - {fname}")
 
-        # Corriger la classification
         with st.expander("Corriger la classification", expanded=False):
             corrected = {}
             for f in uploaded_files:
@@ -161,11 +215,9 @@ if uploaded_files:
             progress = st.progress(0, text="Upload en cours...")
             success_count = 0
             error_count = 0
-
             for i, uploaded in enumerate(uploaded_files):
                 cat = classifications[uploaded.name]
                 progress.progress(i / nb, text=f"Upload de {uploaded.name} -> {cat}...")
-
                 try:
                     file_result = storage.upload_file(
                         file_bytes=uploaded.getvalue(),
@@ -174,7 +226,6 @@ if uploaded_files:
                         famille=cat,
                         doc_type=cat,
                     )
-
                     if file_result:
                         success_count += 1
                     else:
@@ -183,26 +234,20 @@ if uploaded_files:
                 except Exception as e:
                     error_count += 1
                     st.error(f"Erreur lors de l'import de '{uploaded.name}': {e}")
-
             progress.progress(1.0, text="Termine !")
             if success_count > 0:
                 st.success(f"{success_count} fichier{'s' if success_count > 1 else ''} classe{'s' if success_count > 1 else ''} et uploade{'s' if success_count > 1 else ''} avec succes !")
             if error_count > 0:
                 st.error(f"{error_count} fichier{'s' if error_count > 1 else ''} en erreur.")
             st.rerun()
-
     else:
-        # Mode manuel
         st.info(f"{nb} fichier{'s' if nb > 1 else ''} selectionne{'s' if nb > 1 else ''} -> {doc_type}")
-
         if st.button(f"Uploader {nb} fichier{'s' if nb > 1 else ''}", type="primary"):
             progress = st.progress(0, text="Upload en cours...")
             success_count = 0
             error_count = 0
-
             for i, uploaded in enumerate(uploaded_files):
                 progress.progress(i / nb, text=f"Upload de {uploaded.name}...")
-
                 try:
                     file_result = storage.upload_file(
                         file_bytes=uploaded.getvalue(),
@@ -211,7 +256,6 @@ if uploaded_files:
                         famille=doc_type,
                         doc_type=doc_type,
                     )
-
                     if file_result:
                         success_count += 1
                     else:
@@ -220,7 +264,6 @@ if uploaded_files:
                 except Exception as e:
                     error_count += 1
                     st.error(f"Erreur lors de l'import de '{uploaded.name}': {e}")
-
             progress.progress(1.0, text="Termine !")
             if success_count > 0:
                 st.success(f"{success_count} fichier{'s' if success_count > 1 else ''} uploade{'s' if success_count > 1 else ''} avec succes.")
@@ -228,84 +271,22 @@ if uploaded_files:
                 st.error(f"{error_count} fichier{'s' if error_count > 1 else ''} en erreur.")
             st.rerun()
 
-
 # --- Documents existants ---
 st.markdown("---")
 st.subheader("Documents du chantier")
 
 docs = db.get_documents(user_id=user_id, chantier_id=chantier["id"])
 
-# Onglets par categorie
-tab_names = ["Tous"] + [f"{CAT_ICONS.get(c, '📄')} {c}" for c in CATEGORIES]
+tab_names = ["Tous"] + [f"{CAT_ICONS.get(c, '\U0001f4c4')} {c}" for c in CATEGORIES]
 tabs = st.tabs(tab_names)
 
 # Onglet "Tous"
 with tabs[0]:
     if docs:
-        total_size = sum(d.get("taille", d.get("file_size_bytes", 0)) or 0 for d in docs)
-        size_display = f"{total_size / 1024 / 1024:.1f} Mo" if total_size > 1024 * 1024 else f"{total_size / 1024:.0f} Ko"
-        st.info(f"{len(docs)} documents - {size_display}")
-
+        total_size = sum(d.get("file_size_bytes", d.get("taille", 0)) or 0 for d in docs)
+        st.info(f"{len(docs)} documents - {format_size(total_size)}")
         for doc in docs:
-            _render_document_card(doc) if False else None  # placeholder
-
-        for doc in docs:
-            doc_famille = doc.get("famille", doc.get("type", "Autre"))
-            icon = CAT_ICONS.get(doc_famille, "📄")
-            nom = doc.get("nom", doc.get("filename", "N/A"))
-            taille = doc.get("taille", doc.get("file_size_bytes", 0)) or 0
-            taille_str = f"{taille / 1024:.0f} Ko" if taille < 1024 * 1024 else f"{taille / 1024 / 1024:.1f} Mo"
-            date = str(doc.get("created_at", ""))[:10]
-            storage_path = doc.get("storage_path", "")
-            doc_id = doc.get("id", "")
-
-            col1, col2, col3, col4 = st.columns([4, 2, 1, 1])
-            col1.markdown(f"{icon} **{nom}**")
-            col2.caption(f"{doc_famille} - {taille_str} - {date}")
-
-            # Bouton visualiser
-            if storage_path and can_view_in_browser(nom):
-                if col3.button("👁", key=f"view_{doc_id}", help="Visualiser"):
-                    try:
-                        url = storage.get_signed_url(storage_path, expires_in=1800)
-                        if url:
-                            st.session_state[f"viewing_{doc_id}"] = url
-                        else:
-                            st.warning("Impossible de generer le lien de visualisation.")
-                    except Exception:
-                        st.error("Erreur lors de la generation du lien.")
-
-            # Bouton telecharger
-            if storage_path:
-                if col4.button("📥", key=f"dl_{doc_id}", help="Telecharger"):
-                    try:
-                        url = storage.get_signed_url(storage_path)
-                        if url:
-                            st.markdown(f"[Telecharger {nom}]({url})")
-                        else:
-                            st.warning("Impossible de generer le lien.")
-                    except Exception:
-                        st.error("Erreur lors du telechargement.")
-
-            # Afficher la visionneuse si active
-            view_key = f"viewing_{doc_id}"
-            if st.session_state.get(view_key):
-                url = st.session_state[view_key]
-                _, ext = os.path.splitext(nom.lower())
-                if ext == ".pdf":
-                    st.markdown(f'<iframe src="{url}" width="100%" height="600" style="border: 1px solid #ddd; border-radius: 8px;"></iframe>', unsafe_allow_html=True)
-                elif ext in {".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp"}:
-                    st.image(url, caption=nom, use_container_width=True)
-                elif ext in {".txt", ".csv"}:
-                    try:
-                        file_data = storage.download_file(storage_path, is_encrypted=doc.get("is_encrypted", False))
-                        if file_data:
-                            st.code(file_data.decode("utf-8", errors="replace"), language="text")
-                    except Exception:
-                        st.markdown(f"[Ouvrir dans le navigateur]({url})")
-                if st.button("Fermer", key=f"close_{doc_id}"):
-                    del st.session_state[view_key]
-                    st.rerun()
+            render_document_row(doc, prefix="all_")
     else:
         st.warning("Aucun document pour ce chantier.")
 
@@ -313,63 +294,13 @@ with tabs[0]:
 for i, cat in enumerate(CATEGORIES):
     with tabs[i + 1]:
         cat_docs = [d for d in docs if d.get("famille", d.get("type", "Autre")) == cat]
-
         if cat_docs:
-            total_size = sum(d.get("taille", d.get("file_size_bytes", 0)) or 0 for d in cat_docs)
-            size_display = f"{total_size / 1024 / 1024:.1f} Mo" if total_size > 1024 * 1024 else f"{total_size / 1024:.0f} Ko"
-            st.info(f"{len(cat_docs)} document{'s' if len(cat_docs) > 1 else ''} - {size_display}")
-
+            total_size = sum(d.get("file_size_bytes", d.get("taille", 0)) or 0 for d in cat_docs)
+            st.info(f"{len(cat_docs)} document{'s' if len(cat_docs) > 1 else ''} - {format_size(total_size)}")
             for doc in cat_docs:
-                nom = doc.get("nom", doc.get("filename", "N/A"))
-                taille = doc.get("taille", doc.get("file_size_bytes", 0)) or 0
-                taille_str = f"{taille / 1024:.0f} Ko" if taille < 1024 * 1024 else f"{taille / 1024 / 1024:.1f} Mo"
-                date = str(doc.get("created_at", ""))[:10]
-                storage_path = doc.get("storage_path", "")
-                doc_id = doc.get("id", "")
-
-                col1, col2, col3, col4 = st.columns([4, 2, 1, 1])
-                col1.markdown(f"**{nom}**")
-                col2.caption(f"{taille_str} - {date}")
-
-                if storage_path and can_view_in_browser(nom):
-                    if col3.button("👁", key=f"viewcat_{cat}_{doc_id}", help="Visualiser"):
-                        try:
-                            url = storage.get_signed_url(storage_path, expires_in=1800)
-                            if url:
-                                st.session_state[f"viewingcat_{cat}_{doc_id}"] = url
-                        except Exception:
-                            st.error("Erreur.")
-
-                if storage_path:
-                    if col4.button("📥", key=f"dlcat_{cat}_{doc_id}", help="Telecharger"):
-                        try:
-                            url = storage.get_signed_url(storage_path)
-                            if url:
-                                st.markdown(f"[Telecharger {nom}]({url})")
-                        except Exception:
-                            st.error("Erreur.")
-
-                view_key = f"viewingcat_{cat}_{doc_id}"
-                if st.session_state.get(view_key):
-                    url = st.session_state[view_key]
-                    _, ext = os.path.splitext(nom.lower())
-                    if ext == ".pdf":
-                        st.markdown(f'<iframe src="{url}" width="100%" height="600" style="border: 1px solid #ddd; border-radius: 8px;"></iframe>', unsafe_allow_html=True)
-                    elif ext in {".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp"}:
-                        st.image(url, caption=nom, use_container_width=True)
-                    elif ext in {".txt", ".csv"}:
-                        try:
-                            file_data = storage.download_file(storage_path, is_encrypted=doc.get("is_encrypted", False))
-                            if file_data:
-                                st.code(file_data.decode("utf-8", errors="replace"), language="text")
-                        except Exception:
-                            st.markdown(f"[Ouvrir dans le navigateur]({url})")
-                    if st.button("Fermer", key=f"closecat_{cat}_{doc_id}"):
-                        del st.session_state[view_key]
-                        st.rerun()
+                render_document_row(doc, prefix=f"cat{cat}_")
         else:
             st.info(f"Aucun document de type {cat} pour ce chantier.")
-
 
 # --- Utilisation stockage ---
 st.markdown("---")
