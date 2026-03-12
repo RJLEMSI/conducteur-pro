@@ -3,7 +3,6 @@ import streamlit as st
 # --- Configuration de la page (AVANT st.navigation) ---
 st.set_page_config(
     page_title="ConducteurPro",
-    page_icon="🏗",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -23,8 +22,6 @@ try:
 except Exception:
     pass
 
-# --- Bandeau cookies RGPD supprim� (inutile) ---
-
 # --- Onboarding nouveaux utilisateurs ---
 try:
     from lib.onboarding import should_show_onboarding, render_onboarding
@@ -36,34 +33,34 @@ except Exception:
 # --- Navigation dynamique selon authentification ---
 if is_authenticated():
     pages = {
-        "Général": [
-            st.Page("pages/0_Tableau_de_bord.py", title="Tableau de bord", icon="📊", default=True),
-            st.Page("pages/01_Import_Donnees.py", title="Import Données", icon="📥"),
+        "General": [
+            st.Page("pages/0_Tableau_de_bord.py", title="Tableau de bord", default=True),
+            st.Page("pages/01_Import_Donnees.py", title="Import Donnees"),
         ],
         "Analyses": [
-            st.Page("pages/1_Metres.py", title="Métrés", icon="📐"),
-            st.Page("pages/2_DCE.py", title="DCE", icon="📑"),
-            st.Page("pages/3_Etudes.py", title="Études", icon="🔬"),
-            st.Page("pages/4_Planning.py", title="Planning", icon="📅"),
-            st.Page("pages/5_PLU.py", title="PLU", icon="🏗"),
-            st.Page("pages/6_Synthese.py", title="Synthèse", icon="📊"),
+            st.Page("pages/1_Metres.py", title="Metres"),
+            st.Page("pages/2_DCE.py", title="DCE"),
+            st.Page("pages/3_Etudes.py", title="Etudes"),
+            st.Page("pages/4_Planning.py", title="Planning"),
+            st.Page("pages/5_PLU.py", title="PLU"),
+            st.Page("pages/6_Synthese.py", title="Synthese"),
         ],
         "Documents": [
-            st.Page("pages/8_Devis.py", title="Devis", icon="📋"),
-            st.Page("pages/10_Facturation.py", title="Facturation", icon="💰"),
-            st.Page("pages/11_Documents.py", title="Documents", icon="📂"),
+            st.Page("pages/8_Devis.py", title="Devis"),
+            st.Page("pages/10_Facturation.py", title="Facturation"),
+            st.Page("pages/11_Documents.py", title="Documents"),
         ],
         "Compte": [
-            st.Page("pages/9_Abonnement.py", title="Abonnement", icon="💳"),
-            st.Page("pages/13_Mon_Compte.py", title="Mon Compte", icon="👤"),
-            st.Page("pages/12_Legal.py", title="Mentions légales", icon="⚖"),
+            st.Page("pages/9_Abonnement.py", title="Abonnement"),
+            st.Page("pages/13_Mon_Compte.py", title="Mon Compte"),
+            st.Page("pages/12_Legal.py", title="Mentions legales"),
         ],
     }
 else:
     pages = {
         "Bienvenue": [
-            st.Page("pages/00_Connexion.py", title="Connexion", icon="🔐", default=True),
-            st.Page("pages/12_Legal.py", title="Mentions légales", icon="⚖"),
+            st.Page("pages/00_Connexion.py", title="Connexion", default=True),
+            st.Page("pages/12_Legal.py", title="Mentions legales"),
         ],
     }
 
