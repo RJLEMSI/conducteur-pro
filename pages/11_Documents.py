@@ -8,7 +8,6 @@ import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import streamlit as st
-import pandas as pd
 from datetime import datetime
 from lib.helpers import page_setup, render_saas_sidebar, chantier_selector
 from lib import db, storage
@@ -16,6 +15,93 @@ from utils import GLOBAL_CSS
 
 page_setup(title="Documents", icon="")
 st.markdown(GLOBAL_CSS, unsafe_allow_html=True)
+
+# --- Custom CSS ---
+st.markdown("""
+<style>
+/* Document cards */
+.doc-card {
+    background: white;
+    border: 1px solid #e8ecf1;
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 8px;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.doc-card:hover {
+    border-color: #2563eb;
+    box-shadow: 0 2px 8px rgba(37,99,235,0.12);
+}
+.doc-name {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: #1e293b;
+    margin: 0;
+}
+.doc-meta {
+    font-size: 0.78rem;
+    color: #64748b;
+    margin-top: 2px;
+}
+.doc-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.72rem;
+    font-weight: 500;
+    margin-right: 6px;
+}
+.badge-plan { background: #dbeafe; color: #1d4ed8; }
+.badge-dce { background: #fef3c7; color: #92400e; }
+.badge-devis { background: #d1fae5; color: #065f46; }
+.badge-facture { background: #fee2e2; color: #991b1b; }
+.badge-etude { background: #ede9fe; color: #5b21b6; }
+.badge-contrat { background: #fce7f3; color: #9d174d; }
+.badge-pv { background: #e0f2fe; color: #075985; }
+.badge-photo { background: #f0fdf4; color: #166534; }
+.badge-metre { background: #fff7ed; color: #9a3412; }
+.badge-autre { background: #f1f5f9; color: #475569; }
+
+/* Upload zone */
+.upload-section {
+    background: linear-gradient(135deg, #f0f7ff 0%, #f8fafc 100%);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 24px;
+    border: 1px solid #e2e8f0;
+}
+
+/* Stats cards */
+.storage-card {
+    background: white;
+    border-radius: 10px;
+    padding: 16px;
+    border: 1px solid #e8ecf1;
+    text-align: center;
+}
+.storage-number {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+.storage-label {
+    font-size: 0.8rem;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Delete confirmation */
+.delete-warning {
+    background: #fff5f5;
+    border: 1px solid #fed7d7;
+    border-radius: 8px;
+    padding: 12px;
+    margin: 8px 0;
+}
+</style>
+""", unsafe_allow_html=True)
 
 user_id = st.session_state.get("user_id")
 render_saas_sidebar(user_id)
@@ -59,8 +145,14 @@ CAT_ICONS = {
     "PV": "\U0001f4dd", "Photo": "\U0001f4f7", "Metre": "\U0001f4cf", "Autre": "\U0001f4c4",
 }
 
+BADGE_CLASSES = {
+    "Plan": "badge-plan", "DCE": "badge-dce", "Devis": "badge-devis",
+    "Facture": "badge-facture", "Etude": "badge-etude", "Contrat": "badge-contrat",
+    "PV": "badge-pv", "Photo": "badge-photo", "Metre": "badge-metre", "Autre": "badge-autre",
+}
+
+
 def classify_file(filename: str) -> str:
-    """Classifie un fichier selon son nom et son extension."""
     name_lower = filename.lower()
     _, ext = os.path.splitext(name_lower)
     if ext in IMAGE_EXTENSIONS:
@@ -77,13 +169,13 @@ def classify_file(filename: str) -> str:
             return cat
     return "Autre"
 
+
 def can_view_in_browser(filename: str) -> bool:
-    """Verifie si le fichier peut etre visualise dans le navigateur."""
     _, ext = os.path.splitext(filename.lower())
     return ext in VIEWABLE_EXTENSIONS
 
+
 def format_size(size_bytes):
-    """Formate une taille en octets en Ko/Mo."""
     if not size_bytes:
         return "0 Ko"
     if size_bytes < 1024:
@@ -92,56 +184,110 @@ def format_size(size_bytes):
         return f"{size_bytes / 1024:.0f} Ko"
     return f"{size_bytes / 1024 / 1024:.1f} Mo"
 
-def render_document_row(doc, prefix=""):
-    """Affiche une ligne de document avec actions."""
+
+def delete_document_full(doc):
+    """Supprime un document du storage ET de la base de donnees."""
+    storage_path = doc.get("storage_path", "")
+    doc_id = doc.get("id", "")
+    success = True
+    if storage_path:
+        try:
+            storage.delete_file(storage_path)
+        except Exception:
+            success = False
+    if doc_id:
+        try:
+            db.delete_document(doc_id)
+        except Exception:
+            success = False
+    return success
+
+
+def render_document_card(doc, prefix=""):
+    """Affiche un document en carte avec actions."""
     doc_famille = doc.get("famille", doc.get("type", "Autre"))
     icon = CAT_ICONS.get(doc_famille, "\U0001f4c4")
-    nom = doc.get("nom", doc.get("filename", "Sans nom"))
-    if not nom:
-        nom = "Sans nom"
+    badge_class = BADGE_CLASSES.get(doc_famille, "badge-autre")
+    nom = doc.get("nom", doc.get("filename", "Sans nom")) or "Sans nom"
     taille = doc.get("file_size_bytes", doc.get("taille", 0)) or 0
     taille_str = format_size(taille)
     date = str(doc.get("created_at", ""))[:10]
     storage_path = doc.get("storage_path", "")
     doc_id = doc.get("id", "")
 
-    col1, col2, col3, col4 = st.columns([4, 2, 1, 1])
-    col1.markdown(f"{icon} **{nom}**")
-    col2.caption(f"{doc_famille} \u2022 {taille_str} \u2022 {date}")
+    # Carte document HTML
+    st.markdown(f"""
+    <div class="doc-card">
+        <div style="display:flex; align-items:center; justify-content:space-between;">
+            <div>
+                <p class="doc-name">{icon} {nom}</p>
+                <p class="doc-meta">
+                    <span class="doc-badge {badge_class}">{doc_famille}</span>
+                    {taille_str} &bull; {date}
+                </p>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Actions en colonnes
+    col_view, col_dl, col_del = st.columns([1, 1, 1])
 
     # Bouton visualiser
     if storage_path and can_view_in_browser(nom):
-        if col3.button("\U0001f441\ufe0f", key=f"{prefix}view_{doc_id}", help="Visualiser"):
+        if col_view.button("\U0001f441\ufe0f Voir", key=f"{prefix}view_{doc_id}", use_container_width=True):
             try:
                 url = storage.get_signed_url(storage_path, expires_in=1800)
                 if url:
                     st.session_state[f"{prefix}viewing_{doc_id}"] = url
                 else:
-                    st.warning("Impossible de generer le lien de visualisation.")
+                    st.warning("Impossible de generer le lien.")
             except Exception:
                 st.error("Erreur lors de la generation du lien.")
     else:
-        col3.write("")
+        col_view.button("\U0001f441\ufe0f Voir", key=f"{prefix}view_{doc_id}_disabled", disabled=True, use_container_width=True)
 
     # Bouton telecharger
     if storage_path:
-        if col4.button("\U0001f4e5", key=f"{prefix}dl_{doc_id}", help="Telecharger"):
+        if col_dl.button("\U0001f4e5 Telecharger", key=f"{prefix}dl_{doc_id}", use_container_width=True):
             try:
                 url = storage.get_signed_url(storage_path)
                 if url:
-                    st.markdown(f"[\U0001f4e5 Telecharger {nom}]({url})")
-                else:
-                    st.warning("Impossible de generer le lien.")
+                    st.markdown(f'<a href="{url}" target="_blank">\U0001f4e5 Cliquez ici pour telecharger</a>', unsafe_allow_html=True)
             except Exception:
-                st.error("Erreur lors du telechargement.")
+                st.error("Erreur.")
     else:
-        col4.write("")
+        col_dl.button("\U0001f4e5 Telecharger", key=f"{prefix}dl_{doc_id}_disabled", disabled=True, use_container_width=True)
 
-    # Afficher la visionneuse si active
+    # Bouton supprimer avec confirmation
+    delete_key = f"{prefix}confirm_delete_{doc_id}"
+    if st.session_state.get(delete_key):
+        st.markdown("""<div class="delete-warning">
+            <strong>\u26a0\ufe0f Confirmer la suppression ?</strong><br>
+            Cette action est irreversible.
+        </div>""", unsafe_allow_html=True)
+        c1, c2 = st.columns(2)
+        if c1.button("\u2705 Oui, supprimer", key=f"{prefix}yes_del_{doc_id}", type="primary", use_container_width=True):
+            if delete_document_full(doc):
+                st.success(f"'{nom}' supprime avec succes.")
+                del st.session_state[delete_key]
+                st.rerun()
+            else:
+                st.error("Erreur lors de la suppression.")
+        if c2.button("\u274c Annuler", key=f"{prefix}no_del_{doc_id}", use_container_width=True):
+            del st.session_state[delete_key]
+            st.rerun()
+    else:
+        if col_del.button("\U0001f5d1\ufe0f Supprimer", key=f"{prefix}del_{doc_id}", use_container_width=True):
+            st.session_state[delete_key] = True
+            st.rerun()
+
+    # Visionneuse inline
     view_key = f"{prefix}viewing_{doc_id}"
     if st.session_state.get(view_key):
         url = st.session_state[view_key]
         _, ext = os.path.splitext(nom.lower())
+        st.markdown("---")
         if ext == ".pdf":
             st.markdown(f'<iframe src="{url}" width="100%" height="600" style="border: 1px solid #ddd; border-radius: 8px;"></iframe>', unsafe_allow_html=True)
         elif ext in {".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp"}:
@@ -153,17 +299,20 @@ def render_document_row(doc, prefix=""):
                     st.code(file_data.decode("utf-8", errors="replace"), language="text")
             except Exception:
                 st.markdown(f"[Ouvrir dans le navigateur]({url})")
-        if st.button("Fermer", key=f"{prefix}close_{doc_id}"):
+        if st.button("\u2716 Fermer la visualisation", key=f"{prefix}close_{doc_id}"):
             del st.session_state[view_key]
             st.rerun()
+        st.markdown("---")
 
-# --- Upload ---
+
+# --- Upload Section ---
+st.markdown('<div class="upload-section">', unsafe_allow_html=True)
 st.subheader("Importer des documents")
 
 auto_classify = st.toggle(
     "Classification automatique",
     value=True,
-    help="Quand active, les documents sont automatiquement classes (Devis, Facture, Plan, Etude, Metre...) selon leur nom de fichier.",
+    help="Les documents sont automatiquement classes selon leur nom de fichier.",
 )
 
 if not auto_classify:
@@ -174,7 +323,7 @@ uploaded_files = st.file_uploader(
     type=["pdf", "docx", "xlsx", "csv", "png", "jpg", "jpeg", "txt", "dwg", "dxf", "zip", "pptx"],
     accept_multiple_files=True,
     key="doc_upload",
-    help="Glissez-deposez tous vos fichiers d'un coup. La classification se fait automatiquement.",
+    help="Glissez-deposez vos fichiers. La classification se fait automatiquement.",
 )
 
 if uploaded_files:
@@ -183,8 +332,7 @@ if uploaded_files:
     if auto_classify:
         classifications = {}
         for f in uploaded_files:
-            cat = classify_file(f.name)
-            classifications[f.name] = cat
+            classifications[f.name] = classify_file(f.name)
 
         by_cat = {}
         for fname, cat in classifications.items():
@@ -211,13 +359,13 @@ if uploaded_files:
                 )
             classifications = corrected
 
-        if st.button(f"Uploader et classer {nb} fichier{'s' if nb > 1 else ''}", type="primary"):
+        if st.button(f"\U0001f4e4 Uploader et classer {nb} fichier{'s' if nb > 1 else ''}", type="primary"):
             progress = st.progress(0, text="Upload en cours...")
             success_count = 0
             error_count = 0
             for i, uploaded in enumerate(uploaded_files):
                 cat = classifications[uploaded.name]
-                progress.progress(i / nb, text=f"Upload de {uploaded.name} -> {cat}...")
+                progress.progress(i / nb, text=f"Upload de {uploaded.name} \u2192 {cat}...")
                 try:
                     file_result = storage.upload_file(
                         file_bytes=uploaded.getvalue(),
@@ -233,16 +381,16 @@ if uploaded_files:
                         st.warning(f"Echec pour '{uploaded.name}'")
                 except Exception as e:
                     error_count += 1
-                    st.error(f"Erreur lors de l'import de '{uploaded.name}': {e}")
+                    st.error(f"Erreur: '{uploaded.name}': {e}")
             progress.progress(1.0, text="Termine !")
             if success_count > 0:
-                st.success(f"{success_count} fichier{'s' if success_count > 1 else ''} classe{'s' if success_count > 1 else ''} et uploade{'s' if success_count > 1 else ''} avec succes !")
+                st.success(f"\u2705 {success_count} fichier{'s' if success_count > 1 else ''} uploade{'s' if success_count > 1 else ''} avec succes !")
             if error_count > 0:
                 st.error(f"{error_count} fichier{'s' if error_count > 1 else ''} en erreur.")
             st.rerun()
     else:
-        st.info(f"{nb} fichier{'s' if nb > 1 else ''} selectionne{'s' if nb > 1 else ''} -> {doc_type}")
-        if st.button(f"Uploader {nb} fichier{'s' if nb > 1 else ''}", type="primary"):
+        st.info(f"{nb} fichier{'s' if nb > 1 else ''} \u2192 {doc_type}")
+        if st.button(f"\U0001f4e4 Uploader {nb} fichier{'s' if nb > 1 else ''}", type="primary"):
             progress = st.progress(0, text="Upload en cours...")
             success_count = 0
             error_count = 0
@@ -260,22 +408,34 @@ if uploaded_files:
                         success_count += 1
                     else:
                         error_count += 1
-                        st.warning(f"Echec pour '{uploaded.name}'")
                 except Exception as e:
                     error_count += 1
-                    st.error(f"Erreur lors de l'import de '{uploaded.name}': {e}")
+                    st.error(f"Erreur: '{uploaded.name}': {e}")
             progress.progress(1.0, text="Termine !")
             if success_count > 0:
-                st.success(f"{success_count} fichier{'s' if success_count > 1 else ''} uploade{'s' if success_count > 1 else ''} avec succes.")
+                st.success(f"\u2705 {success_count} fichier{'s' if success_count > 1 else ''} uploade{'s' if success_count > 1 else ''} !")
             if error_count > 0:
-                st.error(f"{error_count} fichier{'s' if error_count > 1 else ''} en erreur.")
+                st.error(f"{error_count} en erreur.")
             st.rerun()
+
+st.markdown('</div>', unsafe_allow_html=True)
 
 # --- Documents existants ---
 st.markdown("---")
 st.subheader("Documents du chantier")
 
 docs = db.get_documents(user_id=user_id, chantier_id=chantier["id"])
+
+# Barre de recherche
+if docs:
+    search_query = st.text_input(
+        "\U0001f50d Rechercher un document",
+        placeholder="Tapez un nom de fichier...",
+        key="doc_search",
+    )
+    if search_query:
+        search_lower = search_query.lower()
+        docs = [d for d in docs if search_lower in (d.get("nom", "") or "").lower()]
 
 tab_names = ["Tous"] + [f"{CAT_ICONS.get(c, '\U0001f4c4')} {c}" for c in CATEGORIES]
 tabs = st.tabs(tab_names)
@@ -284,11 +444,14 @@ tabs = st.tabs(tab_names)
 with tabs[0]:
     if docs:
         total_size = sum(d.get("file_size_bytes", d.get("taille", 0)) or 0 for d in docs)
-        st.info(f"{len(docs)} documents - {format_size(total_size)}")
+        st.info(f"\U0001f4c1 {len(docs)} document{'s' if len(docs) > 1 else ''} - {format_size(total_size)}")
         for doc in docs:
-            render_document_row(doc, prefix="all_")
+            render_document_card(doc, prefix="all_")
     else:
-        st.warning("Aucun document pour ce chantier.")
+        if search_query if 'search_query' in dir() else False:
+            st.warning("Aucun document ne correspond a votre recherche.")
+        else:
+            st.info("Aucun document pour ce chantier. Importez vos premiers fichiers ci-dessus !")
 
 # Onglets par categorie
 for i, cat in enumerate(CATEGORIES):
@@ -298,18 +461,18 @@ for i, cat in enumerate(CATEGORIES):
             total_size = sum(d.get("file_size_bytes", d.get("taille", 0)) or 0 for d in cat_docs)
             st.info(f"{len(cat_docs)} document{'s' if len(cat_docs) > 1 else ''} - {format_size(total_size)}")
             for doc in cat_docs:
-                render_document_row(doc, prefix=f"cat{cat}_")
+                render_document_card(doc, prefix=f"cat{cat}_")
         else:
-            st.info(f"Aucun document de type {cat} pour ce chantier.")
+            st.info(f"Aucun document de type {cat}.")
 
 # --- Utilisation stockage ---
 st.markdown("---")
 st.subheader("Utilisation du stockage")
 
 try:
-    usage = storage.get_storage_usage(user_id=user_id)
-    total_docs = usage.get("nb_documents", 0)
-    total_bytes = usage.get("total_bytes", 0)
+    all_docs = db.get_documents(user_id=user_id)
+    total_docs = len(all_docs)
+    total_bytes = sum(d.get("file_size_bytes", d.get("taille", 0)) or 0 for d in all_docs)
     total_mb = total_bytes / 1024 / 1024
 
     profile = db.get_profile(user_id) or {}
@@ -317,15 +480,34 @@ try:
     limits = {"free": 1024, "pro": 5120, "team": 20480}
     limit_mb = limits.get(plan, 1024)
 
-    c1, c2 = st.columns(2)
-    c1.metric("DOCUMENTS", total_docs)
-    c2.metric("ESPACE UTILISE", f"{total_mb:.1f} Mo / {limit_mb} Mo")
+    c1, c2, c3 = st.columns(3)
+
+    c1.markdown(f"""
+    <div class="storage-card">
+        <div class="storage-number">{total_docs}</div>
+        <div class="storage-label">Documents</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    c2.markdown(f"""
+    <div class="storage-card">
+        <div class="storage-number">{total_mb:.1f} Mo</div>
+        <div class="storage-label">Espace utilise</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    c3.markdown(f"""
+    <div class="storage-card">
+        <div class="storage-number">{limit_mb} Mo</div>
+        <div class="storage-label">Limite ({plan.title()})</div>
+    </div>
+    """, unsafe_allow_html=True)
 
     pct = min(total_mb / limit_mb, 1.0) if limit_mb > 0 else 0
     st.progress(pct)
     st.caption(f"{total_mb:.1f} Mo utilises sur {limit_mb} Mo ({pct*100:.0f}%)")
 
     if pct > 0.9:
-        st.warning("Stockage presque plein ! Pensez a mettre a niveau votre abonnement.")
+        st.warning("\u26a0\ufe0f Stockage presque plein ! Pensez a mettre a niveau votre abonnement.")
 except Exception:
     st.info("Utilisation du stockage non disponible.")
