@@ -433,3 +433,66 @@ save_étape = save_etape
 update_étape = update_etape
 delete_étape = delete_etape
 create_étape = save_etape
+
+
+# ─── Phases Chantier (Planning) ───────────────────────────────────────────────
+
+def get_phases(chantier_id: str) -> list:
+    try:
+        r = _client().table("phases_chantier").select("*").eq("chantier_id", chantier_id).order("ordre").execute()
+        return r.data or []
+    except Exception:
+        return []
+
+
+def get_all_phases_user(user_id: str) -> list:
+    try:
+        r = _client().table("phases_chantier").select("*, chantiers(nom, adresse, statut)").eq("user_id", user_id).order("date_debut").execute()
+        return r.data or []
+    except Exception:
+        return []
+
+
+def save_phase(user_id: str, chantier_id: str, data: dict) -> dict | None:
+    try:
+        data["user_id"] = user_id
+        data["chantier_id"] = chantier_id
+        r = _client().table("phases_chantier").insert(data).execute()
+        return r.data[0] if r.data else None
+    except Exception:
+        return None
+
+
+def update_phase(phase_id: str, data: dict) -> bool:
+    try:
+        _client().table("phases_chantier").update(data).eq("id", phase_id).execute()
+        return True
+    except Exception:
+        return False
+
+
+def delete_phase(phase_id: str) -> bool:
+    try:
+        _client().table("phases_chantier").delete().eq("id", phase_id).execute()
+        return True
+    except Exception:
+        return False
+
+
+def save_phases_batch(user_id: str, chantier_id: str, phases: list) -> bool:
+    try:
+        for p in phases:
+            p["user_id"] = user_id
+            p["chantier_id"] = chantier_id
+        _client().table("phases_chantier").insert(phases).execute()
+        return True
+    except Exception:
+        return False
+
+
+def get_étapes(chantier_id: str) -> list:
+    return get_phases(chantier_id)
+
+
+def save_étape(user_id: str, chantier_id: str, data: dict) -> dict | None:
+    return save_phase(user_id, chantier_id, data)
