@@ -15,7 +15,7 @@ from utils import GLOBAL_CSS
 from lib.supabase_client import init_supabase_session, is_authenticated
 from lib.auth import register_user, login_user, logout_user, reset_password
 
-# st.set_page_config gÃ©rÃ© par app.py
+# st.set_page_config géré par app.py
 st.markdown(GLOBAL_CSS, unsafe_allow_html=True)
 
 # Cacher la sidebar pour la page de connexion
@@ -177,60 +177,60 @@ def _send_otp(to_email, code):
 
 init_supabase_session()
 
-# Si dÃ©jÃ  connect, rediriger vers le tableau de bord
+# Si déjà connect, rediriger vers le tableau de bord
 if is_authenticated():
     st.switch_page("pages/0_Tableau_de_bord.py")
 
 
 
-# â¨ Header de marque
+# ✨ Header de marque
 st.markdown("""
 <div class="brand-header">
-    <h1>ðï¸ ConducteurPro</h1>
+    <h1>🏗️ ConducteurPro</h1>
     <p class="tagline">La plateforme tout-en-un pour les conducteurs de travaux</p>
     <span class="badge">LOGICIEL PROFESSIONNEL BTP</span>
 </div>
 """, unsafe_allow_html=True)
 
-# ð Features rapides
+# 📊 Features rapides
 st.markdown("""
 <div class="features-grid">
     <div class="feature-card">
-        <div class="icon">ð</div>
+        <div class="icon">📅</div>
         <div class="title">Planning intelligent</div>
-        <div class="desc">Gantt interactif et suivi en temps rÃ©el</div>
+        <div class="desc">Gantt interactif et suivi en temps réel</div>
     </div>
     <div class="feature-card">
-        <div class="icon">ð</div>
+        <div class="icon">📄</div>
         <div class="title">Devis & Factures</div>
-        <div class="desc">GÃ©nÃ©ration automatique de PDF professionnels</div>
+        <div class="desc">Génération automatique de PDF professionnels</div>
     </div>
     <div class="feature-card">
-        <div class="icon">ð¤</div>
-        <div class="title">IA IntÃ©grÃ©e</div>
-        <div class="desc">Analyse de plans, mÃ©trÃ©s et Ã©tudes techniques</div>
+        <div class="icon">🤖</div>
+        <div class="title">IA Intégrée</div>
+        <div class="desc">Analyse de plans, métrés et études techniques</div>
     </div>
     <div class="feature-card">
-        <div class="icon">ð</div>
-        <div class="title">GED ComplÃ¨te</div>
-        <div class="desc">Gestion documentaire centralisÃ©e et sÃ©curisÃ©e</div>
+        <div class="icon">📁</div>
+        <div class="title">GED Complète</div>
+        <div class="desc">Gestion documentaire centralisée et sécurisée</div>
     </div>
     <div class="feature-card">
-        <div class="icon">ð</div>
+        <div class="icon">📊</div>
         <div class="title">Tableaux de bord</div>
-        <div class="desc">KPIs en temps rÃ©el et suivi financier</div>
+        <div class="desc">KPIs en temps réel et suivi financier</div>
     </div>
     <div class="feature-card">
-        <div class="icon">ð</div>
-        <div class="title">SÃ©curitÃ© RenforcÃ©e</div>
-        <div class="desc">Chiffrement AES-256 et isolation des donnÃ©es</div>
+        <div class="icon">🔒</div>
+        <div class="title">Sécurité Renforcée</div>
+        <div class="desc">Chiffrement AES-256 et isolation des données</div>
     </div>
 </div>
 
 <div class="trust-badges">
-    <span class="trust-badge">â DonnÃ©es hÃ©bergÃ©es en Europe</span>
-    <span class="trust-badge">ð Chiffrement de bout en bout</span>
-    <span class="trust-badge">â¡ DÃ©ploiement instantanÃ©</span>
+    <span class="trust-badge">✅ Données hébergées en Europe</span>
+    <span class="trust-badge">🔒 Chiffrement de bout en bout</span>
+    <span class="trust-badge">⚡ Déploiement instantané</span>
 </div>
 """, unsafe_allow_html=True)
 
@@ -238,8 +238,8 @@ st.markdown("""
 #  Formulaire connexion / inscription 
 tab_login, tab_register, tab_reset = st.tabs([
     " Se connecter",
-    " CrÃ©er un compte",
-    " Mot de passe oubliÃ©"
+    " Créer un compte",
+    " Mot de passe oublié"
 ])
 
 #  Connexion 
@@ -327,14 +327,14 @@ with tab_login:
 
     st.markdown("""
     <div style="text-align:center;margin-top:1rem;font-size:0.85rem;color:#6B7280;">
-        Pas encore de compte ? Cliquez sur l'onglet <strong>"CrÃ©er un compte"</strong> ci-dessus.
+        Pas encore de compte ? Cliquez sur l'onglet <strong>"Créer un compte"</strong> ci-dessus.
     </div>
     """, unsafe_allow_html=True)
 
 #  Inscription 
 with tab_register:
     with st.form("register_form", clear_on_submit=True):
-        st.markdown("#### CrÃ©ez votre compte ConducteurPro")
+        st.markdown("#### Créez votre compte ConducteurPro")
         st.markdown("Commencez gratuitement avec 3 analyses par mois.")
 
         col1, col2 = st.columns(2)
@@ -344,8 +344,8 @@ with tab_register:
             reg_company = st.text_input("Entreprise (optionnel)", placeholder="BTP Dupont", key="reg_company")
 
         reg_email = st.text_input("Email professionnel", placeholder="jean@btpdupont.fr", key="reg_email")
-        reg_pwd = st.text_input("Mot de passe", type="password", placeholder="Minimum 8 caractÃ¨res", key="reg_pwd")
-        reg_pwd2 = st.text_input("Confirmer le mot de passe", type="password", placeholder="RÃ©tapez votre mot de passe", key="reg_pwd2")
+        reg_pwd = st.text_input("Mot de passe", type="password", placeholder="Minimum 8 caractères", key="reg_pwd")
+        reg_pwd2 = st.text_input("Confirmer le mot de passe", type="password", placeholder="Rétapez votre mot de passe", key="reg_pwd2")
 
         st.markdown("""
         <div style="font-size:0.8rem;color:#6B7280;margin:0.5rem 0;">
@@ -354,17 +354,17 @@ with tab_register:
         </div>
         """, unsafe_allow_html=True)
 
-        submitted = st.form_submit_button("CrÃ©er mon compte", type="primary", use_container_width=True)
+        submitted = st.form_submit_button("Créer mon compte", type="primary", use_container_width=True)
 
         if submitted:
             if not reg_email or not reg_pwd:
                 st.error("Email et mot de passe sont obligatoires.")
             elif len(reg_pwd) < 8:
-                st.error("Le mot de passe doit contenir au moins 8 caractÃ¨res.")
+                st.error("Le mot de passe doit contenir au moins 8 caractères.")
             elif reg_pwd != reg_pwd2:
                 st.error("Les mots de passe ne correspondent pas.")
             else:
-                with st.spinner("CrÃ©ation du compte..."):
+                with st.spinner("Création du compte..."):
                     result = register_user(
                         email=reg_email,
                         password=reg_pwd,
@@ -401,14 +401,14 @@ with tab_reset:
 st.markdown("---")
 st.markdown("""
 <div style="text-align:center;color:#9CA3AF;font-size:0.8rem;">
-    ConducteurPro v3.0  PropulsÃ© par Claude AI   2026 ConducteurPro
+    ConducteurPro v3.0  Propulsé par Claude AI   2026 ConducteurPro
 </div>
 """, unsafe_allow_html=True)
 
-# ð·ï¸ Footer
+# 🏷️ Footer
 st.markdown("""
 <div class="login-footer">
-    <p><strong>ConducteurPro</strong> â Logiciel professionnel pour conducteurs de travaux</p>
-    <p>Â© 2026 ConducteurPro. Tous droits rÃ©servÃ©s.</p>
+    <p><strong>ConducteurPro</strong> — Logiciel professionnel pour conducteurs de travaux</p>
+    <p>© 2026 ConducteurPro. Tous droits réservés.</p>
 </div>
 """, unsafe_allow_html=True)
