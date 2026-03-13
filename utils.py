@@ -13,7 +13,7 @@ import anthropic
 # ─── CSS global réutilisable ─────────────────────────────────────────────────────
 GLOBAL_CSS = """
 <style>
-#MainMenu, footer, header {visibility: hidden;}
+#MainMenu, footer {visibility: hidden;}
 .block-container {padding-top: 2rem; padding-bottom: 2rem;}
 .page-header {
     background: linear-gradient(135deg, #0D3B6E 0%, #1B6CA8 100%);
@@ -134,16 +134,41 @@ GLOBAL_CSS = """
         border-right: 1px solid #dde3eb;
     }
     [data-testid="stSidebarNavLink"] {
-        border-radius: 8px !important;
-        margin: 2px 0 !important;
-        transition: all 0.15s ease !important;
+        border-radius: 10px !important;
+        margin: 3px 8px !important;
+        padding: 0.55rem 1rem !important;
+        transition: all 0.2s ease !important;
+        font-weight: 500 !important;
+        color: #1B4F8A !important;
+        border: 1px solid transparent !important;
     }
     [data-testid="stSidebarNavLink"]:hover {
-        background: rgba(27,79,138,0.08) !important;
+        background: linear-gradient(135deg, rgba(27,79,138,0.10), rgba(27,79,138,0.06)) !important;
+        border-color: rgba(27,79,138,0.15) !important;
+        transform: translateX(2px);
     }
     [data-testid="stSidebarNavLink"][aria-selected="true"] {
-        background: rgba(27,79,138,0.12) !important;
+        background: linear-gradient(135deg, #1B4F8A 0%, #2D6BB4 100%) !important;
+        color: white !important;
         font-weight: 600 !important;
+        box-shadow: 0 2px 8px rgba(27,79,138,0.3) !important;
+        border-color: transparent !important;
+    }
+    [data-testid="stSidebarNavLink"][aria-selected="true"] span {
+        color: white !important;
+    }
+    [data-testid="stSidebarNavSeparator"] {
+        margin: 0.5rem 8px !important;
+        border-color: rgba(27,79,138,0.12) !important;
+    }
+    [data-testid="stSidebarNavItems"] p {
+        font-size: 0.75rem !important;
+        font-weight: 700 !important;
+        color: #1B4F8A !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+        padding: 0.5rem 1rem 0.2rem !important;
+        margin-top: 0.5rem !important;
     }
     
     /* ── Select boxes & inputs ────────────────────── */
