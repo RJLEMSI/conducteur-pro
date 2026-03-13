@@ -15,13 +15,13 @@ def page_setup(title: str = "ConducteurPro", icon: str = "", layout: str = "wide
 
     if not is_authenticated():
         st.warning("Veuillez vous connecter pour acceder a cette page.")
-        st.switch_page("pages/00_Connexion.py")
+        st.rerun()
         st.stop()
 
     user_id = get_user_id()
     if not user_id:
         st.error("Session expiree. Veuillez vous reconnecter.")
-        st.switch_page("pages/00_Connexion.py")
+        st.rerun()
         st.stop()
 
     return user_id
@@ -64,7 +64,7 @@ def render_saas_sidebar(user_id: str):
         # Logout uniquement - la navigation est geree par st.navigation() dans app.py
         if st.button("\U0001f6aa Se deconnecter", use_container_width=True):
             logout_user()
-            st.switch_page("pages/00_Connexion.py")
+            st.rerun()
 
 
 # Selecteur de chantier
