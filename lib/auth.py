@@ -151,6 +151,7 @@ def logout_user():
         "authenticated", "user_id", "user_email", "user_plan",
         "user_display_name", "user_company", "subscription_active",
         "supabase_access_token", "supabase_refresh_token",
+        "pending_2fa", "otp_code", "otp_expiry", "pending_email", "otp_fallback",
     ]
     for key in keys_to_clear:
         if key in st.session_state:
