@@ -30,37 +30,37 @@ try:
 except Exception:
     pass
 
+
 # --- Navigation dynamique selon authentification ---
 if is_authenticated():
     pages = {
         "General": [
-            st.Page("pages/0_Tableau_de_bord.py", title="Tableau de bord", default=True),
-            st.Page("pages/01_Import_Donnees.py", title="Import Donnees"),
+            st.Page("pages/0_Tableau_de_bord.py", title="Tableau de bord", icon="\U0001f4ca", default=True),
+            st.Page("pages/01_Import_Donnees.py", title="Import Donnees", icon="\U0001f4e5"),
         ],
-        "Analyses": [
-            st.Page("pages/1_Metres.py", title="Metres"),
-            st.Page("pages/2_DCE.py", title="DCE"),
-            st.Page("pages/3_Etudes.py", title="Etudes"),
-            st.Page("pages/4_Planning.py", title="Planning"),
-            st.Page("pages/5_PLU.py", title="PLU"),
-            st.Page("pages/6_Synthese.py", title="Synthese"),
+        "Analyses IA": [
+            st.Page("pages/1_Metres.py", title="Metres", icon="\U0001f4d0"),
+            st.Page("pages/2_DCE.py", title="DCE", icon="\U0001f4d1"),
+            st.Page("pages/3_Etudes.py", title="Etudes", icon="\U0001f4d6"),
+            st.Page("pages/4_Planning.py", title="Planning", icon="\U0001f4c5"),
+            st.Page("pages/5_PLU.py", title="PLU", icon="\U0001f3d8\ufe0f"),
+            st.Page("pages/6_Synthese.py", title="Synthese", icon="\U0001f4cb"),
         ],
-        "Documents": [
-            st.Page("pages/8_Devis.py", title="Devis"),
-            st.Page("pages/10_Facturation.py", title="Facturation"),
-            st.Page("pages/11_Documents.py", title="Documents"),
+        "Documents & Finance": [
+            st.Page("pages/8_Devis.py", title="Devis", icon="\U0001f4b0"),
+            st.Page("pages/10_Facturation.py", title="Facturation", icon="\U0001f9fe"),
+            st.Page("pages/11_Documents.py", title="Documents", icon="\U0001f4c2"),
+            st.Page("pages/14_Reunions.py", title="Reunions", icon="\U0001f4dd"),
         ],
         "Compte": [
-            st.Page("pages/9_Abonnement.py", title="Abonnement"),
-            st.Page("pages/13_Mon_Compte.py", title="Mon Compte"),
-            st.Page("pages/12_Legal.py", title="Mentions legales"),
+            st.Page("pages/9_Abonnement.py", title="Abonnement", icon="\u2b50"),
+            st.Page("pages/13_Mon_Compte.py", title="Mon Compte", icon="\U0001f464"),
         ],
     }
 else:
     pages = {
         "Bienvenue": [
             st.Page("pages/00_Connexion.py", title="Connexion", default=True),
-            st.Page("pages/12_Legal.py", title="Mentions legales"),
         ],
     }
 
