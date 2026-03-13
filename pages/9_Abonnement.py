@@ -46,19 +46,19 @@ st.markdown("""<style>
 st.markdown('<p class="section-title">Choisissez votre formule</p>', unsafe_allow_html=True)
 st.markdown('<p class="section-subtitle">Des outils professionnels pour piloter vos chantiers efficacement</p>', unsafe_allow_html=True)
 
-plan_names = {"free": "DÃ©couverte", "pro": "Pro", "team": "Ãquipe"}
+plan_names = {"free": "Découverte", "pro": "Pro", "team": "Équipe"}
 plan_icons = {"free": "\U0001f331", "pro": "\u2b50", "team": "\U0001f680"}
 plan_colors = {"free": "#95a5a6", "pro": "#1B4F72", "team": "#8E44AD"}
-banner_name = plan_names.get(current_plan, "DÃ©couverte")
+banner_name = plan_names.get(current_plan, "Découverte")
 banner_icon = plan_icons.get(current_plan, "\U0001f331")
 banner_color = plan_colors.get(current_plan, "#95a5a6")
 
 st.markdown(f'<div style="background:linear-gradient(135deg,{banner_color}15,{banner_color}08);border-left:4px solid {banner_color};border-radius:8px;padding:16px 24px;margin-bottom:30px;"><span style="font-size:18px;">{banner_icon} Votre abonnement actuel : <strong style="color:{banner_color};">{banner_name}</strong></span></div>', unsafe_allow_html=True)
 
 plans = [
-    {"key": "free", "name": "DÃ©couverte", "icon": "\U0001f331", "price": "0", "period": "", "popular": False, "subtitle": "Pour tester la plateforme", "features": [("\u2713", True, "3 chantiers maximum"), ("\u2713", True, "500 Mo de stockage"), ("\u2713", True, "GÃ©nÃ©ration de devis PDF"), ("\u2713", True, "Planning basique"), ("\u2717", False, "Import de donnÃ©es"), ("\u2717", False, "Facturation avancÃ©e"), ("\u2717", False, "Analyse IA"), ("\u2717", False, "Support prioritaire")]},
-    {"key": "pro", "name": "Pro", "icon": "\u2b50", "price": "65,90", "period": "/mois", "popular": True, "subtitle": "Pour les indÃ©pendants", "features": [("\u2713", True, "50 chantiers"), ("\u2713", True, "100 Go de stockage"), ("\u2713", True, "Toutes les fonctionnalitÃ©s"), ("\u2713", True, "Facturation professionnelle"), ("\u2713", True, "Import CSV / Excel"), ("\u2713", True, "Analyse IA illimitÃ©e"), ("\u2713", True, "Export PDF complet"), ("\u2717", False, "Multi-utilisateurs")]},
-    {"key": "team", "name": "Ãquipe", "icon": "\U0001f680", "price": "119,60", "period": "/mois", "popular": False, "subtitle": "Pour les Ã©quipes", "features": [("\u2713", True, "500 chantiers"), ("\u2713", True, "500 Go de stockage"), ("\u2713", True, "Toutes les fonctionnalitÃ©s"), ("\u2713", True, "4 utilisateurs simultanÃ©s"), ("\u2713", True, "Facturation avancÃ©e"), ("\u2713", True, "Analyse IA illimitÃ©e"), ("\u2713", True, "Support prioritaire"), ("\u2713", True, "Tableau de bord Ã©quipe")]},
+    {"key": "free", "name": "Découverte", "icon": "\U0001f331", "price": "0", "period": "", "popular": False, "subtitle": "Pour tester la plateforme", "features": [("\u2713", True, "3 chantiers maximum"), ("\u2713", True, "500 Mo de stockage"), ("\u2713", True, "Génération de devis PDF"), ("\u2713", True, "Planning basique"), ("\u2717", False, "Import de données"), ("\u2717", False, "Facturation avancée"), ("\u2717", False, "Analyse IA"), ("\u2717", False, "Support prioritaire")]},
+    {"key": "pro", "name": "Pro", "icon": "\u2b50", "price": "65,90", "period": "/mois", "popular": True, "subtitle": "Pour les indépendants", "features": [("\u2713", True, "50 chantiers"), ("\u2713", True, "100 Go de stockage"), ("\u2713", True, "Toutes les fonctionnalités"), ("\u2713", True, "Facturation professionnelle"), ("\u2713", True, "Import CSV / Excel"), ("\u2713", True, "Analyse IA illimitée"), ("\u2713", True, "Export PDF complet"), ("\u2717", False, "Multi-utilisateurs")]},
+    {"key": "team", "name": "Équipe", "icon": "\U0001f680", "price": "119,60", "period": "/mois", "popular": False, "subtitle": "Pour les équipes", "features": [("\u2713", True, "500 chantiers"), ("\u2713", True, "500 Go de stockage"), ("\u2713", True, "Toutes les fonctionnalités"), ("\u2713", True, "4 utilisateurs simultanés"), ("\u2713", True, "Facturation avancée"), ("\u2713", True, "Analyse IA illimitée"), ("\u2713", True, "Support prioritaire"), ("\u2713", True, "Tableau de bord équipe")]},
 ]
 
 cards_html = '<div class="pricing-container">'
@@ -109,15 +109,15 @@ with col2:
                     )
                     st.markdown(f'<meta http-equiv="refresh" content="0;url={session.url}">', unsafe_allow_html=True)
                 except Exception as e:
-                    st.error("Une erreur est survenue lors du paiement. Veuillez rÃ©essayer ou contacter le support.")
+                    st.error("Une erreur est survenue lors du paiement. Veuillez réessayer ou contacter le support.")
             else:
                 st.info("Paiement Stripe en cours de configuration.")
     else:
-        st.success("Vous Ãªtes sur le plan Pro")
+        st.success("Vous êtes sur le plan Pro")
 
 with col3:
     if current_plan != "team":
-        if st.button("Passer Ã  Ãquipe - 119,60\u20ac/mois", use_container_width=True):
+        if st.button("Passer à Équipe - 119,60\u20ac/mois", use_container_width=True):
             if stripe_key and price_team:
                 try:
                     import stripe
@@ -133,47 +133,47 @@ with col3:
                     )
                     st.markdown(f'<meta http-equiv="refresh" content="0;url={session.url}">', unsafe_allow_html=True)
                 except Exception as e:
-                    st.error("Une erreur est survenue lors du paiement. Veuillez rÃ©essayer ou contacter le support.")
+                    st.error("Une erreur est survenue lors du paiement. Veuillez réessayer ou contacter le support.")
             else:
                 st.info("Paiement Stripe en cours de configuration.")
     else:
-        st.success("Vous Ãªtes sur le plan Ãquipe")
+        st.success("Vous êtes sur le plan Équipe")
 
 params = st.query_params
 if params.get("success"):
     st.balloons()
-    st.success("Paiement rÃ©ussi ! Votre abonnement est maintenant actif.")
+    st.success("Paiement réussi ! Votre abonnement est maintenant actif.")
 elif params.get("cancel"):
-    st.warning("Paiement annule. Vous pouvez rÃ©essayer Ã  tout moment.")
+    st.warning("Paiement annule. Vous pouvez réessayer à tout moment.")
 
 st.markdown("---")
-st.markdown('<p class="section-title" style="font-size:24px;">Questions frÃ©quentes</p>', unsafe_allow_html=True)
+st.markdown('<p class="section-title" style="font-size:24px;">Questions fréquentes</p>', unsafe_allow_html=True)
 
-with st.expander("Puis-je changer de formule Ã  tout moment ?"):
+with st.expander("Puis-je changer de formule à tout moment ?"):
     st.write("Oui, vous pouvez upgrader ou downgrader votre abonnement quand vous le souhaitez. Le changement prend effet immediatement.")
 
-with st.expander("Mes donnÃ©es sont-elles en sÃ©curitÃ© ?"):
-    st.write("Absolument. Tous vos fichiers sont chiffres (AES-256) et stockes sur des serveurs sÃ©curisÃ©s en Europe.")
+with st.expander("Mes données sont-elles en sécurité ?"):
+    st.write("Absolument. Tous vos fichiers sont chiffres (AES-256) et stockes sur des serveurs sécurisés en Europe.")
 
-with st.expander("Comment fonctionne la pÃ©riode d essai ?"):
-    st.write("La formule DÃ©couverte est gratuite et sans limite de temps. Vous pouvez tester avec 3 chantiers.")
+with st.expander("Comment fonctionne la période d essai ?"):
+    st.write("La formule Découverte est gratuite et sans limite de temps. Vous pouvez tester avec 3 chantiers.")
 
 with st.expander("Quels moyens de paiement acceptez-vous ?"):
     st.write("Nous acceptons les cartes bancaires (Visa, Mastercard, Amex) via Stripe.")
 
 with st.expander("Puis-je obtenir une facture pour mon entreprise ?"):
-    st.write("Oui, une facture est automatiquement gÃ©nÃ©rÃ©e pour chaque paiement.")
+    st.write("Oui, une facture est automatiquement générée pour chaque paiement.")
 
-st.markdown('<div class="guarantee-box"><div style="font-size:32px;margin-bottom:8px;">\U0001f6e1\ufe0f</div><div style="font-size:18px;font-weight:600;color:#1B4F72;margin-bottom:8px;">Satisfaction garantie</div><div style="color:#5a6c7d;font-size:14px;">Chiffrement SSL | Stripe certifiÃ© PCI-DSS | DonnÃ©es hÃ©bergÃ©es en Europe</div></div>', unsafe_allow_html=True)
+st.markdown('<div class="guarantee-box"><div style="font-size:32px;margin-bottom:8px;">\U0001f6e1\ufe0f</div><div style="font-size:18px;font-weight:600;color:#1B4F72;margin-bottom:8px;">Satisfaction garantie</div><div style="color:#5a6c7d;font-size:14px;">Chiffrement SSL | Stripe certifié PCI-DSS | Données hébergées en Europe</div></div>', unsafe_allow_html=True)
 
-# --- VÃ©rification production Stripe ---
+# --- Vérification production Stripe ---
 try:
     from lib.stripe_config import check_production_readiness, get_stripe_mode
     with st.sidebar:
         mode = get_stripe_mode()
         if mode == "test":
-            st.sidebar.warning("â ï¸ Mode TEST Stripe")
+            st.sidebar.warning("⚠️ Mode TEST Stripe")
         else:
-            st.sidebar.success("â Mode PRODUCTION Stripe")
+            st.sidebar.success("✅ Mode PRODUCTION Stripe")
 except Exception:
     pass
