@@ -3,6 +3,11 @@ Page 00  Connexion / Inscription
 Premire page affiche. Authentification via Supabase Auth.
 """
 import sys, os
+import random
+import time as _time
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import streamlit as st
@@ -143,6 +148,33 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+
+def _generate_otp():
+    return str(random.randint(100000, 999999))
+
+def _send_otp(to_email, code):
+    smtp_email = os.environ.get("SMTP_EMAIL", "")
+    smtp_password = os.environ.get("SMTP_PASSWORD", "")
+    if not smtp_email or not smtp_password:
+        return False
+    msg = MIMEMultipart()
+    msg["From"] = smtp_email
+    msg["To"] = to_email
+    msg["Subject"] = f"ConducteurPro - Code : {code}"
+    body = f"""<html><body style="font-family:Arial,sans-serif;padding:20px;">
+    <div style="max-width:400px;margin:0 auto;background:linear-gradient(135deg,#1B4F8A,#2D6BB4);padding:30px;border-radius:12px;color:white;text-align:center;">
+    <h2>ConducteurPro</h2><p>Votre code de verification :</p>
+    <div style="background:white;color:#1B4F8A;font-size:32px;font-weight:700;letter-spacing:8px;padding:15px;border-radius:8px;margin:20px 0;">{code}</div>
+    <p style="font-size:14px;opacity:0.8;">Ce code expire dans 5 minutes.</p></div></body></html>"""
+    msg.attach(MIMEText(body, "html"))
+    try:
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+            server.login(smtp_email, smtp_password)
+            server.sendmail(smtp_email, to_email, msg.as_string())
+        return True
+    except Exception:
+        return False
+
 init_supabase_session()
 
 # Si déjà connect, rediriger vers le tableau de bord
@@ -212,12 +244,61 @@ tab_login, tab_register, tab_reset = st.tabs([
 
 #  Connexion 
 with tab_login:
-    with st.form("login_form", clear_on_submit=False):
-        st.markdown("#### Connectez-vous à votre compte")
-        email = st.text_input("Email", placeholder="votre@email.fr", key="login_email")
-        password = st.text_input("Mot de passe", type="password", placeholder="", key="login_pwd")
+    # --- Mode verification OTP ---
+    if st.session_state.get("pending_2fa"):
+        st.markdown("### \U0001f510 Verification de securite")
+        pending_email = st.session_state.get("pending_email", "")
+        masked = pending_email[:3] + "***" + pending_email[pending_email.index("@"):] if "@" in pending_email else pending_email
+        st.info(f"Un code de verification a 6 chiffres a ete envoye a **{masked}**")
 
-        submitted = st.form_submit_button("Se connecter", type="primary", use_container_width=True)
+        with st.form("otp_form", clear_on_submit=False):
+            otp_input = st.text_input("Code de verification", max_chars=6, key="otp_input", placeholder="123456")
+            verify_btn = st.form_submit_button("\u2705 Verifier le code", type="primary", use_container_width=True)
+
+        if verify_btn and otp_input:
+            if otp_input == st.session_state.get("otp_code"):
+                if _time.time() < st.session_state.get("otp_expiry", 0):
+                    st.session_state.authenticated = True
+                    st.session_state.pending_2fa = False
+                    for k in ["otp_code", "otp_expiry", "pending_email"]:
+                        st.session_state.pop(k, None)
+                    st.success("Verification reussie !")
+                    st.balloons()
+                    st.rerun()
+                else:
+                    st.error("Code expire. Veuillez vous reconnecter.")
+                    st.session_state.pending_2fa = False
+                    st.session_state.authenticated = False
+            else:
+                st.error("Code incorrect. Veuillez reessayer.")
+
+        col_resend, col_back = st.columns(2)
+        with col_resend:
+            if st.button("\U0001f504 Renvoyer le code", use_container_width=True):
+                new_code = _generate_otp()
+                st.session_state.otp_code = new_code
+                st.session_state.otp_expiry = _time.time() + 300
+                sent = _send_otp(st.session_state.get("pending_email", ""), new_code)
+                if sent:
+                    st.success("Nouveau code envoye !")
+                else:
+                    st.warning(f"Code : **{new_code}** (email non configure)")
+        with col_back:
+            if st.button("\u21a9\ufe0f Retour", use_container_width=True):
+                st.session_state.pending_2fa = False
+                st.session_state.authenticated = False
+                for k in ["otp_code", "otp_expiry", "pending_email"]:
+                    st.session_state.pop(k, None)
+                st.rerun()
+
+    # --- Mode connexion normal ---
+    else:
+        with st.form("login_form", clear_on_submit=False):
+            st.markdown("### Connectez-vous a votre compte")
+            email = st.text_input("Email", placeholder="votre@email.fr", key="login_email")
+            password = st.text_input("Mot de passe", type="password", placeholder="", key="login_pwd")
+
+            submitted = st.form_submit_button("Se connecter", type="primary", use_container_width=True)
 
         if submitted:
             if not email or not password:
@@ -225,12 +306,24 @@ with tab_login:
             else:
                 with st.spinner("Connexion en cours..."):
                     result = login_user(email, password)
-                    if result["success"]:
-                        st.success(result["message"])
-                        st.balloons()
-                        st.rerun()
-                    else:
-                        st.error(result["message"])
+                if result["success"]:
+                    otp_code = _generate_otp()
+                    st.session_state.authenticated = False
+                    st.session_state.pending_2fa = True
+                    st.session_state.pending_email = email
+                    st.session_state.otp_code = otp_code
+                    st.session_state.otp_expiry = _time.time() + 300
+                    sent = _send_otp(email, otp_code)
+                    if not sent:
+                        st.session_state.otp_fallback = True
+                    st.rerun()
+                else:
+                    st.error(result["message"])
+    # Afficher le code si email non configure (fallback)
+    if st.session_state.get("pending_2fa") and st.session_state.get("otp_fallback"):
+        st.warning(f"\u26a0\ufe0f Email non configure. Votre code : **{st.session_state.get('otp_code', '')}**")
+        st.caption("Configurez SMTP_EMAIL et SMTP_PASSWORD sur le serveur pour l'envoi automatique.")
+
 
     st.markdown("""
     <div style="text-align:center;margin-top:1rem;font-size:0.85rem;color:#6B7280;">
