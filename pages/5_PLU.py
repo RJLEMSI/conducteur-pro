@@ -89,7 +89,7 @@ Description : {description_projet}
 st.session_state["plu_context"] = plu_context
 
 # ─── Analyse IA ──────────────────────────────────────────────────────────────
-if st.button("🚀 Analyser le PLU", use_container_width=True,
+if st.button("🚀 Analyser le PLU", width="stretch",
              disabled=not (plu_text and description_projet)):
     with st.spinner("🤖 Analyse du PLU et extraction des règles... (30-60 secondes)"):
         client = get_client()
