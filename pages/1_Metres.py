@@ -78,8 +78,11 @@ if uploaded:
 
                     # Upload du fichier source
                     uploaded.seek(0)
-                    path = storage.upload_file(user_id, chantier["id"], "metres",
-                                               uploaded.name, uploaded.read())
+                    path = storage.upload_file(
+                        file_bytes=uploaded.read(),
+                        filename=uploaded.name,
+                        chantier_id=chantier["id"],
+                        famille="metres")
                     if path:
                         db.create_document({
                             "nom": uploaded.name,
