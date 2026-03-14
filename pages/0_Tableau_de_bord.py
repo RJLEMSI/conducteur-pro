@@ -4,7 +4,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-from datetime import datetime
+from datetime import datetime, timedelta, date
 from lib.helpers import page_setup, render_saas_sidebar
 from lib import db
 from utils import GLOBAL_CSS
@@ -13,9 +13,26 @@ from utils import GLOBAL_CSS
 STATUT_DISPLAY = {
     "en_cours": "En cours", "termine": "Termine", "en_attente": "En attente",
     "annule": "Annule", "brouillon": "Brouillon", "envoye": "Envoye",
-    "envoyée": "Envoyee", "accepte": "Accepte", "refuse": "Refuse",
+    "envoyÃ©e": "Envoyee", "accepte": "Accepte", "refuse": "Refuse",
     "payee": "Payee", "en_retard": "En retard", "valide": "Valide",
 }
+
+
+# Phases BTP par defaut pour generation rapide
+PHASES_BTP = [
+    {"nom": "Installation chantier", "duree": 7, "couleur": "#FF6B6B", "categorie": "preparation"},
+    {"nom": "Terrassement / Fondations", "duree": 14, "couleur": "#4ECDC4", "categorie": "gros_oeuvre"},
+    {"nom": "Gros oeuvre / Maconnerie", "duree": 28, "couleur": "#45B7D1", "categorie": "gros_oeuvre"},
+    {"nom": "Charpente / Couverture", "duree": 21, "couleur": "#2D6BB4", "categorie": "gros_oeuvre"},
+    {"nom": "Menuiseries exterieures", "duree": 14, "couleur": "#45B7D1", "categorie": "second_oeuvre"},
+    {"nom": "Electricite", "duree": 21, "couleur": "#E8A838", "categorie": "second_oeuvre"},
+    {"nom": "Plomberie / CVC", "duree": 21, "couleur": "#96CEB4", "categorie": "second_oeuvre"},
+    {"nom": "Isolation / Platrerie", "duree": 18, "couleur": "#FFEAA7", "categorie": "second_oeuvre"},
+    {"nom": "Revetements sols et murs", "duree": 14, "couleur": "#DDA0DD", "categorie": "finitions"},
+    {"nom": "Peinture", "duree": 14, "couleur": "#88D8B0", "categorie": "finitions"},
+    {"nom": "Amenagements exterieurs", "duree": 14, "couleur": "#FF6B6B", "categorie": "finitions"},
+    {"nom": "Nettoyage / Reception", "duree": 7, "couleur": "#4ECDC4", "categorie": "finitions"},
+]
 
 def _fmt_date(val):
     if pd.isna(val) or val is None:
@@ -32,9 +49,9 @@ render_saas_sidebar(user_id)
 
 st.title("\U0001f4ca Tableau de bord")
 
-# ═══════════════════════════════════════════════════════════════════════════════
+# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 # ASSISTANT IA - Barre de commande intelligente
-# ═══════════════════════════════════════════════════════════════════════════════
+# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
 st.markdown("""
 <style>
@@ -194,7 +211,7 @@ if ai_query and ai_query.strip():
     st.markdown("---")
 
     # Routing intelligent vers les bonnes pages
-    if any(kw in query_lower for kw in ["metre", "metré", "metr", "quantitatif"]):
+    if any(kw in query_lower for kw in ["metre", "metrÃ©", "metr", "quantitatif"]):
         st.markdown("""
         <div class="ai-response">
             <div class="ai-response-header">\U0001f4d0 Metre automatique</div>
@@ -335,9 +352,9 @@ if ai_query and ai_query.strip():
 
 st.markdown("---")
 
-# ═══════════════════════════════════════════════════════════════════════════════
+# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 # KPIs
-# ═══════════════════════════════════════════════════════════════════════════════
+# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
 stats = db.get_dashboard_stats(user_id)
 
@@ -367,9 +384,9 @@ st.markdown("---")
 
 st.markdown("---")
 
-# ═══════════════════════════════════════════════════════════════════════════════
+# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 # PLANNING VISUEL GENERAL - Vue Gantt de tous les chantiers
-# ═══════════════════════════════════════════════════════════════════════════════
+# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
 st.markdown("### \U0001f4c5 Planning general des chantiers")
 
@@ -449,14 +466,14 @@ with planning_container:
             phases_ch = chantier_phases_map.get(ch_nom, [])
             ch_id = chantier_ids_map.get(ch_nom)
             nb_phases = len(phases_ch)
-            label = f"\U0001f3d7\ufe0f {ch_nom} — {nb_phases} phase(s)" if nb_phases > 0 else f"\U0001f3d7\ufe0f {ch_nom} — Aucune phase"
+            label = f"\U0001f3d7\ufe0f {ch_nom} â {nb_phases} phase(s)" if nb_phases > 0 else f"\U0001f3d7\ufe0f {ch_nom} â Aucune phase"
 
             with st.expander(label, expanded=False):
                 if phases_ch:
                     for ph in phases_ch:
                         col_a, col_b, col_c = st.columns([3, 2, 1])
                         col_a.markdown(f"**{ph.get('nom', 'Phase')}**")
-                        col_b.caption(f"{ph.get('date_debut', '?')} → {ph.get('date_fin', '?')}")
+                        col_b.caption(f"{ph.get('date_debut', '?')} â {ph.get('date_fin', '?')}")
                         statut = ph.get("statut", "a_faire")
                         if statut == "termine":
                             col_c.success("Termine")
@@ -470,10 +487,45 @@ with planning_container:
                     st.warning("Aucune phase detaillee pour ce chantier.")
                     if ch_id:
                         if st.button(f"\U0001f916 Generer le planning IA pour {ch_nom}", key=f"gen_plan_{idx_ch}"):
-                            st.session_state["auto_action"] = "generate_planning"
-                            st.session_state["auto_chantier_id"] = ch_id
-                            st.session_state["auto_chantier_nom"] = ch_nom
-                            st.switch_page("pages/4_Planning.py")
+                            _date_debut = ch.get("date_debut")
+                            if _date_debut and isinstance(_date_debut, str):
+                                try:
+                                    _start = datetime.strptime(_date_debut, "%Y-%m-%d").date()
+                                except Exception:
+                                    _start = date.today()
+                            elif _date_debut and hasattr(_date_debut, "year"):
+                                _start = _date_debut
+                            else:
+                                _start = date.today()
+
+                            _phases_to_save = []
+                            _current = _start
+                            for _idx_p, _phase in enumerate(PHASES_BTP):
+                                _d_debut = _current
+                                _d_fin = _d_debut + timedelta(days=_phase["duree"])
+                                _phases_to_save.append({
+                                    "nom": _phase["nom"],
+                                    "categorie": _phase.get("categorie", "personnalisee"),
+                                    "date_debut": _d_debut.isoformat(),
+                                    "date_fin": _d_fin.isoformat(),
+                                    "duree_jours": _phase["duree"],
+                                    "statut": "a_faire",
+                                    "progression": 0,
+                                    "ordre": _idx_p + 1,
+                                    "couleur": _phase.get("couleur", "#1B4F8A"),
+                                })
+                                _current = _d_fin - timedelta(days=min(2, _phase["duree"] - 1))
+
+                            _ok = db.save_phases_batch(user_id, ch_id, _phases_to_save)
+                            if _ok:
+                                db.update_chantier(ch_id, {
+                                    "date_debut": _phases_to_save[0]["date_debut"],
+                                    "date_fin": _phases_to_save[-1]["date_fin"],
+                                })
+                                st.success(f"Planning genere avec {len(_phases_to_save)} phases pour {ch_nom} !")
+                                st.rerun()
+                            else:
+                                st.error("Erreur lors de la generation du planning.")
     else:
         today = datetime.now()
         start_month = today.replace(day=1)
@@ -496,13 +548,49 @@ with planning_container:
             st.markdown("<br>", unsafe_allow_html=True)
             if st.button("\U0001f916 Generer planning IA", type="primary", key="btn_gen_planning"):
                 ch = chantier_noms[selected_chantier]
-                st.session_state["auto_action"] = "generate_planning"
-                st.session_state["auto_chantier_id"] = ch.get("id")
-                st.session_state["auto_chantier_nom"] = selected_chantier
-                st.switch_page("pages/4_Planning.py")
+                ch_id_gen = ch.get("id")
+                _date_debut = ch.get("date_debut")
+                if _date_debut and isinstance(_date_debut, str):
+                    try:
+                        _start = datetime.strptime(_date_debut, "%Y-%m-%d").date()
+                    except Exception:
+                        _start = date.today()
+                elif _date_debut and hasattr(_date_debut, "year"):
+                    _start = _date_debut
+                else:
+                    _start = date.today()
+
+                _phases_to_save = []
+                _current = _start
+                for _idx_p, _phase in enumerate(PHASES_BTP):
+                    _d_debut = _current
+                    _d_fin = _d_debut + timedelta(days=_phase["duree"])
+                    _phases_to_save.append({
+                        "nom": _phase["nom"],
+                        "categorie": _phase.get("categorie", "personnalisee"),
+                        "date_debut": _d_debut.isoformat(),
+                        "date_fin": _d_fin.isoformat(),
+                        "duree_jours": _phase["duree"],
+                        "statut": "a_faire",
+                        "progression": 0,
+                        "ordre": _idx_p + 1,
+                        "couleur": _phase.get("couleur", "#1B4F8A"),
+                    })
+                    _current = _d_fin - timedelta(days=min(2, _phase["duree"] - 1))
+
+                _ok = db.save_phases_batch(user_id, ch_id_gen, _phases_to_save)
+                if _ok:
+                    db.update_chantier(ch_id_gen, {
+                        "date_debut": _phases_to_save[0]["date_debut"],
+                        "date_fin": _phases_to_save[-1]["date_fin"],
+                    })
+                    st.success(f"Planning genere avec {len(_phases_to_save)} phases pour {selected_chantier} !")
+                    st.rerun()
+                else:
+                    st.error("Erreur lors de la generation du planning.")
 
 # Details par onglet
-# ═══════════════════════════════════════════════════════════════════════════════
+# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
 tab1, tab2, tab3 = st.tabs(["\U0001f3d7\ufe0f Chantiers", "\U0001f4c4 Devis", "\U0001f9fe Factures"])
 
