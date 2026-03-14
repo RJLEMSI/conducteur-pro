@@ -60,7 +60,7 @@ with tab_chantiers:
 
         if not df.empty:
             st.markdown(f"**{len(df)} lignes dtectes.** Aperçu :")
-            st.dataframe(df.head(10), use_container_width=True)
+            st.dataframe(df.head(10), width="stretch")
 
             # Mapping des colonnes
             st.markdown("#### Vrification des colonnes")
@@ -103,7 +103,7 @@ with tab_factures:
         df_f = parse_file(file_f, "csv" if ext == "csv" else "excel")
 
         if not df_f.empty:
-            st.dataframe(df_f.head(10), use_container_width=True)
+            st.dataframe(df_f.head(10), width="stretch")
 
             chantier_map = build_chantier_map()
             if not chantier_map:
@@ -135,7 +135,7 @@ with tab_étapes:
         df_e = parse_file(file_e, "csv" if ext == "csv" else "excel")
 
         if not df_e.empty:
-            st.dataframe(df_e.head(10), use_container_width=True)
+            st.dataframe(df_e.head(10), width="stretch")
 
             chantier_map = build_chantier_map()
             if not chantier_map:
@@ -196,7 +196,7 @@ with tab_templates:
             data=get_template_csv("chantiers").encode("utf-8"),
             file_name="modele_chantiers.csv",
             mime="text/csv",
-            use_container_width=True,
+            width="stretch",
         )
 
     with col2:
@@ -206,7 +206,7 @@ with tab_templates:
             data=get_template_csv("factures").encode("utf-8"),
             file_name="modele_factures.csv",
             mime="text/csv",
-            use_container_width=True,
+            width="stretch",
         )
 
     with col3:
@@ -216,7 +216,7 @@ with tab_templates:
             data=get_template_csv("étapes").encode("utf-8"),
             file_name="modele_étapes.csv",
             mime="text/csv",
-            use_container_width=True,
+            width="stretch",
         )
 
     st.markdown("---")
