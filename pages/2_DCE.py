@@ -26,7 +26,11 @@ uploaded = st.file_uploader("Fichier DCE (PDF)", type=["pdf"], key="dce_upload")
 
 if uploaded:
     # Upload vers Supabase Storage
-    file_url = storage.upload_file(user_id, chantier["id"], uploaded.name, uploaded.getvalue(), "dce")
+    file_url = storage.upload_file(
+        file_bytes=uploaded.getvalue(),
+        filename=uploaded.name,
+        chantier_id=chantier["id"],
+        famille="dce")
     if file_url:
         st.success(f"Fichier '{uploaded.name}' uploadé.")
     
