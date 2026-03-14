@@ -94,7 +94,7 @@ def assemble_context(chantier_data: dict) -> str:
         parts.append("")
 
     # Étapes / Planning
-    étapes = db.get_étapes(chantier_id=cid)
+    étapes = db.get_etapes(chantier_id=cid)
     if étapes:
         parts.append("## Planning / Étapes")
         for et in étapes:
@@ -143,7 +143,7 @@ if chantier:
         focus_text = ", ".join(focus) if focus else "Tous les aspects"
 
         # ─── Génération ───────────────────────────────────────────────────────
-        if st.button("🚀 Générer la synthèse globale", use_container_width=True, type="primary"):
+        if st.button("🚀 Générer la synthèse globale", width="stretch", type="primary"):
             with st.spinner("🤖 Génération de la synthèse globale... (30-60 secondes)"):
                 client = get_client()
                 enhanced_context = (
