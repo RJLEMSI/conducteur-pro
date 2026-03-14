@@ -387,7 +387,7 @@ with tab_chantier:
                 st.metric("Duree totale estimee", f"{duree_totale} jours ({duree_totale // 30} mois)")
 
                 # Bouton de validation
-                if st.button("\u2705 Valider et enregistrer ce planning", type="primary", use_container_width=True):
+                if st.button("\u2705 Valider et enregistrer ce planning", type="primary", width="stretch"):
                     phases_to_save = []
                     current_date = date_debut_chantier
                     for idx, phase in enumerate(selected_phases):
