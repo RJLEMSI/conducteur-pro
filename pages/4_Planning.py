@@ -20,7 +20,7 @@ render_saas_sidebar(user_id)
 
 st.title("\U0001f4c5 Planning")
 
-# Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Phases types BTP avec durÃÂ©es et couleurs Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+# ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ Phases types BTP avec durÃÂÃÂ©es et couleurs ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
 PHASES_BTP = [
     {"nom": "Etudes et preparation", "duree": 21, "couleur": "#6C5B7B", "categorie": "preparation"},
     {"nom": "Installation de chantier", "duree": 7, "couleur": "#C06C84", "categorie": "preparation"},
@@ -52,67 +52,70 @@ STATUT_COLORS = {
     "en_retard": "#e74c3c",
 }
 
-# Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ ONGLETS PRINCIPAUX Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+# ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ ONGLETS PRINCIPAUX ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
 tab_general, tab_chantier = st.tabs([
     "\U0001f3D7\uFE0F Planning General",
     "\U0001f4CB Calculer un Planning Chantier"
 ])
 
-# Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
-# TAB 1 : PLANNING GÃÂNÃÂRAL (Gantt de tous les chantiers)
-# Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+# ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
+
+# TAB 1 : PLANNING GENERAL
 with tab_general:
     st.subheader("\U0001f3D7\uFE0F Vue d'ensemble de tous les chantiers")
 
     chantiers = db.get_chantiers(user_id)
     all_phases = db.get_all_phases_user(user_id)
 
-    # Organiser les phases par chantier
-    phases_par_chantier = {}
+    phases_par_chantier_id = {}
     if all_phases:
         for p in all_phases:
-            ch_info = p.get("chantiers", {})
-            ch_nom = ch_info.get("nom", "Sans nom") if ch_info else "Sans nom"
-            if ch_nom not in phases_par_chantier:
-                phases_par_chantier[ch_nom] = []
-            phases_par_chantier[ch_nom].append(p)
+            cid = p.get("chantier_id")
+            if cid:
+                if cid not in phases_par_chantier_id:
+                    phases_par_chantier_id[cid] = []
+                phases_par_chantier_id[cid].append(p)
 
-    # Construire le Gantt - phases + chantiers avec dates
     gantt_data = []
-    if all_phases:
-        for p in all_phases:
-            if p.get("date_debut") and p.get("date_fin"):
-                ch_info = p.get("chantiers", {})
-                ch_nom = ch_info.get("nom", "Sans nom") if ch_info else "Sans nom"
-                gantt_data.append({
-                    "Tache": p["nom"], "Chantier": ch_nom,
-                    "Debut": str(p["date_debut"]), "Fin": str(p["date_fin"]),
-                    "Statut": STATUT_LABELS.get(p.get("statut", "a_faire"), p.get("statut", "")),
-                })
-
-    # Ajouter chantiers avec dates sans phases
-    chantiers_with_phases = set(d["Chantier"] for d in gantt_data)
+    chantier_ids_map = {}
     if chantiers:
         for ch in chantiers:
             ch_nom = ch.get("nom", "Sans nom")
-            if ch_nom not in chantiers_with_phases and ch.get("date_debut") and ch.get("date_fin"):
-                gantt_data.append({
-                    "Tache": "Chantier planifie", "Chantier": ch_nom,
-                    "Debut": str(ch["date_debut"]), "Fin": str(ch["date_fin"]),
-                    "Statut": "Planifie",
-                })
+            ch_id = ch.get("id")
+            chantier_ids_map[ch_nom] = ch_id
+            ch_phases = phases_par_chantier_id.get(ch_id, [])
+            if ch_phases:
+                dates_debut = [p["date_debut"] for p in ch_phases if p.get("date_debut")]
+                dates_fin = [p["date_fin"] for p in ch_phases if p.get("date_fin")]
+                if dates_debut and dates_fin:
+                    gantt_data.append({"Chantier": ch_nom, "Debut": str(min(dates_debut)), "Fin": str(max(dates_fin)), "Client": ch.get("client_nom", "-"), "Phases": len(ch_phases)})
+            elif ch.get("date_debut") and ch.get("date_fin"):
+                gantt_data.append({"Chantier": ch_nom, "Debut": str(ch["date_debut"]), "Fin": str(ch["date_fin"]), "Client": ch.get("client_nom", "-"), "Phases": 0})
 
-    # Afficher le Gantt ou calendrier vide
     plan_container = st.container()
     with plan_container:
         if gantt_data:
             df_gantt = pd.DataFrame(gantt_data)
             unique_ch = list(df_gantt["Chantier"].unique())
             ch_color_map = {name: CHANTIER_COLORS[i % len(CHANTIER_COLORS)] for i, name in enumerate(unique_ch)}
-            fig = px.timeline(df_gantt, x_start="Debut", x_end="Fin", y="Tache", color="Chantier", hover_data=["Chantier", "Statut"], color_discrete_map=ch_color_map, title="")
+            fig = px.timeline(df_gantt, x_start="Debut", x_end="Fin", y="Chantier", color="Chantier", hover_data=["Client", "Phases"], color_discrete_map=ch_color_map, title="")
             fig.update_yaxes(autorange="reversed")
-            fig.update_layout(height=max(350, len(gantt_data) * 45), margin=dict(l=0, r=0, t=10, b=0), showlegend=True, legend=dict(orientation="h", yanchor="bottom", y=-0.3))
-            st.plotly_chart(fig, key="plan_gantt_general", width="stretch")
+            fig.update_layout(height=max(250, len(unique_ch) * 80), margin=dict(l=0, r=0, t=10, b=0), showlegend=False)
+            event = st.plotly_chart(fig, key="plan_gantt_general", on_select="rerun", width="stretch")
+
+            selected_from_chart = None
+            if event and hasattr(event, "selection") and event.selection and event.selection.points:
+                pt = event.selection.points[0]
+                selected_from_chart = pt.get("y", None) or pt.get("label", None)
+
+            ch_names = [g["Chantier"] for g in gantt_data]
+            if selected_from_chart and selected_from_chart in ch_names:
+                st.session_state["selected_chantier_general"] = selected_from_chart
+
+            cur_sel = st.session_state.get("selected_chantier_general", ch_names[0] if ch_names else None)
+            sel_idx = ch_names.index(cur_sel) if cur_sel in ch_names else 0
+            chosen = st.selectbox("\U0001f50d Ou selectionnez un chantier :", ch_names, index=sel_idx, key="select_ch_general")
+            st.session_state["selected_chantier_general"] = chosen
         else:
             _today = datetime.now()
             _sm = _today.replace(day=1)
@@ -121,130 +124,122 @@ with tab_general:
             fig.add_shape(type="line", x0=str(_today.date()), x1=str(_today.date()), y0=-0.5, y1=0.5, line=dict(color="red", width=2, dash="dash"))
             fig.add_annotation(x=str(_today.date()), y=0.3, text="Aujourd'hui", showarrow=False, font=dict(color="red", size=10))
             fig.update_layout(xaxis=dict(type="date", range=[str(_sm.date()), str(_em.date())], title="", dtick="D1", tickformat="%d %b"), yaxis=dict(visible=False), height=200, margin=dict(l=0, r=0, t=10, b=40), plot_bgcolor="white")
-            fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor="#f0f0f0")
-            st.plotly_chart(fig, key="plan_gantt_general", width="stretch")
-            st.info("Aucune donnee de planning. Creez un chantier avec des dates ou generez un planning IA.")
+            st.plotly_chart(fig, key="empty_cal_general", width="stretch")
+            st.info("Aucun chantier avec des dates. Creez un chantier depuis le Tableau de bord.")
+            chosen = None
 
-    # Detail cliquable par chantier
-    if chantiers:
-        st.markdown("#### \U0001f50d Detail par chantier (cliquez pour ouvrir)")
-        for idx_ch, ch in enumerate(chantiers):
-            ch_nom = ch.get("nom", "Sans nom")
-            ch_id = ch.get("id")
-            phases_ch = phases_par_chantier.get(ch_nom, [])
-            nb = len(phases_ch)
-            color_hex = CHANTIER_COLORS[idx_ch % len(CHANTIER_COLORS)]
-            header = f"\U0001f3d7\ufe0f {ch_nom} Ã¢ÂÂ {nb} phase(s)" if nb > 0 else f"\U0001f3d7\ufe0f {ch_nom} Ã¢ÂÂ Aucune phase"
+    # Detail du chantier selectionne
+    if chosen and chantiers:
+        st.markdown("---")
+        ch_data = next((ch for ch in chantiers if ch.get("nom") == chosen), None)
+        if ch_data:
+            ch_id = ch_data.get("id")
+            ch_phases = phases_par_chantier_id.get(ch_id, [])
+            st.markdown(f"### \U0001f4cb Planning detaille : {chosen}")
+            col_i1, col_i2, col_i3 = st.columns(3)
+            col_i1.metric("Client", ch_data.get("client_nom", "-"))
+            col_i2.metric("Adresse", ch_data.get("adresse", "-"))
+            col_i3.metric("Statut", str(ch_data.get("statut", "-")).replace("_", " ").capitalize())
 
-            with st.expander(header, expanded=False):
-                col_info1, col_info2, col_info3 = st.columns(3)
-                col_info1.metric("Client", ch.get("client_nom", "-"))
-                col_info2.metric("Adresse", ch.get("adresse", "-"))
-                col_info3.metric("Dates", f"{ch.get('date_debut', '?')} Ã¢ÂÂ {ch.get('date_fin', '?')}")
+            if ch_phases:
+                ch_phases.sort(key=lambda x: x.get("ordre", 0))
+                st.markdown("**Phases du chantier :**")
+                h1, h2, h3, h4, h5 = st.columns([3, 1.5, 1.5, 1.2, 0.8])
+                h1.markdown("**Phase**")
+                h2.markdown("**Debut**")
+                h3.markdown("**Fin**")
+                h4.markdown("**Statut**")
+                h5.markdown("**Progr.**")
 
-                if phases_ch:
-                    st.markdown("**Phases du chantier :**")
-                    _edited = False
-                    for _ip, ph in enumerate(phases_ch):
-                        col_a, col_b, col_c, col_d, col_e = st.columns([3, 1.5, 1.5, 1, 0.8])
-                        col_a.markdown(f"**{ph.get('nom', 'Phase')}**")
+                for _ip, ph in enumerate(ch_phases):
+                    col_a, col_b, col_c, col_d, col_e = st.columns([3, 1.5, 1.5, 1.2, 0.8])
+                    col_a.markdown(f"\U0001f539 **{ph.get('nom', 'Phase')}**")
+                    _ph_deb = ph.get("date_debut")
+                    _ph_fin = ph.get("date_fin")
+                    try:
+                        _dv = datetime.strptime(str(_ph_deb), "%Y-%m-%d").date() if _ph_deb else date.today()
+                    except Exception:
+                        _dv = date.today()
+                    try:
+                        _fv = datetime.strptime(str(_ph_fin), "%Y-%m-%d").date() if _ph_fin else date.today()
+                    except Exception:
+                        _fv = date.today()
+                    col_b.date_input("d", value=_dv, key=f"ph_deb_{ch_id}_{_ip}", label_visibility="collapsed")
+                    col_c.date_input("f", value=_fv, key=f"ph_fin_{ch_id}_{_ip}", label_visibility="collapsed")
+                    statut = ph.get("statut", "a_faire")
+                    col_d.markdown(f"_{STATUT_LABELS.get(statut, statut)}_")
+                    prog = ph.get("progression", 0)
+                    col_e.progress(prog / 100 if prog else 0)
 
-                        # Parse existing dates
-                        _ph_deb = ph.get("date_debut")
-                        _ph_fin = ph.get("date_fin")
-                        try:
-                            _ph_deb_val = datetime.strptime(str(_ph_deb), "%Y-%m-%d").date() if _ph_deb else date.today()
-                        except Exception:
-                            _ph_deb_val = date.today()
-                        try:
-                            _ph_fin_val = datetime.strptime(str(_ph_fin), "%Y-%m-%d").date() if _ph_fin else date.today()
-                        except Exception:
-                            _ph_fin_val = date.today()
-
-                        _new_deb = col_b.date_input("Debut", value=_ph_deb_val, key=f"ph_deb_{idx_ch}_{_ip}", label_visibility="collapsed")
-                        _new_fin = col_c.date_input("Fin", value=_ph_fin_val, key=f"ph_fin_{idx_ch}_{_ip}", label_visibility="collapsed")
-
-                        statut = ph.get("statut", "a_faire")
-                        col_d.markdown(f"_{STATUT_LABELS.get(statut, statut)}_")
-                        prog = ph.get("progression", 0)
-                        col_e.progress(prog / 100 if prog else 0)
-
-                    if st.button(f"\U0001f4be Enregistrer les modifications", key=f"save_phases_{idx_ch}", type="primary"):
-                        _all_ok = True
-                        for _ip2, ph2 in enumerate(phases_ch):
-                            _k_deb = f"ph_deb_{idx_ch}_{_ip2}"
-                            _k_fin = f"ph_fin_{idx_ch}_{_ip2}"
-                            _nd = st.session_state.get(_k_deb)
-                            _nf = st.session_state.get(_k_fin)
-                            if _nd and _nf and ph2.get("id"):
-                                try:
-                                    db.update_phase(ph2["id"], {
-                                        "date_debut": str(_nd),
-                                        "date_fin": str(_nf),
-                                        "duree_jours": (_nf - _nd).days,
-                                    })
-                                except Exception as _e:
-                                    _all_ok = False
-                                    st.error(f"Erreur phase {ph2.get('nom')}: {_e}")
-                        if _all_ok:
-                            st.success("Dates mises a jour !")
-                            st.rerun()
-                else:
-                    st.warning("Aucune phase detaillee pour ce chantier.")
-                    st.markdown("Generez un planning IA complet avec les phases BTP adaptees a ce chantier.")
-                    if st.button(f"\U0001f916 Generer le planning IA pour {ch_nom}", key=f"gen_plan_general_{idx_ch}"):
-                        # Generation automatique avec les phases BTP par defaut
-                        _date_debut = ch.get("date_debut")
-                        if _date_debut and isinstance(_date_debut, str):
+                if st.button("\U0001f4be Enregistrer les modifications", key=f"save_phases_{ch_id}", type="primary"):
+                    _all_ok = True
+                    for _ip2, ph2 in enumerate(ch_phases):
+                        _nd = st.session_state.get(f"ph_deb_{ch_id}_{_ip2}")
+                        _nf = st.session_state.get(f"ph_fin_{ch_id}_{_ip2}")
+                        if _nd and _nf and ph2.get("id"):
                             try:
-                                _start = datetime.strptime(_date_debut, "%Y-%m-%d").date()
-                            except Exception:
-                                _start = date.today()
-                        elif _date_debut and hasattr(_date_debut, "year"):
-                            _start = _date_debut
-                        else:
+                                db.update_phase(ph2["id"], {"date_debut": str(_nd), "date_fin": str(_nf), "duree_jours": (_nf - _nd).days})
+                            except Exception as _e:
+                                _all_ok = False
+                                st.error(f"Erreur phase {ph2.get('nom')}: {_e}")
+                    if _all_ok:
+                        all_deb = [st.session_state.get(f"ph_deb_{ch_id}_{i}") for i in range(len(ch_phases))]
+                        all_fin = [st.session_state.get(f"ph_fin_{ch_id}_{i}") for i in range(len(ch_phases))]
+                        all_deb = [d for d in all_deb if d]
+                        all_fin = [d for d in all_fin if d]
+                        if all_deb and all_fin:
+                            db.update_chantier(ch_id, {"date_debut": str(min(all_deb)), "date_fin": str(max(all_fin))})
+                        st.success("Dates mises a jour !")
+                        st.rerun()
+
+                # Mini Gantt des phases
+                phase_gantt = []
+                for ph in ch_phases:
+                    if ph.get("date_debut") and ph.get("date_fin"):
+                        phase_gantt.append({"Phase": ph["nom"], "Debut": str(ph["date_debut"]), "Fin": str(ph["date_fin"]), "Statut": STATUT_LABELS.get(ph.get("statut", "a_faire"), "A faire")})
+                if phase_gantt:
+                    df_ph = pd.DataFrame(phase_gantt)
+                    fig_ph = px.timeline(df_ph, x_start="Debut", x_end="Fin", y="Phase", color="Statut", title="")
+                    fig_ph.update_yaxes(autorange="reversed")
+                    fig_ph.update_layout(height=max(250, len(phase_gantt) * 40), margin=dict(l=0, r=0, t=10, b=0))
+                    st.plotly_chart(fig_ph, key=f"phase_gantt_{ch_id}", width="stretch")
+            else:
+                st.warning("Aucune phase detaillee pour ce chantier.")
+                if st.button(f"\U0001f916 Generer le planning IA pour {chosen}", key=f"gen_plan_{ch_id}"):
+                    _date_debut = ch_data.get("date_debut")
+                    if _date_debut and isinstance(_date_debut, str):
+                        try:
+                            _start = datetime.strptime(_date_debut, "%Y-%m-%d").date()
+                        except Exception:
                             _start = date.today()
-
-                        _phases_to_save = []
-                        _current = _start
-                        for _idx_p, _phase in enumerate(PHASES_BTP):
-                            _d_debut = _current
-                            _d_fin = _d_debut + timedelta(days=_phase["duree"])
-                            _phases_to_save.append({
-                                "nom": _phase["nom"],
-                                "categorie": _phase.get("categorie", "personnalisee"),
-                                "date_debut": _d_debut.isoformat(),
-                                "date_fin": _d_fin.isoformat(),
-                                "duree_jours": _phase["duree"],
-                                "statut": "a_faire",
-                                "progression": 0,
-                                "ordre": _idx_p + 1,
-                                "couleur": _phase.get("couleur", "#1B4F8A"),
-                            })
-                            _current = _d_fin - timedelta(days=min(2, _phase["duree"] - 1))
-
-                        _ok = db.save_phases_batch(user_id, ch_id, _phases_to_save)
-                        if _ok:
-                            db.update_chantier(ch_id, {
-                                "date_debut": _phases_to_save[0]["date_debut"],
-                                "date_fin": _phases_to_save[-1]["date_fin"],
-                            })
-                            st.success(f"Planning genere avec {len(_phases_to_save)} phases pour {ch_nom} !")
-                            st.rerun()
-                        else:
-                            st.error("Erreur lors de la generation du planning.")
-    else:
-        st.info("Aucun chantier. Creez un chantier depuis le Tableau de bord.")
+                    elif _date_debut and hasattr(_date_debut, "year"):
+                        _start = _date_debut
+                    else:
+                        _start = date.today()
+                    _phases_to_save = []
+                    _current = _start
+                    for _idx_p, _phase in enumerate(PHASES_BTP):
+                        _d_debut = _current
+                        _d_fin = _d_debut + timedelta(days=_phase["duree"])
+                        _phases_to_save.append({"nom": _phase["nom"], "categorie": _phase.get("categorie", "personnalisee"), "date_debut": _d_debut.isoformat(), "date_fin": _d_fin.isoformat(), "duree_jours": _phase["duree"], "statut": "a_faire", "progression": 0, "ordre": _idx_p + 1, "couleur": _phase.get("couleur", "#1B4F8A")})
+                        _current = _d_fin - timedelta(days=min(2, _phase["duree"] - 1))
+                    _ok = db.save_phases_batch(user_id, ch_id, _phases_to_save)
+                    if _ok:
+                        db.update_chantier(ch_id, {"date_debut": _phases_to_save[0]["date_debut"], "date_fin": _phases_to_save[-1]["date_fin"]})
+                        st.success(f"Planning genere avec {len(_phases_to_save)} phases !")
+                        st.rerun()
+                    else:
+                        st.error("Erreur lors de la generation.")
 
 with tab_chantier:
     st.subheader("\U0001f4CB Calculer le planning d'un chantier")
 
-    # Charger les chantiers pour le selectbox (sans utiliser chantier_selector qui peut poser problÃÂ¨me dans les tabs)
+    # Charger les chantiers pour le selectbox (sans utiliser chantier_selector qui peut poser problÃÂÃÂ¨me dans les tabs)
     chantiers_list = db.get_chantiers(user_id)
     if not chantiers_list:
         st.info("Aucun chantier disponible. Creez un chantier depuis le Tableau de bord.")
     else:
-        chantier_options = {f"{ch.get('nom', 'Sans nom')} Ã¢ÂÂ {ch.get('adresse', '')}": ch for ch in chantiers_list}
+        chantier_options = {f"{ch.get('nom', 'Sans nom')} ÃÂ¢ÃÂÃÂ {ch.get('adresse', '')}": ch for ch in chantiers_list}
         selected_label = st.selectbox(
             "Selectionner un chantier",
             options=list(chantier_options.keys()),
@@ -254,7 +249,7 @@ with tab_chantier:
         chantier_id = chantier["id"]
         existing_phases = db.get_phases(chantier_id)
 
-        # Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Si des phases existent dÃÂ©jÃÂ  Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+        # ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ Si des phases existent dÃÂÃÂ©jÃÂÃÂ  ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
         if existing_phases:
             st.success(f"{len(existing_phases)} phases planifiees pour ce chantier")
 
@@ -285,7 +280,7 @@ with tab_chantier:
                     STATUT_LABELS["termine"]: STATUT_COLORS["termine"],
                     STATUT_LABELS["en_retard"]: STATUT_COLORS["en_retard"],
                 },
-                title=f"Planning Ã¢ÂÂ {chantier.get('nom', '')}"
+                title=f"Planning ÃÂ¢ÃÂÃÂ {chantier.get('nom', '')}"
             )
             fig_ch.update_layout(
                 height=max(350, len(existing_phases) * 45),
@@ -296,10 +291,10 @@ with tab_chantier:
             fig_ch.update_yaxes(autorange="reversed")
             st.plotly_chart(fig_ch, width="stretch")
 
-            # Tableau de mise ÃÂ  jour des statuts
+            # Tableau de mise ÃÂÃÂ  jour des statuts
             st.subheader("\u270F\uFE0F Mettre a jour les phases")
             for i, phase in enumerate(existing_phases):
-                with st.expander(f"{phase['nom']} Ã¢ÂÂ {STATUT_LABELS.get(phase.get('statut', 'a_faire'), '')}", expanded=False):
+                with st.expander(f"{phase['nom']} ÃÂ¢ÃÂÃÂ {STATUT_LABELS.get(phase.get('statut', 'a_faire'), '')}", expanded=False):
                     col1, col2, col3 = st.columns(3)
                     new_statut = col1.selectbox(
                         "Statut", ["a_faire", "en_cours", "termine", "en_retard"],
@@ -322,7 +317,7 @@ with tab_chantier:
                         st.success("Phase mise a jour !")
                         st.rerun()
 
-            # Ajouter une phase personnalisÃÂ©e
+            # Ajouter une phase personnalisÃÂÃÂ©e
             st.markdown("---")
             st.subheader("\u2795 Ajouter une tache personnalisee")
             with st.form("add_custom_phase"):
@@ -360,7 +355,7 @@ with tab_chantier:
                 st.success("Planning reinitialise.")
                 st.rerun()
 
-        # Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Aucune phase : proposer la crÃÂ©ation Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+        # ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ Aucune phase : proposer la crÃÂÃÂ©ation ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
         else:
             st.info("Aucun planning pour ce chantier. Generez-en un ci-dessous.")
             # Calendrier vide - mois en cours
@@ -392,7 +387,7 @@ with tab_chantier:
 
             st.markdown("#### Phases a inclure :")
 
-            # SÃÂ©lection des phases avec durÃÂ©es modifiables
+            # SÃÂÃÂ©lection des phases avec durÃÂÃÂ©es modifiables
             selected_phases = []
             categories = {"preparation": "Preparation", "gros_oeuvre": "Gros Oeuvre", "second_oeuvre": "Second Oeuvre", "finitions": "Finitions"}
 
@@ -415,7 +410,7 @@ with tab_chantier:
                             "categorie": phase["categorie"],
                         })
 
-            # Ajouter des tÃÂ¢ches personnalisÃÂ©es
+            # Ajouter des tÃÂÃÂ¢ches personnalisÃÂÃÂ©es
             st.markdown("---")
             st.markdown("#### Taches personnalisees supplementaires")
             nb_custom = st.number_input("Nombre de taches a ajouter", min_value=0, max_value=10, value=0, key="nb_custom")
@@ -433,7 +428,7 @@ with tab_chantier:
                     })
 
             if selected_phases:
-                # AperÃÂ§u
+                # AperÃÂÃÂ§u
                 st.markdown("---")
                 st.subheader("\U0001f4C6 Apercu du planning")
                 preview_data = []
@@ -448,7 +443,7 @@ with tab_chantier:
                         "Duree": f"{phase['duree']}j",
                         "Categorie": phase.get("categorie", ""),
                     })
-                    # Phase suivante commence 2 jours avant la fin (chevauchement lÃÂ©ger)
+                    # Phase suivante commence 2 jours avant la fin (chevauchement lÃÂÃÂ©ger)
                     current_date = d_fin - timedelta(days=min(2, phase["duree"] - 1))
 
                 df_preview = pd.DataFrame(preview_data)
@@ -494,7 +489,7 @@ with tab_chantier:
 
                     success = db.save_phases_batch(user_id, chantier_id, phases_to_save)
                     if success:
-                        # Mettre ÃÂ  jour les dates du chantier
+                        # Mettre ÃÂÃÂ  jour les dates du chantier
                         db.update_chantier(chantier_id, {
                             "date_debut": phases_to_save[0]["date_debut"],
                             "date_fin": phases_to_save[-1]["date_fin"],
