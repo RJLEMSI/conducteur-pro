@@ -253,7 +253,7 @@ with tab_login:
 
         with st.form("otp_form", clear_on_submit=False):
             otp_input = st.text_input("Code de verification", max_chars=6, key="otp_input", placeholder="123456")
-            verify_btn = st.form_submit_button("\u2705 Verifier le code", type="primary", use_container_width=True)
+            verify_btn = st.form_submit_button("\u2705 Verifier le code", type="primary", width="stretch")
 
         if verify_btn and otp_input:
             if otp_input == st.session_state.get("otp_code"):
@@ -274,7 +274,7 @@ with tab_login:
 
         col_resend, col_back = st.columns(2)
         with col_resend:
-            if st.button("\U0001f504 Renvoyer le code", use_container_width=True):
+            if st.button("\U0001f504 Renvoyer le code", width="stretch"):
                 new_code = _generate_otp()
                 st.session_state.otp_code = new_code
                 st.session_state.otp_expiry = _time.time() + 300
@@ -284,7 +284,7 @@ with tab_login:
                 else:
                     st.warning(f"Code : **{new_code}** (email non configure)")
         with col_back:
-            if st.button("\u21a9\ufe0f Retour", use_container_width=True):
+            if st.button("\u21a9\ufe0f Retour", width="stretch"):
                 st.session_state.pending_2fa = False
                 st.session_state.authenticated = False
                 for k in ["otp_code", "otp_expiry", "pending_email"]:
@@ -298,7 +298,7 @@ with tab_login:
             email = st.text_input("Email", placeholder="votre@email.fr", key="login_email")
             password = st.text_input("Mot de passe", type="password", placeholder="", key="login_pwd")
 
-            submitted = st.form_submit_button("Se connecter", type="primary", use_container_width=True)
+            submitted = st.form_submit_button("Se connecter", type="primary", width="stretch")
 
         if submitted:
             if not email or not password:
@@ -354,7 +354,7 @@ with tab_register:
         </div>
         """, unsafe_allow_html=True)
 
-        submitted = st.form_submit_button("Créer mon compte", type="primary", use_container_width=True)
+        submitted = st.form_submit_button("Créer mon compte", type="primary", width="stretch")
 
         if submitted:
             if not reg_email or not reg_pwd:
@@ -384,7 +384,7 @@ with tab_reset:
         st.markdown("Entrez votre email et nous vous enverrons un lien de rinitialisation.")
 
         reset_email = st.text_input("Email", placeholder="votre@email.fr", key="reset_email")
-        submitted = st.form_submit_button("Envoyer le lien", type="primary", use_container_width=True)
+        submitted = st.form_submit_button("Envoyer le lien", type="primary", width="stretch")
 
         if submitted:
             if not reset_email:
