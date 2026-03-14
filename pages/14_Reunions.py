@@ -401,7 +401,7 @@ with tab_new:
     # Generation
     st.markdown("---")
 
-    if st.button("Generer la presentation PowerPoint", type="primary", use_container_width=True):
+    if st.button("Generer la presentation PowerPoint", type="primary", width="stretch"):
         if not any(v.strip() for v in sections_content.values()):
             st.error("Veuillez remplir au moins une section avant de generer la presentation.")
         else:
