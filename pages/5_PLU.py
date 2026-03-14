@@ -59,8 +59,10 @@ if uploaded_plu:
             if chantier:
                 pdf_bytes = uploaded_plu.getvalue()
                 path = storage.upload_file(
-                    user_id, chantier["id"], "documents_techniques",
-                    uploaded_plu.name, pdf_bytes
+                    file_bytes=pdf_bytes,
+                    filename=uploaded_plu.name,
+                    chantier_id=chantier["id"],
+                    famille="documents_techniques"
                 )
                 if path:
                     db.create_document({
