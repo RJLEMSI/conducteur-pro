@@ -215,7 +215,7 @@ if ai_query and ai_query.strip():
         """, unsafe_allow_html=True)
         if st.button("\u27a1\ufe0f Aller aux Devis", type="primary"):
             st.session_state["auto_query"] = ai_query
-                    st.switch_page("pages/8_Devis.py")
+            st.switch_page("pages/8_Devis.py")
 
     elif any(kw in query_lower for kw in ["plan", "facade", "coupe", "implantation"]):
         st.markdown("""
@@ -230,7 +230,7 @@ if ai_query and ai_query.strip():
             st.switch_page("pages/1_Metres.py")
         if c2.button("\U0001f4d6 Etudes (analyse)", width="stretch"):
             st.session_state["auto_query"] = ai_query
-                    st.switch_page("pages/3_Etudes.py")
+            st.switch_page("pages/3_Etudes.py")
 
     elif any(kw in query_lower for kw in ["etude", "thermique", "acoustique", "structure", "geotechnique"]):
         st.markdown("""
@@ -242,7 +242,7 @@ if ai_query and ai_query.strip():
         """, unsafe_allow_html=True)
         if st.button("\u27a1\ufe0f Aller aux Etudes", type="primary"):
             st.session_state["auto_query"] = ai_query
-                    st.switch_page("pages/3_Etudes.py")
+            st.switch_page("pages/3_Etudes.py")
 
     elif any(kw in query_lower for kw in ["plu", "urbanisme", "regle", "zone"]):
         st.markdown("""
@@ -254,7 +254,7 @@ if ai_query and ai_query.strip():
         """, unsafe_allow_html=True)
         if st.button("\u27a1\ufe0f Aller au PLU", type="primary"):
             st.session_state["auto_query"] = ai_query
-                    st.switch_page("pages/5_PLU.py")
+            st.switch_page("pages/5_PLU.py")
 
     elif any(kw in query_lower for kw in ["facture", "facturation", "paiement"]):
         st.markdown("""
@@ -265,7 +265,7 @@ if ai_query and ai_query.strip():
         """, unsafe_allow_html=True)
         if st.button("\u27a1\ufe0f Aller a la Facturation", type="primary"):
             st.session_state["auto_query"] = ai_query
-                    st.switch_page("pages/10_Facturation.py")
+            st.switch_page("pages/10_Facturation.py")
 
     elif any(kw in query_lower for kw in ["dce", "cctp", "ccap", "dpgf", "cahier"]):
         st.markdown("""
@@ -276,7 +276,7 @@ if ai_query and ai_query.strip():
         """, unsafe_allow_html=True)
         if st.button("\u27a1\ufe0f Aller au DCE", type="primary"):
             st.session_state["auto_query"] = ai_query
-                    st.switch_page("pages/2_DCE.py")
+            st.switch_page("pages/2_DCE.py")
 
     elif any(kw in query_lower for kw in ["planning", "gantt", "calendrier"]):
         st.markdown("""
@@ -287,7 +287,7 @@ if ai_query and ai_query.strip():
         """, unsafe_allow_html=True)
         if st.button("\u27a1\ufe0f Aller au Planning", type="primary"):
             st.session_state["auto_query"] = ai_query
-                    st.switch_page("pages/4_Planning.py")
+            st.switch_page("pages/4_Planning.py")
 
     elif any(kw in query_lower for kw in ["reunion", "compte-rendu", "pv reunion", "cr "]):
         st.markdown("""
@@ -298,7 +298,7 @@ if ai_query and ai_query.strip():
         """, unsafe_allow_html=True)
         if st.button("\u27a1\ufe0f Aller aux Reunions", type="primary"):
             st.session_state["auto_query"] = ai_query
-                    st.switch_page("pages/14_Reunions.py")
+            st.switch_page("pages/14_Reunions.py")
 
     elif any(kw in query_lower for kw in ["document", "fichier", "upload", "telecharger"]):
         st.markdown("""
@@ -309,7 +309,7 @@ if ai_query and ai_query.strip():
         """, unsafe_allow_html=True)
         if st.button("\u27a1\ufe0f Aller aux Documents", type="primary"):
             st.session_state["auto_query"] = ai_query
-                    st.switch_page("pages/11_Documents.py")
+            st.switch_page("pages/11_Documents.py")
 
     else:
         st.markdown(f"""
