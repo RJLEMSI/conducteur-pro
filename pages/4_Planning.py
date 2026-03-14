@@ -65,167 +65,104 @@ with tab_general:
     st.subheader("\U0001f3D7\uFE0F Vue d'ensemble de tous les chantiers")
 
     chantiers = db.get_chantiers(user_id)
-    if not chantiers:
-        st.info("Aucun chantier en cours. Creez un chantier depuis le Tableau de bord.")
-        # Calendrier vide - mois en cours
-        from datetime import datetime as _dt, timedelta as _td
-        _today = _dt.now()
-        _start_m = _today.replace(day=1)
-        _end_m = (_today.replace(day=28) + _td(days=4)).replace(day=1) - _td(days=1)
-        import plotly.graph_objects as _go
-        _fig_e = _go.Figure()
-        _fig_e.add_shape(type="line", x0=str(_today.date()), x1=str(_today.date()), y0=-0.5, y1=0.5, line=dict(color="red", width=2, dash="dash"))
-        _fig_e.add_annotation(x=str(_today.date()), y=0.3, text="Aujourd'hui", showarrow=False, font=dict(color="red", size=10))
-        _fig_e.update_layout(
-            xaxis=dict(type="date", range=[str(_start_m.date()), str(_end_m.date())], title="", dtick="D1", tickformat="%d %b"),
-            yaxis=dict(visible=False),
-            height=200, margin=dict(l=0, r=0, t=10, b=40),
-            plot_bgcolor="white",
-        )
-        _fig_e.update_xaxes(showgrid=True, gridwidth=1, gridcolor="#f0f0f0")
-        st.plotly_chart(_fig_e, width="stretch", key="empty_cal_no_chantier")
-    else:
-        # Récupérer toutes les phases de l'utilisateur
-        all_phases = db.get_all_phases_user(user_id)
+    all_phases = db.get_all_phases_user(user_id)
 
-        if all_phases:
-            # Construire le DataFrame pour le Gantt
-            gantt_data = []
-            for phase in all_phases:
-                chantier_info = phase.get("chantiers", {})
-                chantier_nom = chantier_info.get("nom", "Sans nom") if chantier_info else "Sans nom"
+    # Organiser les phases par chantier
+    phases_par_chantier = {}
+    if all_phases:
+        for p in all_phases:
+            ch_info = p.get("chantiers", {})
+            ch_nom = ch_info.get("nom", "Sans nom") if ch_info else "Sans nom"
+            if ch_nom not in phases_par_chantier:
+                phases_par_chantier[ch_nom] = []
+            phases_par_chantier[ch_nom].append(p)
+
+    # Construire le Gantt - phases + chantiers avec dates
+    gantt_data = []
+    if all_phases:
+        for p in all_phases:
+            if p.get("date_debut") and p.get("date_fin"):
+                ch_info = p.get("chantiers", {})
+                ch_nom = ch_info.get("nom", "Sans nom") if ch_info else "Sans nom"
                 gantt_data.append({
-                    "Tache": phase["nom"],
-                    "Chantier": chantier_nom,
-                    "Debut": phase["date_debut"],
-                    "Fin": phase["date_fin"],
-                    "Statut": STATUT_LABELS.get(phase.get("statut", "a_faire"), phase.get("statut", "")),
-                    "Progression": phase.get("progression", 0),
-                    "statut_raw": phase.get("statut", "a_faire"),
+                    "Tache": p["nom"], "Chantier": ch_nom,
+                    "Debut": str(p["date_debut"]), "Fin": str(p["date_fin"]),
+                    "Statut": STATUT_LABELS.get(p.get("statut", "a_faire"), p.get("statut", "")),
                 })
 
+    # Ajouter chantiers avec dates sans phases
+    chantiers_with_phases = set(d["Chantier"] for d in gantt_data)
+    if chantiers:
+        for ch in chantiers:
+            ch_nom = ch.get("nom", "Sans nom")
+            if ch_nom not in chantiers_with_phases and ch.get("date_debut") and ch.get("date_fin"):
+                gantt_data.append({
+                    "Tache": "Chantier planifie", "Chantier": ch_nom,
+                    "Debut": str(ch["date_debut"]), "Fin": str(ch["date_fin"]),
+                    "Statut": "Planifie",
+                })
 
-            # Ajouter les chantiers qui ont des dates mais pas encore de phases
-            chantiers_with_phases = set(d["Chantier"] for d in gantt_data)
-            for ch in chantiers:
-                ch_nom = ch.get("nom", "Sans nom")
-                if ch_nom not in chantiers_with_phases and ch.get("date_debut") and ch.get("date_fin"):
-                    gantt_data.append({
-                        "Tache": "Chantier planifie",
-                        "Chantier": ch_nom,
-                        "Debut": str(ch["date_debut"]),
-                        "Fin": str(ch["date_fin"]),
-                        "Statut": STATUT_LABELS.get(ch.get("statut", "en_cours"), "En cours"),
-                        "Progression": 0,
-                        "statut_raw": ch.get("statut", "en_cours"),
-                    })
-            df = pd.DataFrame(gantt_data)
-            df["Debut"] = pd.to_datetime(df["Debut"])
-            df["Fin"] = pd.to_datetime(df["Fin"])
-
-            # Filtres
-            col_f1, col_f2 = st.columns(2)
-            with col_f1:
-                chantier_filter = st.multiselect(
-                    "Filtrer par chantier",
-                    options=df["Chantier"].unique().tolist(),
-                    default=df["Chantier"].unique().tolist(),
-                    key="gantt_filter_chantier"
-                )
-            with col_f2:
-                statut_filter = st.multiselect(
-                    "Filtrer par statut",
-                    options=list(STATUT_LABELS.values()),
-                    default=list(STATUT_LABELS.values()),
-                    key="gantt_filter_statut"
-                )
-
-            df_filtered = df[df["Chantier"].isin(chantier_filter) & df["Statut"].isin(statut_filter)]
-
-            if not df_filtered.empty:
-                # Gantt avec Plotly
-                fig = px.timeline(
-                    df_filtered,
-                    x_start="Debut",
-                    x_end="Fin",
-                    y="Chantier",
-                    color="Chantier",
-                    hover_data=["Tache", "Progression"],
-                color_discrete_map={name: CHANTIER_COLORS[i % len(CHANTIER_COLORS)] for i, name in enumerate(df_filtered["Chantier"].unique())},
-                    title="Planning General - Tous les chantiers"
-                )
-                fig.update_layout(
-                    height=max(400, len(df_filtered["Chantier"].unique()) * 120),
-                    xaxis_title="",
-                    yaxis_title="",
-                    font=dict(size=12),
-                    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5),
-                    plot_bgcolor="rgba(0,0,0,0)",
-                )
-                fig.update_yaxes(autorange="reversed")
-                st.plotly_chart(fig, width="stretch")
-
-                # Résumé par chantier
-                st.subheader("\U0001f4CA Résumé par chantier")
-                for ch_name in df_filtered["Chantier"].unique():
-                    ch_df = df_filtered[df_filtered["Chantier"] == ch_name]
-                    total = len(ch_df)
-                    termines = len(ch_df[ch_df["statut_raw"] == "termine"])
-                    en_cours = len(ch_df[ch_df["statut_raw"] == "en_cours"])
-                    en_retard = len(ch_df[ch_df["statut_raw"] == "en_retard"])
-                    pct = int((termines / total) * 100) if total > 0 else 0
-
-                    with st.expander(f"\U0001f3D7\uFE0F {ch_name} — {pct}% termine ({termines}/{total} phases)", expanded=False):
-                        st.progress(pct / 100)
-                        cols = st.columns(4)
-                        cols[0].metric("Total", total)
-                        cols[1].metric("Termines", termines)
-                        cols[2].metric("En cours", en_cours)
-                        cols[3].metric("En retard", en_retard)
-            else:
-                st.warning("Aucune phase ne correspond aux filtres selectionnes.")
+    # Afficher le Gantt ou calendrier vide
+    plan_container = st.container()
+    with plan_container:
+        if gantt_data:
+            df_gantt = pd.DataFrame(gantt_data)
+            unique_ch = list(df_gantt["Chantier"].unique())
+            ch_color_map = {name: CHANTIER_COLORS[i % len(CHANTIER_COLORS)] for i, name in enumerate(unique_ch)}
+            fig = px.timeline(df_gantt, x_start="Debut", x_end="Fin", y="Chantier", color="Chantier", hover_data=["Tache", "Statut"], color_discrete_map=ch_color_map, title="")
+            fig.update_yaxes(autorange="reversed")
+            fig.update_layout(height=max(300, len(unique_ch) * 100), margin=dict(l=0, r=0, t=10, b=0), showlegend=True, legend=dict(orientation="h", yanchor="bottom", y=-0.3))
+            st.plotly_chart(fig, key="plan_gantt_general", width="stretch")
         else:
-            st.info("Aucune phase de chantier planifiee. Utilisez l'onglet **Calculer un Planning Chantier** pour commencer.")
-            # Calendrier vide - mois en cours
-            from datetime import datetime as _dt, timedelta as _td
-            _today = _dt.now()
-            _start_m = _today.replace(day=1)
-            _end_m = (_today.replace(day=28) + _td(days=4)).replace(day=1) - _td(days=1)
-            import plotly.graph_objects as _go
-            _fig_e = _go.Figure()
-            _fig_e.add_shape(type="line", x0=str(_today.date()), x1=str(_today.date()), y0=-0.5, y1=0.5, line=dict(color="red", width=2, dash="dash"))
-            _fig_e.add_annotation(x=str(_today.date()), y=0.3, text="Aujourd'hui", showarrow=False, font=dict(color="red", size=10))
-            _fig_e.update_layout(
-                xaxis=dict(type="date", range=[str(_start_m.date()), str(_end_m.date())], title="", dtick="D1", tickformat="%d %b"),
-                yaxis=dict(visible=False),
-                height=200, margin=dict(l=0, r=0, t=10, b=40),
-                plot_bgcolor="white",
-            )
-            _fig_e.update_xaxes(showgrid=True, gridwidth=1, gridcolor="#f0f0f0")
-            st.plotly_chart(_fig_e, width="stretch", key="empty_cal_no_phases")
+            _today = datetime.now()
+            _sm = _today.replace(day=1)
+            _em = (_today.replace(day=28) + timedelta(days=4)).replace(day=1) - timedelta(days=1)
+            fig = go.Figure()
+            fig.add_shape(type="line", x0=str(_today.date()), x1=str(_today.date()), y0=-0.5, y1=0.5, line=dict(color="red", width=2, dash="dash"))
+            fig.add_annotation(x=str(_today.date()), y=0.3, text="Aujourd'hui", showarrow=False, font=dict(color="red", size=10))
+            fig.update_layout(xaxis=dict(type="date", range=[str(_sm.date()), str(_em.date())], title="", dtick="D1", tickformat="%d %b"), yaxis=dict(visible=False), height=200, margin=dict(l=0, r=0, t=10, b=40), plot_bgcolor="white")
+            fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor="#f0f0f0")
+            st.plotly_chart(fig, key="plan_gantt_general", width="stretch")
+            st.info("Aucune donnee de planning. Creez un chantier avec des dates ou generez un planning IA.")
 
-            # Afficher les chantiers avec dates sur un Gantt
-            ch_with_dates = [ch for ch in chantiers if ch.get("date_debut") and ch.get("date_fin")]
-            if ch_with_dates:
-                import pandas as pd_ch
-                gantt_ch = [{"Chantier": ch.get("nom","Sans nom"), "Tache": "Chantier planifie", "Debut": str(ch["date_debut"]), "Fin": str(ch["date_fin"]), "Statut": "En cours"} for ch in ch_with_dates]
-                df_ch = pd_ch.DataFrame(gantt_ch)
-                fig_ch_dates = px.timeline(df_ch, x_start="Debut", x_end="Fin", y="Chantier", color="Statut", hover_data=["Tache"], title="")
-                fig_ch_dates.update_yaxes(autorange="reversed")
-                fig_ch_dates.update_layout(height=max(200, len(ch_with_dates) * 60), margin=dict(l=0, r=0, t=10, b=0))
-                st.plotly_chart(fig_ch_dates, width="stretch", key="gantt_chantiers_dates")
+    # Detail cliquable par chantier
+    if chantiers:
+        st.markdown("#### \U0001f50d Detail par chantier (cliquez pour ouvrir)")
+        for idx_ch, ch in enumerate(chantiers):
+            ch_nom = ch.get("nom", "Sans nom")
+            ch_id = ch.get("id")
+            phases_ch = phases_par_chantier.get(ch_nom, [])
+            nb = len(phases_ch)
+            color_hex = CHANTIER_COLORS[idx_ch % len(CHANTIER_COLORS)]
+            header = f"\U0001f3d7\ufe0f {ch_nom} — {nb} phase(s)" if nb > 0 else f"\U0001f3d7\ufe0f {ch_nom} — Aucune phase"
 
-            # Afficher les chantiers sous forme de cards
-            st.subheader("Vos chantiers")
-            for ch in chantiers:
-                col1, col2 = st.columns([3, 1])
-                col1.markdown(f"**{ch.get('nom', 'Sans nom')}** — {ch.get('adresse', '')}")
-                col2.caption(ch.get("statut", "en_cours"))
+            with st.expander(header, expanded=False):
+                col_info1, col_info2, col_info3 = st.columns(3)
+                col_info1.metric("Client", ch.get("client_nom", "-"))
+                col_info2.metric("Adresse", ch.get("adresse", "-"))
+                col_info3.metric("Dates", f"{ch.get('date_debut', '?')} → {ch.get('date_fin', '?')}")
 
+                if phases_ch:
+                    st.markdown("**Phases du chantier :**")
+                    for ph in phases_ch:
+                        col_a, col_b, col_c, col_d = st.columns([3, 2, 1, 1])
+                        col_a.markdown(f"**{ph.get('nom', 'Phase')}**")
+                        col_b.caption(f"{ph.get('date_debut', '?')} → {ph.get('date_fin', '?')}")
+                        statut = ph.get("statut", "a_faire")
+                        col_c.markdown(f"_{STATUT_LABELS.get(statut, statut)}_")
+                        prog = ph.get("progression", 0)
+                        col_d.progress(prog / 100 if prog else 0)
+                else:
+                    st.warning("Aucune phase detaillee pour ce chantier.")
+                    st.markdown("Generez un planning IA complet avec les phases BTP adaptees a ce chantier.")
+                    if st.button(f"\U0001f916 Generer le planning IA pour {ch_nom}", key=f"gen_plan_general_{idx_ch}"):
+                        st.session_state["auto_action"] = "generate_planning"
+                        st.session_state["auto_chantier_id"] = ch_id
+                        st.session_state["auto_chantier_nom"] = ch_nom
+                        st.switch_page("pages/4_Planning.py")
+    else:
+        st.info("Aucun chantier. Creez un chantier depuis le Tableau de bord.")
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# TAB 2 : CALCULER UN PLANNING CHANTIER
-# ═══════════════════════════════════════════════════════════════════════════════
 with tab_chantier:
     st.subheader("\U0001f4CB Calculer le planning d'un chantier")
 
