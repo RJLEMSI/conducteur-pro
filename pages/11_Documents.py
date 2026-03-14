@@ -235,7 +235,7 @@ def render_document_card(doc, prefix=""):
 
     # Bouton visualiser
     if storage_path and can_view_in_browser(nom):
-        if col_view.button("\U0001f441\ufe0f Voir", key=f"{prefix}view_{doc_id}", use_container_width=True):
+        if col_view.button("\U0001f441\ufe0f Voir", key=f"{prefix}view_{doc_id}", width="stretch"):
             try:
                 url = storage.get_signed_url(storage_path, expires_in=1800)
                 if url:
@@ -245,11 +245,11 @@ def render_document_card(doc, prefix=""):
             except Exception:
                 st.error("Erreur lors de la generation du lien.")
     else:
-        col_view.button("\U0001f441\ufe0f Voir", key=f"{prefix}view_{doc_id}_disabled", disabled=True, use_container_width=True)
+        col_view.button("\U0001f441\ufe0f Voir", key=f"{prefix}view_{doc_id}_disabled", disabled=True, width="stretch")
 
     # Bouton telecharger
     if storage_path:
-        if col_dl.button("\U0001f4e5 Telecharger", key=f"{prefix}dl_{doc_id}", use_container_width=True):
+        if col_dl.button("\U0001f4e5 Telecharger", key=f"{prefix}dl_{doc_id}", width="stretch"):
             try:
                 url = storage.get_signed_url(storage_path)
                 if url:
@@ -257,7 +257,7 @@ def render_document_card(doc, prefix=""):
             except Exception:
                 st.error("Erreur.")
     else:
-        col_dl.button("\U0001f4e5 Telecharger", key=f"{prefix}dl_{doc_id}_disabled", disabled=True, use_container_width=True)
+        col_dl.button("\U0001f4e5 Telecharger", key=f"{prefix}dl_{doc_id}_disabled", disabled=True, width="stretch")
 
     # Bouton supprimer avec confirmation
     delete_key = f"{prefix}confirm_delete_{doc_id}"
@@ -267,18 +267,18 @@ def render_document_card(doc, prefix=""):
             Cette action est irreversible.
         </div>""", unsafe_allow_html=True)
         c1, c2 = st.columns(2)
-        if c1.button("\u2705 Oui, supprimer", key=f"{prefix}yes_del_{doc_id}", type="primary", use_container_width=True):
+        if c1.button("\u2705 Oui, supprimer", key=f"{prefix}yes_del_{doc_id}", type="primary", width="stretch"):
             if delete_document_full(doc):
                 st.success(f"'{nom}' supprime avec succes.")
                 del st.session_state[delete_key]
                 st.rerun()
             else:
                 st.error("Erreur lors de la suppression.")
-        if c2.button("\u274c Annuler", key=f"{prefix}no_del_{doc_id}", use_container_width=True):
+        if c2.button("\u274c Annuler", key=f"{prefix}no_del_{doc_id}", width="stretch"):
             del st.session_state[delete_key]
             st.rerun()
     else:
-        if col_del.button("\U0001f5d1\ufe0f Supprimer", key=f"{prefix}del_{doc_id}", use_container_width=True):
+        if col_del.button("\U0001f5d1\ufe0f Supprimer", key=f"{prefix}del_{doc_id}", width="stretch"):
             st.session_state[delete_key] = True
             st.rerun()
 
@@ -291,7 +291,7 @@ def render_document_card(doc, prefix=""):
         if ext == ".pdf":
             st.markdown(f'<iframe src="{url}" width="100%" height="600" style="border: 1px solid #ddd; border-radius: 8px;"></iframe>', unsafe_allow_html=True)
         elif ext in {".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp"}:
-            st.image(url, caption=nom, use_container_width=True)
+            st.image(url, caption=nom, width="stretch")
         elif ext in {".txt", ".csv"}:
             try:
                 file_data = storage.download_file(storage_path, is_encrypted=doc.get("is_encrypted", False))
