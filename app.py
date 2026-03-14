@@ -36,7 +36,6 @@ if is_authenticated():
     pages = {
         "General": [
             st.Page("pages/0_Tableau_de_bord.py", title="Tableau de bord", icon="\U0001f4ca", default=True),
-            st.Page("pages/01_Import_Donnees.py", title="Import Donnees", icon="\U0001f4e5"),
         ],
         "Analyses IA": [
             st.Page("pages/1_Metres.py", title="Metres", icon="\U0001f4d0"),
