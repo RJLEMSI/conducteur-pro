@@ -48,13 +48,13 @@ if uploaded:
 
     if is_pdf:
         preview_bytes = pdf_first_page_to_image(uploaded)
-        st.image(preview_bytes, caption="Première page du plan", use_container_width=True)
+        st.image(preview_bytes, caption="Première page du plan", width="stretch")
         image_b64 = encode_image_bytes_to_base64(preview_bytes)
     else:
-        st.image(uploaded, caption="Plan chargé", use_container_width=True)
+        st.image(uploaded, caption="Plan chargé", width="stretch")
         image_b64, media_type = image_file_to_base64(uploaded)
 
-    if st.button("🚀 Analyser le plan et extraire les métrés", use_container_width=True):
+    if st.button("🚀 Analyser le plan et extraire les métrés", width="stretch"):
         with st.spinner("🔍 Analyse en cours par l'IA Claude..."):
             client = get_client()
             result = analyze_plan_image(image_b64, media_type, client, extra_info)
