@@ -374,109 +374,73 @@ st.markdown("---")
 st.markdown("### \U0001f4c5 Planning general des chantiers")
 
 import plotly.express as px
+import plotly.graph_objects as go_plan
 from datetime import datetime, timedelta
-import plotly.graph_objects as go_empty
 
 all_phases = db.get_all_phases_user(user_id)
 chantiers_list = stats.get("chantiers", [])
 
-# Construire les donnees du Gantt
 gantt_data = []
-
-# 1) Ajouter les phases existantes
 if all_phases:
     for p in all_phases:
         start = p.get("date_debut")
         end = p.get("date_fin")
         if start and end:
-            chantier_nom = p.get("chantier_nom", "Chantier")
             gantt_data.append({
-                "Chantier": chantier_nom,
+                "Chantier": p.get("chantier_nom", "Chantier"),
                 "Phase": p.get("nom", "Phase"),
-                "Debut": str(start),
-                "Fin": str(end),
+                "Debut": str(start), "Fin": str(end),
                 "Statut": p.get("statut", "En cours"),
                 "Avancement": p.get("avancement", 0),
             })
 
-# 2) Ajouter les chantiers avec date_debut/date_fin mais sans phases
 chantiers_with_phases = set(d["Chantier"] for d in gantt_data)
 for ch in chantiers_list:
     ch_nom = ch.get("nom", "Sans nom")
     if ch_nom not in chantiers_with_phases and ch.get("date_debut") and ch.get("date_fin"):
         gantt_data.append({
-            "Chantier": ch_nom,
-            "Phase": "Chantier planifie",
-            "Debut": str(ch["date_debut"]),
-            "Fin": str(ch["date_fin"]),
-            "Statut": "Planifie",
-            "Avancement": 0,
+            "Chantier": ch_nom, "Phase": "Chantier planifie",
+            "Debut": str(ch["date_debut"]), "Fin": str(ch["date_fin"]),
+            "Statut": "Planifie", "Avancement": 0,
         })
 
-# Affichage
-if gantt_data:
-    import pandas as pd
-    df_gantt = pd.DataFrame(gantt_data)
-    color_map = {"Termine": "#2ecc71", "En cours": "#3498db", "En retard": "#e74c3c", "A venir": "#95a5a6", "Planifie": "#f39c12", "a_faire": "#95a5a6"}
-    fig = px.timeline(
-        df_gantt, x_start="Debut", x_end="Fin", y="Chantier",
-        color="Statut", hover_data=["Phase", "Avancement"],
-        color_discrete_map=color_map,
-        title=""
-    )
-    fig.update_yaxes(autorange="reversed")
-    fig.update_layout(height=max(250, len(set(df_gantt["Chantier"])) * 80), margin=dict(l=0, r=0, t=10, b=0))
-    st.plotly_chart(fig, width="stretch")
+planning_container = st.container()
+with planning_container:
+    if gantt_data:
+        import pandas as pd
+        df_gantt = pd.DataFrame(gantt_data)
+        color_map = {"Termine": "#2ecc71", "En cours": "#3498db", "En retard": "#e74c3c", "A venir": "#95a5a6", "Planifie": "#f39c12", "a_faire": "#95a5a6"}
+        fig_plan = px.timeline(df_gantt, x_start="Debut", x_end="Fin", y="Chantier", color="Statut", hover_data=["Phase", "Avancement"], color_discrete_map=color_map, title="")
+        fig_plan.update_yaxes(autorange="reversed")
+        fig_plan.update_layout(height=max(250, len(set(df_gantt["Chantier"])) * 80), margin=dict(l=0, r=0, t=10, b=0))
+        st.plotly_chart(fig_plan, key="planning_gantt_main", width="stretch")
+    else:
+        today = datetime.now()
+        start_month = today.replace(day=1)
+        end_month = (today.replace(day=28) + timedelta(days=4)).replace(day=1) - timedelta(days=1)
+        fig_plan = go_plan.Figure()
+        fig_plan.add_shape(type="line", x0=str(today.date()), x1=str(today.date()), y0=-0.5, y1=0.5, line=dict(color="red", width=2, dash="dash"))
+        fig_plan.add_annotation(x=str(today.date()), y=0.3, text="Aujourd'hui", showarrow=False, font=dict(color="red", size=10))
+        fig_plan.update_layout(xaxis=dict(type="date", range=[str(start_month.date()), str(end_month.date())], title="", dtick="D1", tickformat="%d %b"), yaxis=dict(visible=False), height=200, margin=dict(l=0, r=0, t=10, b=40), plot_bgcolor="white")
+        fig_plan.update_xaxes(showgrid=True, gridwidth=1, gridcolor="#f0f0f0")
+        st.plotly_chart(fig_plan, key="planning_gantt_main", width="stretch")
+        st.info("\U0001f4c5 Aucun chantier planifie. Creez un chantier avec des dates ou generez un planning IA.")
 
-    # Bouton pour generer un planning IA pour un chantier
-    col_plan1, col_plan2 = st.columns([3, 1])
-    with col_plan1:
-        if chantiers_list:
+    # Toujours afficher le bouton de generation IA
+    if chantiers_list:
+        col_plan1, col_plan2 = st.columns([3, 1])
+        with col_plan1:
             chantier_noms = {c.get("nom", "Sans nom"): c for c in chantiers_list}
             selected_chantier = st.selectbox("Generer un planning IA pour :", list(chantier_noms.keys()), key="planning_gen_select")
-    with col_plan2:
-        st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("\U0001f916 Generer planning IA", type="primary", key="btn_gen_planning"):
-            if chantiers_list:
-                chantier_noms_map = {c.get("nom", "Sans nom"): c for c in chantiers_list}
-                ch = chantier_noms_map.get(selected_chantier)
-                if ch:
-                    st.session_state["auto_action"] = "generate_planning"
-                    st.session_state["auto_chantier_id"] = ch.get("id")
-                    st.session_state["auto_chantier_nom"] = selected_chantier
-                    st.switch_page("pages/4_Planning.py")
-else:
-    # Calendrier vide du mois en cours
-    today = datetime.now()
-    start_month = today.replace(day=1)
-    end_month = (today.replace(day=28) + timedelta(days=4)).replace(day=1) - timedelta(days=1)
-    fig_empty = go_empty.Figure()
-    fig_empty.add_shape(type="line", x0=str(today.date()), x1=str(today.date()), y0=-0.5, y1=0.5, line=dict(color="red", width=2, dash="dash"))
-    fig_empty.add_annotation(x=str(today.date()), y=0.3, text="Aujourd'hui", showarrow=False, font=dict(color="red", size=10))
-    fig_empty.update_layout(
-        xaxis=dict(type="date", range=[str(start_month.date()), str(end_month.date())], title="", dtick="D1", tickformat="%d %b"),
-        yaxis=dict(visible=False),
-        height=200, margin=dict(l=0, r=0, t=10, b=40),
-        plot_bgcolor="white",
-    )
-    fig_empty.update_xaxes(showgrid=True, gridwidth=1, gridcolor="#f0f0f0")
-    st.plotly_chart(fig_empty, width="stretch", key="empty_cal_tdb_main")
-    st.info("\U0001f4c5 Aucun chantier planifie. Creez un chantier avec des dates ou generez un planning IA.")
-    if chantiers_list:
-        chantier_noms = {c.get("nom", "Sans nom"): c for c in chantiers_list}
-        col_p1, col_p2 = st.columns([3, 1])
-        with col_p1:
-            selected_chantier = st.selectbox("Chantier :", list(chantier_noms.keys()), key="planning_gen_select_empty")
-        with col_p2:
+        with col_plan2:
             st.markdown("<br>", unsafe_allow_html=True)
-            if st.button("\U0001f916 Generer planning IA", type="primary", key="btn_gen_planning_empty"):
+            if st.button("\U0001f916 Generer planning IA", type="primary", key="btn_gen_planning"):
                 ch = chantier_noms[selected_chantier]
                 st.session_state["auto_action"] = "generate_planning"
                 st.session_state["auto_chantier_id"] = ch.get("id")
                 st.session_state["auto_chantier_nom"] = selected_chantier
                 st.switch_page("pages/4_Planning.py")
 
-# ═══════════════════════════════════════════════════════════════════════════════
 # Details par onglet
 # ═══════════════════════════════════════════════════════════════════════════════
 
