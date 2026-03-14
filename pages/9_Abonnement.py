@@ -88,12 +88,12 @@ price_team = st.secrets.get("STRIPE_PRICE_TEAM", "")
 
 with col1:
     if current_plan != "free":
-        if st.button("Revenir au gratuit", use_container_width=True):
+        if st.button("Revenir au gratuit", width="stretch"):
             st.warning("Contactez le support pour reclasser votre abonnement.")
 
 with col2:
     if current_plan != "pro":
-        if st.button("Passer au Pro - 65,90\u20ac/mois", use_container_width=True, type="primary"):
+        if st.button("Passer au Pro - 65,90\u20ac/mois", width="stretch", type="primary"):
             if stripe_key and price_pro:
                 try:
                     import stripe
@@ -117,7 +117,7 @@ with col2:
 
 with col3:
     if current_plan != "team":
-        if st.button("Passer à Équipe - 119,60\u20ac/mois", use_container_width=True):
+        if st.button("Passer à Équipe - 119,60\u20ac/mois", width="stretch"):
             if stripe_key and price_team:
                 try:
                     import stripe
