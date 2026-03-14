@@ -63,6 +63,23 @@ with tab_general:
     chantiers = db.get_chantiers(user_id)
     if not chantiers:
         st.info("Aucun chantier en cours. Creez un chantier depuis le Tableau de bord.")
+        # Calendrier vide - mois en cours
+        from datetime import datetime as _dt, timedelta as _td
+        _today = _dt.now()
+        _start_m = _today.replace(day=1)
+        _end_m = (_today.replace(day=28) + _td(days=4)).replace(day=1) - _td(days=1)
+        import plotly.graph_objects as _go
+        _fig_e = _go.Figure()
+        _fig_e.add_shape(type="line", x0=str(_today.date()), x1=str(_today.date()), y0=-0.5, y1=0.5, line=dict(color="red", width=2, dash="dash"))
+        _fig_e.add_annotation(x=str(_today.date()), y=0.3, text="Aujourd'hui", showarrow=False, font=dict(color="red", size=10))
+        _fig_e.update_layout(
+            xaxis=dict(type="date", range=[str(_start_m.date()), str(_end_m.date())], title="", dtick="D1", tickformat="%d %b"),
+            yaxis=dict(visible=False),
+            height=200, margin=dict(l=0, r=0, t=10, b=40),
+            plot_bgcolor="white",
+        )
+        _fig_e.update_xaxes(showgrid=True, gridwidth=1, gridcolor="#f0f0f0")
+        st.plotly_chart(_fig_e, width="stretch")
     else:
         # Récupérer toutes les phases de l'utilisateur
         all_phases = db.get_all_phases_user(user_id)
@@ -155,6 +172,23 @@ with tab_general:
                 st.warning("Aucune phase ne correspond aux filtres selectionnes.")
         else:
             st.info("Aucune phase de chantier planifiee. Utilisez l'onglet **Calculer un Planning Chantier** pour commencer.")
+            # Calendrier vide - mois en cours
+            from datetime import datetime as _dt, timedelta as _td
+            _today = _dt.now()
+            _start_m = _today.replace(day=1)
+            _end_m = (_today.replace(day=28) + _td(days=4)).replace(day=1) - _td(days=1)
+            import plotly.graph_objects as _go
+            _fig_e = _go.Figure()
+            _fig_e.add_shape(type="line", x0=str(_today.date()), x1=str(_today.date()), y0=-0.5, y1=0.5, line=dict(color="red", width=2, dash="dash"))
+            _fig_e.add_annotation(x=str(_today.date()), y=0.3, text="Aujourd'hui", showarrow=False, font=dict(color="red", size=10))
+            _fig_e.update_layout(
+                xaxis=dict(type="date", range=[str(_start_m.date()), str(_end_m.date())], title="", dtick="D1", tickformat="%d %b"),
+                yaxis=dict(visible=False),
+                height=200, margin=dict(l=0, r=0, t=10, b=40),
+                plot_bgcolor="white",
+            )
+            _fig_e.update_xaxes(showgrid=True, gridwidth=1, gridcolor="#f0f0f0")
+            st.plotly_chart(_fig_e, width="stretch")
 
             # Afficher les chantiers sous forme de cards
             st.subheader("Vos chantiers")
@@ -294,6 +328,23 @@ with tab_chantier:
         # ─── Aucune phase : proposer la création ──────────────────────────────────
         else:
             st.info("Aucun planning pour ce chantier. Generez-en un ci-dessous.")
+            # Calendrier vide - mois en cours
+            from datetime import datetime as _dt, timedelta as _td
+            _today = _dt.now()
+            _start_m = _today.replace(day=1)
+            _end_m = (_today.replace(day=28) + _td(days=4)).replace(day=1) - _td(days=1)
+            import plotly.graph_objects as _go
+            _fig_e = _go.Figure()
+            _fig_e.add_shape(type="line", x0=str(_today.date()), x1=str(_today.date()), y0=-0.5, y1=0.5, line=dict(color="red", width=2, dash="dash"))
+            _fig_e.add_annotation(x=str(_today.date()), y=0.3, text="Aujourd'hui", showarrow=False, font=dict(color="red", size=10))
+            _fig_e.update_layout(
+                xaxis=dict(type="date", range=[str(_start_m.date()), str(_end_m.date())], title="", dtick="D1", tickformat="%d %b"),
+                yaxis=dict(visible=False),
+                height=200, margin=dict(l=0, r=0, t=10, b=40),
+                plot_bgcolor="white",
+            )
+            _fig_e.update_xaxes(showgrid=True, gridwidth=1, gridcolor="#f0f0f0")
+            st.plotly_chart(_fig_e, width="stretch")
 
             st.subheader("\U0001f680 Generer un planning automatique")
             st.markdown("Selectionnez les phases BTP a inclure et definissez la date de debut du chantier.")
