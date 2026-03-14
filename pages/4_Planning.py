@@ -20,7 +20,7 @@ render_saas_sidebar(user_id)
 
 st.title("\U0001f4c5 Planning")
 
-# ─── Phases types BTP avec durées et couleurs ─────────────────────────────────
+# âââ Phases types BTP avec durÃ©es et couleurs âââââââââââââââââââââââââââââââââ
 PHASES_BTP = [
     {"nom": "Etudes et preparation", "duree": 21, "couleur": "#6C5B7B", "categorie": "preparation"},
     {"nom": "Installation de chantier", "duree": 7, "couleur": "#C06C84", "categorie": "preparation"},
@@ -52,15 +52,15 @@ STATUT_COLORS = {
     "en_retard": "#e74c3c",
 }
 
-# ─── ONGLETS PRINCIPAUX ───────────────────────────────────────────────────────
+# âââ ONGLETS PRINCIPAUX âââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 tab_general, tab_chantier = st.tabs([
     "\U0001f3D7\uFE0F Planning General",
     "\U0001f4CB Calculer un Planning Chantier"
 ])
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# TAB 1 : PLANNING GÉNÉRAL (Gantt de tous les chantiers)
-# ═══════════════════════════════════════════════════════════════════════════════
+# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+# TAB 1 : PLANNING GÃNÃRAL (Gantt de tous les chantiers)
+# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 with tab_general:
     st.subheader("\U0001f3D7\uFE0F Vue d'ensemble de tous les chantiers")
 
@@ -134,20 +134,20 @@ with tab_general:
             phases_ch = phases_par_chantier.get(ch_nom, [])
             nb = len(phases_ch)
             color_hex = CHANTIER_COLORS[idx_ch % len(CHANTIER_COLORS)]
-            header = f"\U0001f3d7\ufe0f {ch_nom} — {nb} phase(s)" if nb > 0 else f"\U0001f3d7\ufe0f {ch_nom} — Aucune phase"
+            header = f"\U0001f3d7\ufe0f {ch_nom} â {nb} phase(s)" if nb > 0 else f"\U0001f3d7\ufe0f {ch_nom} â Aucune phase"
 
             with st.expander(header, expanded=False):
                 col_info1, col_info2, col_info3 = st.columns(3)
                 col_info1.metric("Client", ch.get("client_nom", "-"))
                 col_info2.metric("Adresse", ch.get("adresse", "-"))
-                col_info3.metric("Dates", f"{ch.get('date_debut', '?')} → {ch.get('date_fin', '?')}")
+                col_info3.metric("Dates", f"{ch.get('date_debut', '?')} â {ch.get('date_fin', '?')}")
 
                 if phases_ch:
                     st.markdown("**Phases du chantier :**")
                     for ph in phases_ch:
                         col_a, col_b, col_c, col_d = st.columns([3, 2, 1, 1])
                         col_a.markdown(f"**{ph.get('nom', 'Phase')}**")
-                        col_b.caption(f"{ph.get('date_debut', '?')} → {ph.get('date_fin', '?')}")
+                        col_b.caption(f"{ph.get('date_debut', '?')} â {ph.get('date_fin', '?')}")
                         statut = ph.get("statut", "a_faire")
                         col_c.markdown(f"_{STATUT_LABELS.get(statut, statut)}_")
                         prog = ph.get("progression", 0)
@@ -156,22 +156,58 @@ with tab_general:
                     st.warning("Aucune phase detaillee pour ce chantier.")
                     st.markdown("Generez un planning IA complet avec les phases BTP adaptees a ce chantier.")
                     if st.button(f"\U0001f916 Generer le planning IA pour {ch_nom}", key=f"gen_plan_general_{idx_ch}"):
-                        st.session_state["auto_action"] = "generate_planning"
-                        st.session_state["auto_chantier_id"] = ch_id
-                        st.session_state["auto_chantier_nom"] = ch_nom
-                        st.switch_page("pages/4_Planning.py")
+                        # Generation automatique avec les phases BTP par defaut
+                        _date_debut = ch.get("date_debut")
+                        if _date_debut and isinstance(_date_debut, str):
+                            try:
+                                _start = datetime.strptime(_date_debut, "%Y-%m-%d").date()
+                            except Exception:
+                                _start = date.today()
+                        elif _date_debut and hasattr(_date_debut, "year"):
+                            _start = _date_debut
+                        else:
+                            _start = date.today()
+
+                        _phases_to_save = []
+                        _current = _start
+                        for _idx_p, _phase in enumerate(PHASES_BTP):
+                            _d_debut = _current
+                            _d_fin = _d_debut + timedelta(days=_phase["duree"])
+                            _phases_to_save.append({
+                                "nom": _phase["nom"],
+                                "categorie": _phase.get("categorie", "personnalisee"),
+                                "date_debut": _d_debut.isoformat(),
+                                "date_fin": _d_fin.isoformat(),
+                                "duree_jours": _phase["duree"],
+                                "statut": "a_faire",
+                                "progression": 0,
+                                "ordre": _idx_p + 1,
+                                "couleur": _phase.get("couleur", "#1B4F8A"),
+                            })
+                            _current = _d_fin - timedelta(days=min(2, _phase["duree"] - 1))
+
+                        _ok = db.save_phases_batch(user_id, ch_id, _phases_to_save)
+                        if _ok:
+                            db.update_chantier(ch_id, {
+                                "date_debut": _phases_to_save[0]["date_debut"],
+                                "date_fin": _phases_to_save[-1]["date_fin"],
+                            })
+                            st.success(f"Planning genere avec {len(_phases_to_save)} phases pour {ch_nom} !")
+                            st.rerun()
+                        else:
+                            st.error("Erreur lors de la generation du planning.")
     else:
         st.info("Aucun chantier. Creez un chantier depuis le Tableau de bord.")
 
 with tab_chantier:
     st.subheader("\U0001f4CB Calculer le planning d'un chantier")
 
-    # Charger les chantiers pour le selectbox (sans utiliser chantier_selector qui peut poser problème dans les tabs)
+    # Charger les chantiers pour le selectbox (sans utiliser chantier_selector qui peut poser problÃ¨me dans les tabs)
     chantiers_list = db.get_chantiers(user_id)
     if not chantiers_list:
         st.info("Aucun chantier disponible. Creez un chantier depuis le Tableau de bord.")
     else:
-        chantier_options = {f"{ch.get('nom', 'Sans nom')} — {ch.get('adresse', '')}": ch for ch in chantiers_list}
+        chantier_options = {f"{ch.get('nom', 'Sans nom')} â {ch.get('adresse', '')}": ch for ch in chantiers_list}
         selected_label = st.selectbox(
             "Selectionner un chantier",
             options=list(chantier_options.keys()),
@@ -181,7 +217,7 @@ with tab_chantier:
         chantier_id = chantier["id"]
         existing_phases = db.get_phases(chantier_id)
 
-        # ─── Si des phases existent déjà ──────────────────────────────────────────
+        # âââ Si des phases existent dÃ©jÃ  ââââââââââââââââââââââââââââââââââââââââââ
         if existing_phases:
             st.success(f"{len(existing_phases)} phases planifiees pour ce chantier")
 
@@ -212,7 +248,7 @@ with tab_chantier:
                     STATUT_LABELS["termine"]: STATUT_COLORS["termine"],
                     STATUT_LABELS["en_retard"]: STATUT_COLORS["en_retard"],
                 },
-                title=f"Planning — {chantier.get('nom', '')}"
+                title=f"Planning â {chantier.get('nom', '')}"
             )
             fig_ch.update_layout(
                 height=max(350, len(existing_phases) * 45),
@@ -223,10 +259,10 @@ with tab_chantier:
             fig_ch.update_yaxes(autorange="reversed")
             st.plotly_chart(fig_ch, width="stretch")
 
-            # Tableau de mise à jour des statuts
+            # Tableau de mise Ã  jour des statuts
             st.subheader("\u270F\uFE0F Mettre a jour les phases")
             for i, phase in enumerate(existing_phases):
-                with st.expander(f"{phase['nom']} — {STATUT_LABELS.get(phase.get('statut', 'a_faire'), '')}", expanded=False):
+                with st.expander(f"{phase['nom']} â {STATUT_LABELS.get(phase.get('statut', 'a_faire'), '')}", expanded=False):
                     col1, col2, col3 = st.columns(3)
                     new_statut = col1.selectbox(
                         "Statut", ["a_faire", "en_cours", "termine", "en_retard"],
@@ -249,7 +285,7 @@ with tab_chantier:
                         st.success("Phase mise a jour !")
                         st.rerun()
 
-            # Ajouter une phase personnalisée
+            # Ajouter une phase personnalisÃ©e
             st.markdown("---")
             st.subheader("\u2795 Ajouter une tache personnalisee")
             with st.form("add_custom_phase"):
@@ -287,7 +323,7 @@ with tab_chantier:
                 st.success("Planning reinitialise.")
                 st.rerun()
 
-        # ─── Aucune phase : proposer la création ──────────────────────────────────
+        # âââ Aucune phase : proposer la crÃ©ation ââââââââââââââââââââââââââââââââââ
         else:
             st.info("Aucun planning pour ce chantier. Generez-en un ci-dessous.")
             # Calendrier vide - mois en cours
@@ -319,7 +355,7 @@ with tab_chantier:
 
             st.markdown("#### Phases a inclure :")
 
-            # Sélection des phases avec durées modifiables
+            # SÃ©lection des phases avec durÃ©es modifiables
             selected_phases = []
             categories = {"preparation": "Preparation", "gros_oeuvre": "Gros Oeuvre", "second_oeuvre": "Second Oeuvre", "finitions": "Finitions"}
 
@@ -342,7 +378,7 @@ with tab_chantier:
                             "categorie": phase["categorie"],
                         })
 
-            # Ajouter des tâches personnalisées
+            # Ajouter des tÃ¢ches personnalisÃ©es
             st.markdown("---")
             st.markdown("#### Taches personnalisees supplementaires")
             nb_custom = st.number_input("Nombre de taches a ajouter", min_value=0, max_value=10, value=0, key="nb_custom")
@@ -360,7 +396,7 @@ with tab_chantier:
                     })
 
             if selected_phases:
-                # Aperçu
+                # AperÃ§u
                 st.markdown("---")
                 st.subheader("\U0001f4C6 Apercu du planning")
                 preview_data = []
@@ -375,7 +411,7 @@ with tab_chantier:
                         "Duree": f"{phase['duree']}j",
                         "Categorie": phase.get("categorie", ""),
                     })
-                    # Phase suivante commence 2 jours avant la fin (chevauchement léger)
+                    # Phase suivante commence 2 jours avant la fin (chevauchement lÃ©ger)
                     current_date = d_fin - timedelta(days=min(2, phase["duree"] - 1))
 
                 df_preview = pd.DataFrame(preview_data)
@@ -421,7 +457,7 @@ with tab_chantier:
 
                     success = db.save_phases_batch(user_id, chantier_id, phases_to_save)
                     if success:
-                        # Mettre à jour les dates du chantier
+                        # Mettre Ã  jour les dates du chantier
                         db.update_chantier(chantier_id, {
                             "date_debut": phases_to_save[0]["date_debut"],
                             "date_fin": phases_to_save[-1]["date_fin"],
