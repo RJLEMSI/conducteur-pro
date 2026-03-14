@@ -10,6 +10,10 @@ from lib.helpers import page_setup, render_saas_sidebar, chantier_selector
 from lib import db
 from utils import GLOBAL_CSS
 
+# Palette de couleurs par chantier
+CHANTIER_COLORS = ["#1B4F8A", "#E67E22", "#2ECC71", "#9B59B6", "#E74C3C", "#1ABC9C", "#F39C12", "#3498DB", "#D35400", "#27AE60", "#8E44AD", "#C0392B", "#16A085", "#2980B9", "#F1C40F"]
+
+
 user_id = page_setup(title="Planning", icon="\U0001f4c5")
 st.markdown(GLOBAL_CSS, unsafe_allow_html=True)
 render_saas_sidebar(user_id)
@@ -145,14 +149,9 @@ with tab_general:
                     x_start="Debut",
                     x_end="Fin",
                     y="Chantier",
-                    color="Statut",
+                    color="Chantier",
                     hover_data=["Tache", "Progression"],
-                    color_discrete_map={
-                        STATUT_LABELS["a_faire"]: STATUT_COLORS["a_faire"],
-                        STATUT_LABELS["en_cours"]: STATUT_COLORS["en_cours"],
-                        STATUT_LABELS["termine"]: STATUT_COLORS["termine"],
-                        STATUT_LABELS["en_retard"]: STATUT_COLORS["en_retard"],
-                    },
+                color_discrete_map={name: CHANTIER_COLORS[i % len(CHANTIER_COLORS)] for i, name in enumerate(df_filtered["Chantier"].unique())},
                     title="Planning General - Tous les chantiers"
                 )
                 fig.update_layout(
