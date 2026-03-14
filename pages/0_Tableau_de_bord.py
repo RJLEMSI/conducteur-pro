@@ -109,16 +109,16 @@ quick_actions = {
 }
 
 with qcol1:
-    if st.button("\U0001f4d0 Faire un metre", use_container_width=True):
+    if st.button("\U0001f4d0 Faire un metre", width="stretch"):
         st.session_state["ai_input"] = "Fait un metre a partir du dernier plan depose"
 with qcol2:
-    if st.button("\U0001f4b0 Creer un devis", use_container_width=True):
+    if st.button("\U0001f4b0 Creer un devis", width="stretch"):
         st.session_state["ai_input"] = "Cree un devis pour le chantier en cours"
 with qcol3:
-    if st.button("\U0001f50d Analyser un plan", use_container_width=True):
+    if st.button("\U0001f50d Analyser un plan", width="stretch"):
         st.session_state["ai_input"] = "Analyse le dernier plan depose"
 with qcol4:
-    if st.button("\U0001f4ca Etude / PLU", use_container_width=True):
+    if st.button("\U0001f4ca Etude / PLU", width="stretch"):
         st.session_state["ai_input"] = "Analyse la derniere etude deposee"
 
 # Barre de saisie avec bouton micro
@@ -225,9 +225,9 @@ if ai_query and ai_query.strip():
         </div>
         """, unsafe_allow_html=True)
         c1, c2 = st.columns(2)
-        if c1.button("\U0001f4d0 Metres (extraction)", type="primary", use_container_width=True):
+        if c1.button("\U0001f4d0 Metres (extraction)", type="primary", width="stretch"):
             st.switch_page("pages/1_Metres.py")
-        if c2.button("\U0001f4d6 Etudes (analyse)", use_container_width=True):
+        if c2.button("\U0001f4d6 Etudes (analyse)", width="stretch"):
             st.switch_page("pages/3_Etudes.py")
 
     elif any(kw in query_lower for kw in ["etude", "thermique", "acoustique", "structure", "geotechnique"]):
@@ -390,13 +390,13 @@ with tab1:
 
         rename = {"nom": "Nom", "client_nom": "Client", "statut": "Statut", "adresse": "Adresse", "budget_ht": "Budget HT", "avancement_pct": "Avancement", "created_at": "Cree le"}
         df_display.columns = [rename.get(c, c) for c in df_display.columns]
-        st.dataframe(df_display, use_container_width=True, hide_index=True)
+        st.dataframe(df_display, width="stretch", hide_index=True)
 
         if "statut" in df.columns:
             df["Statut"] = df["statut"].apply(_fmt_statut)
             fig = px.pie(df, names="Statut", title="Repartition par statut", color_discrete_sequence=px.colors.qualitative.Set2)
             fig.update_layout(margin=dict(t=40, b=10, l=10, r=10), height=300)
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
     else:
         st.info("Aucun chantier. Creez votre premier chantier ci-dessous.")
 
@@ -436,7 +436,7 @@ with tab2:
             df_display["montant_ht"] = df_display["montant_ht"].apply(lambda x: f"{float(x or 0):,.2f} \u20ac")
         rename = {"numero": "N\u00b0", "objet": "Objet", "client_nom": "Client", "montant_ht": "Montant HT", "statut": "Statut", "created_at": "Cree le"}
         df_display.columns = [rename.get(c, c) for c in df_display.columns]
-        st.dataframe(df_display, use_container_width=True, hide_index=True)
+        st.dataframe(df_display, width="stretch", hide_index=True)
     else:
         st.info("Aucun devis. Creez-en un depuis la page Devis.")
 
@@ -462,6 +462,6 @@ with tab3:
             df_display["montant_ttc"] = df_display["montant_ttc"].apply(lambda x: f"{float(x or 0):,.2f} \u20ac")
         rename = {"numero": "N\u00b0", "client_nom": "Client", "objet": "Objet", "montant_ttc": "Montant TTC", "statut": "Statut", "date_facture": "Date", "date_echeance": "Echeance"}
         df_display.columns = [rename.get(c, c) for c in df_display.columns]
-        st.dataframe(df_display, use_container_width=True, hide_index=True)
+        st.dataframe(df_display, width="stretch", hide_index=True)
     else:
         st.info("Aucune facture. Creez-en une depuis la page Facturation.")
