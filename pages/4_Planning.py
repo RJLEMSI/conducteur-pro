@@ -79,7 +79,7 @@ with tab_general:
             plot_bgcolor="white",
         )
         _fig_e.update_xaxes(showgrid=True, gridwidth=1, gridcolor="#f0f0f0")
-        st.plotly_chart(_fig_e, width="stretch")
+        st.plotly_chart(_fig_e, width="stretch", key="empty_cal_no_chantier")
     else:
         # Récupérer toutes les phases de l'utilisateur
         all_phases = db.get_all_phases_user(user_id)
@@ -100,6 +100,21 @@ with tab_general:
                     "statut_raw": phase.get("statut", "a_faire"),
                 })
 
+
+            # Ajouter les chantiers qui ont des dates mais pas encore de phases
+            chantiers_with_phases = set(d["Chantier"] for d in gantt_data)
+            for ch in chantiers:
+                ch_nom = ch.get("nom", "Sans nom")
+                if ch_nom not in chantiers_with_phases and ch.get("date_debut") and ch.get("date_fin"):
+                    gantt_data.append({
+                        "Tache": "Chantier planifie",
+                        "Chantier": ch_nom,
+                        "Debut": str(ch["date_debut"]),
+                        "Fin": str(ch["date_fin"]),
+                        "Statut": STATUT_LABELS.get(ch.get("statut", "en_cours"), "En cours"),
+                        "Progression": 0,
+                        "statut_raw": ch.get("statut", "en_cours"),
+                    })
             df = pd.DataFrame(gantt_data)
             df["Debut"] = pd.to_datetime(df["Debut"])
             df["Fin"] = pd.to_datetime(df["Fin"])
@@ -188,7 +203,18 @@ with tab_general:
                 plot_bgcolor="white",
             )
             _fig_e.update_xaxes(showgrid=True, gridwidth=1, gridcolor="#f0f0f0")
-            st.plotly_chart(_fig_e, width="stretch")
+            st.plotly_chart(_fig_e, width="stretch", key="empty_cal_no_phases")
+
+            # Afficher les chantiers avec dates sur un Gantt
+            ch_with_dates = [ch for ch in chantiers if ch.get("date_debut") and ch.get("date_fin")]
+            if ch_with_dates:
+                import pandas as pd_ch
+                gantt_ch = [{"Chantier": ch.get("nom","Sans nom"), "Tache": "Chantier planifie", "Debut": str(ch["date_debut"]), "Fin": str(ch["date_fin"]), "Statut": "En cours"} for ch in ch_with_dates]
+                df_ch = pd_ch.DataFrame(gantt_ch)
+                fig_ch_dates = px.timeline(df_ch, x_start="Debut", x_end="Fin", y="Chantier", color="Statut", hover_data=["Tache"], title="")
+                fig_ch_dates.update_yaxes(autorange="reversed")
+                fig_ch_dates.update_layout(height=max(200, len(ch_with_dates) * 60), margin=dict(l=0, r=0, t=10, b=0))
+                st.plotly_chart(fig_ch_dates, width="stretch", key="gantt_chantiers_dates")
 
             # Afficher les chantiers sous forme de cards
             st.subheader("Vos chantiers")
@@ -344,7 +370,7 @@ with tab_chantier:
                 plot_bgcolor="white",
             )
             _fig_e.update_xaxes(showgrid=True, gridwidth=1, gridcolor="#f0f0f0")
-            st.plotly_chart(_fig_e, width="stretch")
+            st.plotly_chart(_fig_e, width="stretch", key="empty_cal_per_chantier")
 
             st.subheader("\U0001f680 Generer un planning automatique")
             st.markdown("Selectionnez les phases BTP a inclure et definissez la date de debut du chantier.")
