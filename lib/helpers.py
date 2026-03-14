@@ -62,7 +62,7 @@ def render_saas_sidebar(user_id: str):
         st.markdown("---")
 
         # Logout uniquement - la navigation est geree par st.navigation() dans app.py
-        if st.button("\U0001f6aa Se deconnecter", use_container_width=True):
+        if st.button("\U0001f6aa Se deconnecter", width="stretch"):
             logout_user()
             st.rerun()
 
