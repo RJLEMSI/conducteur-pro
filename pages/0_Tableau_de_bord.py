@@ -438,7 +438,7 @@ if all_phases:
             plot_bgcolor="white",
         )
         fig_empty.update_xaxes(showgrid=True, gridwidth=1, gridcolor="#f0f0f0")
-        st.plotly_chart(fig_empty, width="stretch")
+        st.plotly_chart(fig_empty, width="stretch", key="empty_cal_tdb_440")
         chantiers_list = stats.get("chantiers", [])
         if chantiers_list:
             chantier_noms = {c.get("nom", "Sans nom"): c for c in chantiers_list}
@@ -471,7 +471,7 @@ else:
         plot_bgcolor="white",
     )
     fig_empty.update_xaxes(showgrid=True, gridwidth=1, gridcolor="#f0f0f0")
-    st.plotly_chart(fig_empty, width="stretch")
+    st.plotly_chart(fig_empty, width="stretch", key="empty_cal_tdb_473")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -530,9 +530,18 @@ with tab1:
                 metier = st.selectbox("Metier", ["Gros oeuvre", "Second oeuvre", "Genie civil", "Renovation", "Extension", "Neuf", "Autre"])
                 responsable = st.text_input("Responsable")
             notes = st.text_area("Notes", height=80)
+            c3, c4 = st.columns(2)
+            with c3:
+                date_debut = st.date_input("Date de debut du chantier", value=None, key="new_ch_date_debut")
+            with c4:
+                date_fin = st.date_input("Date de fin prevue", value=None, key="new_ch_date_fin")
             submitted = st.form_submit_button("Creer le chantier", type="primary")
             if submitted and nom:
                 data = {"nom": nom, "client_nom": client, "adresse": adresse, "statut": "en_cours", "budget_ht": budget, "metier": metier, "responsable": responsable, "notes": notes}
+                if date_debut:
+                    data["date_debut"] = str(date_debut)
+                if date_fin:
+                    data["date_fin"] = str(date_fin)
                 result = db.create_chantier(user_id, data)
                 if result:
                     st.success(f"Chantier '{nom}' cree !")
