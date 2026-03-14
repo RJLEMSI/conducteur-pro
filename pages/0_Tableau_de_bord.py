@@ -214,7 +214,8 @@ if ai_query and ai_query.strip():
         </div>
         """, unsafe_allow_html=True)
         if st.button("\u27a1\ufe0f Aller aux Devis", type="primary"):
-            st.switch_page("pages/8_Devis.py")
+            st.session_state["auto_query"] = ai_query
+                    st.switch_page("pages/8_Devis.py")
 
     elif any(kw in query_lower for kw in ["plan", "facade", "coupe", "implantation"]):
         st.markdown("""
@@ -228,7 +229,8 @@ if ai_query and ai_query.strip():
         if c1.button("\U0001f4d0 Metres (extraction)", type="primary", width="stretch"):
             st.switch_page("pages/1_Metres.py")
         if c2.button("\U0001f4d6 Etudes (analyse)", width="stretch"):
-            st.switch_page("pages/3_Etudes.py")
+            st.session_state["auto_query"] = ai_query
+                    st.switch_page("pages/3_Etudes.py")
 
     elif any(kw in query_lower for kw in ["etude", "thermique", "acoustique", "structure", "geotechnique"]):
         st.markdown("""
@@ -239,7 +241,8 @@ if ai_query and ai_query.strip():
         </div>
         """, unsafe_allow_html=True)
         if st.button("\u27a1\ufe0f Aller aux Etudes", type="primary"):
-            st.switch_page("pages/3_Etudes.py")
+            st.session_state["auto_query"] = ai_query
+                    st.switch_page("pages/3_Etudes.py")
 
     elif any(kw in query_lower for kw in ["plu", "urbanisme", "regle", "zone"]):
         st.markdown("""
@@ -250,7 +253,8 @@ if ai_query and ai_query.strip():
         </div>
         """, unsafe_allow_html=True)
         if st.button("\u27a1\ufe0f Aller au PLU", type="primary"):
-            st.switch_page("pages/5_PLU.py")
+            st.session_state["auto_query"] = ai_query
+                    st.switch_page("pages/5_PLU.py")
 
     elif any(kw in query_lower for kw in ["facture", "facturation", "paiement"]):
         st.markdown("""
@@ -260,7 +264,8 @@ if ai_query and ai_query.strip():
         </div>
         """, unsafe_allow_html=True)
         if st.button("\u27a1\ufe0f Aller a la Facturation", type="primary"):
-            st.switch_page("pages/10_Facturation.py")
+            st.session_state["auto_query"] = ai_query
+                    st.switch_page("pages/10_Facturation.py")
 
     elif any(kw in query_lower for kw in ["dce", "cctp", "ccap", "dpgf", "cahier"]):
         st.markdown("""
@@ -270,7 +275,8 @@ if ai_query and ai_query.strip():
         </div>
         """, unsafe_allow_html=True)
         if st.button("\u27a1\ufe0f Aller au DCE", type="primary"):
-            st.switch_page("pages/2_DCE.py")
+            st.session_state["auto_query"] = ai_query
+                    st.switch_page("pages/2_DCE.py")
 
     elif any(kw in query_lower for kw in ["planning", "gantt", "calendrier"]):
         st.markdown("""
@@ -280,7 +286,8 @@ if ai_query and ai_query.strip():
         </div>
         """, unsafe_allow_html=True)
         if st.button("\u27a1\ufe0f Aller au Planning", type="primary"):
-            st.switch_page("pages/4_Planning.py")
+            st.session_state["auto_query"] = ai_query
+                    st.switch_page("pages/4_Planning.py")
 
     elif any(kw in query_lower for kw in ["reunion", "compte-rendu", "pv reunion", "cr "]):
         st.markdown("""
@@ -290,7 +297,8 @@ if ai_query and ai_query.strip():
         </div>
         """, unsafe_allow_html=True)
         if st.button("\u27a1\ufe0f Aller aux Reunions", type="primary"):
-            st.switch_page("pages/14_Reunions.py")
+            st.session_state["auto_query"] = ai_query
+                    st.switch_page("pages/14_Reunions.py")
 
     elif any(kw in query_lower for kw in ["document", "fichier", "upload", "telecharger"]):
         st.markdown("""
@@ -300,7 +308,8 @@ if ai_query and ai_query.strip():
         </div>
         """, unsafe_allow_html=True)
         if st.button("\u27a1\ufe0f Aller aux Documents", type="primary"):
-            st.switch_page("pages/11_Documents.py")
+            st.session_state["auto_query"] = ai_query
+                    st.switch_page("pages/11_Documents.py")
 
     else:
         st.markdown(f"""
@@ -355,6 +364,81 @@ with col_c:
     st.metric("\U0001f4ca Devis non factures", f"{marge:,.0f} \u20ac")
 
 st.markdown("---")
+
+st.markdown("---")
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# PLANNING VISUEL GENERAL - Vue Gantt de tous les chantiers
+# ═══════════════════════════════════════════════════════════════════════════════
+
+st.markdown("### 📅 Planning général des chantiers")
+
+all_phases = db.get_all_phases_user(user_id)
+if all_phases:
+    import plotly.express as px
+    gantt_data = []
+    for p in all_phases:
+        start = p.get("date_debut")
+        end = p.get("date_fin")
+        if start and end:
+            chantier_nom = p.get("chantier_nom", "Chantier")
+            gantt_data.append({
+                "Chantier": chantier_nom,
+                "Phase": p.get("nom", "Phase"),
+                "Debut": str(start),
+                "Fin": str(end),
+                "Statut": p.get("statut", "En cours"),
+                "Avancement": p.get("avancement", 0),
+            })
+    if gantt_data:
+        import pandas as pd
+        df_gantt = pd.DataFrame(gantt_data)
+        color_map = {"Termine": "#2ecc71", "En cours": "#3498db", "En retard": "#e74c3c", "A venir": "#95a5a6", "Planifie": "#f39c12"}
+        fig = px.timeline(
+            df_gantt, x_start="Debut", x_end="Fin", y="Chantier",
+            color="Statut", hover_data=["Phase", "Avancement"],
+            color_discrete_map=color_map,
+            title=""
+        )
+        fig.update_yaxes(autorange="reversed")
+        fig.update_layout(height=max(250, len(set(df_gantt["Chantier"])) * 80), margin=dict(l=0, r=0, t=10, b=0))
+        st.plotly_chart(fig, width="stretch")
+
+        # Bouton pour generer un planning IA pour un chantier
+        col_plan1, col_plan2 = st.columns([3, 1])
+        with col_plan1:
+            chantiers_list = stats.get("chantiers", [])
+            chantier_noms = {c.get("nom", "Sans nom"): c for c in chantiers_list}
+            if chantier_noms:
+                selected_chantier = st.selectbox("Generer un planning IA pour :", list(chantier_noms.keys()), key="planning_gen_select")
+        with col_plan2:
+            st.markdown("<br>", unsafe_allow_html=True)
+            if st.button("🤖 Generer planning IA", type="primary", key="btn_gen_planning"):
+                if chantier_noms:
+                    ch = chantier_noms[selected_chantier]
+                    st.session_state["auto_action"] = "generate_planning"
+                    st.session_state["auto_chantier_id"] = ch.get("id")
+                    st.session_state["auto_chantier_nom"] = selected_chantier
+                    st.switch_page("pages/4_Planning.py")
+    else:
+        st.info("Aucune phase planifiee. Utilisez le bouton ci-dessous pour generer un planning IA.")
+        chantiers_list = stats.get("chantiers", [])
+        if chantiers_list:
+            chantier_noms = {c.get("nom", "Sans nom"): c for c in chantiers_list}
+            col_p1, col_p2 = st.columns([3, 1])
+            with col_p1:
+                selected_chantier = st.selectbox("Chantier :", list(chantier_noms.keys()), key="planning_gen_select_empty")
+            with col_p2:
+                st.markdown("<br>", unsafe_allow_html=True)
+                if st.button("🤖 Generer planning IA", type="primary", key="btn_gen_planning_empty"):
+                    ch = chantier_noms[selected_chantier]
+                    st.session_state["auto_action"] = "generate_planning"
+                    st.session_state["auto_chantier_id"] = ch.get("id")
+                    st.session_state["auto_chantier_nom"] = selected_chantier
+                    st.switch_page("pages/4_Planning.py")
+else:
+    st.info("📅 Aucun chantier avec planning. Creez un chantier et generez un planning IA.")
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Details par onglet
