@@ -422,6 +422,23 @@ if all_phases:
                     st.switch_page("pages/4_Planning.py")
     else:
         st.info("Aucune phase planifiee. Utilisez le bouton ci-dessous pour generer un planning IA.")
+        # Calendrier vide - mois en cours
+        from datetime import datetime, timedelta
+        import plotly.graph_objects as go_empty
+        today = datetime.now()
+        start_month = today.replace(day=1)
+        end_month = (today.replace(day=28) + timedelta(days=4)).replace(day=1) - timedelta(days=1)
+        fig_empty = go_empty.Figure()
+        fig_empty.add_shape(type="line", x0=str(today.date()), x1=str(today.date()), y0=-0.5, y1=0.5, line=dict(color="red", width=2, dash="dash"))
+        fig_empty.add_annotation(x=str(today.date()), y=0.3, text="Aujourd'hui", showarrow=False, font=dict(color="red", size=10))
+        fig_empty.update_layout(
+            xaxis=dict(type="date", range=[str(start_month.date()), str(end_month.date())], title="", dtick="D1", tickformat="%d %b"),
+            yaxis=dict(visible=False),
+            height=200, margin=dict(l=0, r=0, t=10, b=40),
+            plot_bgcolor="white",
+        )
+        fig_empty.update_xaxes(showgrid=True, gridwidth=1, gridcolor="#f0f0f0")
+        st.plotly_chart(fig_empty, width="stretch")
         chantiers_list = stats.get("chantiers", [])
         if chantiers_list:
             chantier_noms = {c.get("nom", "Sans nom"): c for c in chantiers_list}
@@ -438,6 +455,23 @@ if all_phases:
                     st.switch_page("pages/4_Planning.py")
 else:
     st.info("📅 Aucun chantier avec planning. Creez un chantier et generez un planning IA.")
+    # Calendrier vide - mois en cours
+    from datetime import datetime, timedelta
+    import plotly.graph_objects as go_empty
+    today = datetime.now()
+    start_month = today.replace(day=1)
+    end_month = (today.replace(day=28) + timedelta(days=4)).replace(day=1) - timedelta(days=1)
+    fig_empty = go_empty.Figure()
+    fig_empty.add_shape(type="line", x0=str(today.date()), x1=str(today.date()), y0=-0.5, y1=0.5, line=dict(color="red", width=2, dash="dash"))
+    fig_empty.add_annotation(x=str(today.date()), y=0.3, text="Aujourd'hui", showarrow=False, font=dict(color="red", size=10))
+    fig_empty.update_layout(
+        xaxis=dict(type="date", range=[str(start_month.date()), str(end_month.date())], title="", dtick="D1", tickformat="%d %b"),
+        yaxis=dict(visible=False),
+        height=200, margin=dict(l=0, r=0, t=10, b=40),
+        plot_bgcolor="white",
+    )
+    fig_empty.update_xaxes(showgrid=True, gridwidth=1, gridcolor="#f0f0f0")
+    st.plotly_chart(fig_empty, width="stretch")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
