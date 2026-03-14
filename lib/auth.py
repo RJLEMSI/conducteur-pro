@@ -292,7 +292,7 @@ def require_auth():
 
     # Non connecté - rediriger
     st.warning("Veuillez vous connectér pour accéder à cette page.")
-    if st.button("Se connectér", type="primary", use_container_width=True):
+    if st.button("Se connectér", type="primary", width="stretch"):
         st.switch_page("pages/00_Connexion.py")
     st.stop()
     return False
