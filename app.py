@@ -1,5 +1,6 @@
 import streamlit as st
 import os
+import json
 
 # --- Configuration de la page (AVANT st.navigation) ---
 st.set_page_config(
@@ -27,29 +28,27 @@ if is_authenticated():
             plan=st.session_state.get("user_plan", "free"),
         )
 
-# --- DEBUG temporaire: afficher les logs session ---
+# --- DEBUG temporaire ---
 _log_file = "/tmp/conducteurpro_session_debug.log"
 _sess_file = "/tmp/conducteurpro_sessions.json"
-_debug_parts = []
-_debug_parts.append(f"auth={is_authenticated()}")
-_debug_parts.append(f"uid={bool(st.session_state.get('user_id'))}")
-_debug_parts.append(f"at={bool(st.session_state.get('supabase_access_token'))}")
-_debug_parts.append(f"rt={bool(st.session_state.get('supabase_refresh_token'))}")
-_debug_parts.append(f"log_exists={os.path.exists(_log_file)}")
-_debug_parts.append(f"sess_exists={os.path.exists(_sess_file)}")
+_dbg = "auth=" + str(is_authenticated())
+_dbg += " uid=" + str(bool(st.session_state.get("user_id")))
+_dbg += " at=" + str(bool(st.session_state.get("supabase_access_token")))
+_dbg += " rt=" + str(bool(st.session_state.get("supabase_refresh_token")))
+_dbg += " log=" + str(os.path.exists(_log_file))
+_dbg += " sess=" + str(os.path.exists(_sess_file))
 if os.path.exists(_sess_file):
-    _debug_parts.append(f"sess_size={os.path.getsize(_sess_file)}")
-st.sidebar.caption("[DBG] " + " | ".join(_debug_parts))
+    _dbg += " sz=" + str(os.path.getsize(_sess_file))
+st.caption(_dbg)
 if os.path.exists(_log_file):
     try:
         with open(_log_file, "r") as _f:
-            _lines = _f.readlines()
-            _last = _lines[-20:] if len(_lines) > 20 else _lines
-            st.sidebar.code("".join(_last), language="text")
-    except:
+            _log_lines = _f.readlines()[-15:]
+            st.code("".join(_log_lines), language="text")
+    except Exception:
         pass
+# --- END DEBUG ---
 
-# --- CSS Global + Responsive ---
 from utils import GLOBAL_CSS
 st.markdown(GLOBAL_CSS, unsafe_allow_html=True)
 
@@ -60,7 +59,6 @@ try:
 except Exception:
     pass
 
-# --- Onboarding nouveaux utilisateurs ---
 try:
     from lib.onboarding import should_show_onboarding, render_onboarding
     if is_authenticated() and should_show_onboarding():
@@ -68,7 +66,6 @@ try:
 except Exception:
     pass
 
-# --- Navigation dynamique selon authentification ---
 if is_authenticated():
     pages = {
         "General": [
