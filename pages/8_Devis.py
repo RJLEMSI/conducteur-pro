@@ -345,8 +345,6 @@ if "devis_generated" in st.session_state:
                 "montant_ht": total_ht_global,
                 "montant_ttc": total_ttc,
                 "statut": "brouillon",
-                "contenu": json.dumps(devis_final, default=str),
-                "metadata": json.dumps({"tva": tva_rate, "lots_count": len(edited_lots)}),
             })
             if result:
                 st.success(f"Devis {numero} enregistre !")
