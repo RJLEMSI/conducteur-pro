@@ -21,6 +21,8 @@ jobs:
             sudo git reset --hard origin/main
             echo "=== Latest commit ==="
             sudo git log -1 --oneline
+            echo "=== Installing dependencies ==="
+            sudo pip install -r requirements.txt --break-system-packages 2>&1 | tail -5
             echo "=== Restarting service ==="
             sudo systemctl restart conducteurpro
             sleep 3
