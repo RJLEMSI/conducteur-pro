@@ -12,7 +12,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import streamlit as st
 from utils import GLOBAL_CSS
-from lib.supabase_client import init_supabase_session, is_authenticated
+from lib.supabase_client import init_supabase_session, is_authenticated, save_persistent_session
 from lib.auth import register_user, login_user, logout_user, reset_password
 
 # st.set_page_config géré par app.py
@@ -262,6 +262,14 @@ with tab_login:
                     st.session_state.pending_2fa = False
                     for k in ["otp_code", "otp_expiry", "pending_email"]:
                         st.session_state.pop(k, None)
+                    # Sauvegarder la session persistante (survit aux refresh de page)
+                    save_persistent_session(
+                        user_id=st.session_state.get("user_id", ""),
+                        email=st.session_state.get("user_email", ""),
+                        access_token=st.session_state.get("supabase_access_token", ""),
+                        refresh_token=st.session_state.get("supabase_refresh_token", ""),
+                        plan=st.session_state.get("user_plan", "free"),
+                    )
                     st.success("Verification reussie !")
                     st.balloons()
                     st.rerun()
