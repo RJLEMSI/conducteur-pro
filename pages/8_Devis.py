@@ -22,16 +22,132 @@ if not chantier:
 
 profile = db.get_profile(user_id) or {}
 
-# ═══════════════════════════════════════════════════════════════════════════════
+# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 # Auto-action depuis le Tableau de bord
-# ═══════════════════════════════════════════════════════════════════════════════
+# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 auto_query = st.session_state.pop("auto_query", None)
 if auto_query:
     st.session_state["devis_desc_travaux"] = auto_query
 
-# ═══════════════════════════════════════════════════════════════════════════════
+# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 # Personnalisation visuelle du devis
-# ═══════════════════════════════════════════════════════════════════════════════
+# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+
+def _generate_devis_pdf(devis, numero, nom_soc, siret_soc, adresse_soc, tel_soc, email_soc,
+                         client_nom, client_adresse, tva_rate, validite_jours,
+                         logo_bytes=None, cgv_text=None):
+    """Genere un PDF professionnel pour le devis avec logo et CGV."""
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib import colors
+    from reportlab.lib.units import mm
+    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=15*mm, bottomMargin=15*mm, leftMargin=15*mm, rightMargin=15*mm)
+    styles = getSampleStyleSheet()
+    elements = []
+    
+    title_style = ParagraphStyle('DevisTitle', parent=styles['Heading1'], fontSize=18, textColor=colors.HexColor('#1a5276'))
+    header_style = ParagraphStyle('Header', parent=styles['Normal'], fontSize=9, textColor=colors.HexColor('#555555'))
+    cgv_style = ParagraphStyle('CGV', parent=styles['Normal'], fontSize=7, textColor=colors.HexColor('#666666'), leading=9)
+    
+    # Logo
+    if logo_bytes:
+        try:
+            logo_io = io.BytesIO(logo_bytes)
+            logo_img = Image(logo_io, width=50*mm, height=20*mm)
+            logo_img.hAlign = 'LEFT'
+            elements.append(logo_img)
+            elements.append(Spacer(1, 3*mm))
+        except Exception:
+            pass
+    
+    # En-tete societe
+    if nom_soc:
+        elements.append(Paragraph(f"<b>{nom_soc}</b>", styles['Heading2']))
+        details = []
+        if siret_soc:
+            details.append(f"SIRET: {siret_soc}")
+        if adresse_soc:
+            details.append(adresse_soc)
+        if tel_soc:
+            details.append(f"Tel: {tel_soc}")
+        if email_soc:
+            details.append(email_soc)
+        if details:
+            elements.append(Paragraph(" | ".join(details), header_style))
+    elements.append(Spacer(1, 5*mm))
+    
+    # Titre devis
+    elements.append(Paragraph(f"<b>DEVIS N\u00b0 {numero}</b>", ParagraphStyle('Num', parent=styles['Heading2'], fontSize=14)))
+    elements.append(Paragraph(f"Date: {date.today().strftime('%d/%m/%Y')} | Validite: {validite_jours} jours", header_style))
+    elements.append(Spacer(1, 5*mm))
+    
+    # Client
+    if client_nom:
+        elements.append(Paragraph(f"<b>Client:</b> {client_nom}", styles['Normal']))
+        if client_adresse:
+            elements.append(Paragraph(client_adresse, header_style))
+    elements.append(Spacer(1, 8*mm))
+    
+    # Tableau devis
+    for lot in devis.get("lots", []):
+        elements.append(Paragraph(f"<b>{lot['nom']}</b>", styles['Heading3']))
+        table_data = [["Designation", "Unite", "Qte", "PU HT", "Total HT"]]
+        for p in lot.get("postes", []):
+            table_data.append([
+                p["designation"], p.get("unite", "u"),
+                f"{p['quantite']:.2f}", f"{p['prix_unitaire']:.2f} \u20ac",
+                f"{p['total_ht']:.2f} \u20ac"
+            ])
+        table_data.append(["", "", "", "Sous-total:", f"{lot.get('sous_total_ht', 0):.2f} \u20ac"])
+        
+        t = Table(table_data, colWidths=[80*mm, 20*mm, 20*mm, 25*mm, 30*mm])
+        t.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1a5276')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('FONTSIZE', (0, 0), (-1, -1), 8),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#cccccc')),
+            ('ALIGN', (2, 1), (-1, -1), 'RIGHT'),
+            ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#f0f0f0')),
+            ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+        ]))
+        elements.append(t)
+        elements.append(Spacer(1, 5*mm))
+    
+    # Totaux
+    total_ht = devis.get("total_ht", 0)
+    tva_montant = devis.get("tva_montant", total_ht * tva_rate / 100)
+    total_ttc = devis.get("total_ttc", total_ht + tva_montant)
+    
+    totaux = [
+        ["Total HT:", f"{total_ht:,.2f} \u20ac"],
+        [f"TVA ({tva_rate}%):", f"{tva_montant:,.2f} \u20ac"],
+        ["Total TTC:", f"{total_ttc:,.2f} \u20ac"],
+    ]
+    t_totaux = Table(totaux, colWidths=[130*mm, 45*mm])
+    t_totaux.setStyle(TableStyle([
+        ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+        ('LINEABOVE', (0, -1), (-1, -1), 1, colors.HexColor('#1a5276')),
+        ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#eaf2f8')),
+    ]))
+    elements.append(t_totaux)
+    
+    # Conditions Generales de Vente (CGV)
+    if cgv_text:
+        elements.append(Spacer(1, 10*mm))
+        elements.append(Paragraph("<b>Conditions Generales de Vente</b>", styles['Heading4']))
+        for line in cgv_text.split("\n"):
+            if line.strip():
+                elements.append(Paragraph(line.strip(), cgv_style))
+    
+    doc.build(elements)
+    return buffer.getvalue()
+
+
 with st.expander("\u2699\ufe0f Personnalisation du devis", expanded=False):
     col_p1, col_p2 = st.columns(2)
     with col_p1:
@@ -41,6 +157,8 @@ with st.expander("\u2699\ufe0f Personnalisation du devis", expanded=False):
         adresse_societe = st.text_input("Adresse", value=profile.get("address", ""), key="devis_address")
         tel_societe = st.text_input("Telephone", value=profile.get("phone", ""), key="devis_phone")
         email_societe = st.text_input("Email", value=profile.get("email", ""), key="devis_email")
+        logo_file = st.file_uploader("Logo de l'entreprise", type=["png", "jpg", "jpeg"], key="devis_logo", help="Votre logo apparaitra en haut du PDF")
+        logo_bytes = logo_file.read() if logo_file else None
     with col_p2:
         st.markdown("**Informations client**")
         client_nom = st.text_input("Nom du client", value=chantier.get("client_nom", ""), key="devis_client_nom")
@@ -48,12 +166,13 @@ with st.expander("\u2699\ufe0f Personnalisation du devis", expanded=False):
         tva_rate = st.number_input("Taux de TVA (%)", value=20.0, min_value=0.0, max_value=30.0, step=0.5, key="devis_tva")
         devise = st.selectbox("Devise", ["EUR (\u20ac)", "USD ($)"], key="devis_devise")
         date_validite = st.number_input("Validite (jours)", value=30, min_value=7, max_value=180, key="devis_validite")
+        cgv_text = st.text_area("Conditions Generales de Vente", value="", height=120, key="devis_cgv", help="Ces conditions apparaitront en bas du PDF du devis", placeholder="Ex: Paiement a 30 jours. Acompte de 30% a la commande...")
 
 st.markdown("---")
 
-# ═══════════════════════════════════════════════════════════════════════════════
+# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 # Donnees existantes du chantier (metres, etudes)
-# ═══════════════════════════════════════════════════════════════════════════════
+# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 metres = db.get_metres(chantier["id"])
 etudes = db.get_etudes(chantier_id=chantier["id"])
 
@@ -63,9 +182,9 @@ with col_info1:
 with col_info2:
     st.info(f"\U0001f4d1 {len(etudes)} etude(s) disponible(s) pour ce chantier")
 
-# ═══════════════════════════════════════════════════════════════════════════════
+# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 # Generation du devis par IA
-# ═══════════════════════════════════════════════════════════════════════════════
+# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 st.subheader("\U0001f916 Generer un devis")
 
 desc_travaux = st.text_area(
@@ -143,9 +262,9 @@ Reponds UNIQUEMENT en JSON avec cette structure exacte:
         except Exception as e:
             st.error(f"Erreur: {e}")
 
-# ═══════════════════════════════════════════════════════════════════════════════
+# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 # Affichage et personnalisation du devis genere
-# ═══════════════════════════════════════════════════════════════════════════════
+# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 if "devis_generated" in st.session_state:
     devis_data = st.session_state["devis_generated"]
     
@@ -157,7 +276,7 @@ if "devis_generated" in st.session_state:
     edited_lots = []
     
     for lot_idx, lot in enumerate(devis_data.get("lots", [])):
-        with st.expander(f"\U0001f4e6 {lot['nom']} — {lot.get('sous_total_ht', 0):,.2f} \u20ac HT", expanded=True):
+        with st.expander(f"\U0001f4e6 {lot['nom']} â {lot.get('sous_total_ht', 0):,.2f} \u20ac HT", expanded=True):
             postes_edites = []
             for p_idx, poste in enumerate(lot.get("postes", [])):
                 cols = st.columns([4, 1, 1, 1, 1])
@@ -197,13 +316,14 @@ if "devis_generated" in st.session_state:
     
     st.markdown("---")
     
-    # ═══════════════════════════════════════════════════════════════════════════
+    # âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
     # Export PDF + Sauvegarde
-    # ═══════════════════════════════════════════════════════════════════════════
+    # âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
     col_btn1, col_btn2 = st.columns(2)
     
     with col_btn1:
         if st.button("\U0001f4be Enregistrer le devis", type="primary", width="stretch"):
+          try:
             # Sauvegarder en base
             devis_final = {
                 "titre": devis_data.get("titre", "Devis"),
@@ -236,7 +356,8 @@ if "devis_generated" in st.session_state:
                     pdf_bytes = _generate_devis_pdf(
                         devis_final, numero,
                         nom_societe, siret, adresse_societe, tel_societe, email_societe,
-                        client_nom, client_adresse, tva_rate, date_validite
+                        client_nom, client_adresse, tva_rate, date_validite,
+                        logo_bytes=logo_bytes, cgv_text=cgv_text
                     )
                     storage.upload_generated_document(
                         file_bytes=pdf_bytes,
@@ -257,7 +378,9 @@ if "devis_generated" in st.session_state:
                 except Exception as e:
                     st.warning(f"Devis enregistre mais erreur PDF: {e}")
             else:
-                st.error("Erreur lors de l'enregistrement")
+                st.error("Erreur lors de l'enregistrement. Verifiez les donnees.")
+          except Exception as save_err:
+                st.error(f"Erreur: {save_err}")
     
     with col_btn2:
         # Telecharger PDF
@@ -268,7 +391,8 @@ if "devis_generated" in st.session_state:
                  "tva_montant": tva_montant, "total_ttc": total_ttc},
                 "APERCU",
                 nom_societe, siret, adresse_societe, tel_societe, email_societe,
-                client_nom, client_adresse, tva_rate, date_validite
+                client_nom, client_adresse, tva_rate, date_validite,
+                logo_bytes=logo_bytes, cgv_text=cgv_text
             )
             st.download_button(
                 "\U0001f4e5 Telecharger PDF",
@@ -283,9 +407,9 @@ if "devis_generated" in st.session_state:
 
 st.markdown("---")
 
-# ═══════════════════════════════════════════════════════════════════════════════
+# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 # Historique des devis
-# ═══════════════════════════════════════════════════════════════════════════════
+# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 st.subheader("\U0001f4cb Historique des devis")
 devis_list = db.get_devis(chantier_id=chantier["id"])
 if devis_list:
@@ -303,92 +427,6 @@ else:
     st.info("Aucun devis pour ce chantier.")
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
+# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 # Fonction generation PDF
-# ═══════════════════════════════════════════════════════════════════════════════
-def _generate_devis_pdf(devis, numero, nom_soc, siret_soc, adresse_soc, tel_soc, email_soc,
-                         client_nom, client_adresse, tva_rate, validite_jours):
-    """Genere un PDF professionnel pour le devis."""
-    from reportlab.lib.pagesizes import A4
-    from reportlab.lib import colors
-    from reportlab.lib.units import mm
-    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
-    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-    
-    buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=15*mm, bottomMargin=15*mm, leftMargin=15*mm, rightMargin=15*mm)
-    styles = getSampleStyleSheet()
-    elements = []
-    
-    # Style personnalise
-    title_style = ParagraphStyle('DevisTitle', parent=styles['Heading1'], fontSize=18, textColor=colors.HexColor('#1a5276'))
-    header_style = ParagraphStyle('Header', parent=styles['Normal'], fontSize=9, textColor=colors.HexColor('#555555'))
-    
-    # En-tete societe
-    if nom_soc:
-        elements.append(Paragraph(f"<b>{nom_soc}</b>", title_style))
-        if siret_soc:
-            elements.append(Paragraph(f"SIRET: {siret_soc}", header_style))
-        if adresse_soc:
-            elements.append(Paragraph(adresse_soc, header_style))
-        info_parts = []
-        if tel_soc: info_parts.append(f"Tel: {tel_soc}")
-        if email_soc: info_parts.append(f"Email: {email_soc}")
-        if info_parts:
-            elements.append(Paragraph(" | ".join(info_parts), header_style))
-        elements.append(Spacer(1, 10*mm))
-    
-    # Titre devis
-    elements.append(Paragraph(f"<b>DEVIS N\u00b0 {numero}</b>", ParagraphStyle('Num', parent=styles['Heading2'], fontSize=14)))
-    elements.append(Paragraph(f"Date: {date.today().strftime('%d/%m/%Y')} | Validite: {validite_jours} jours", header_style))
-    elements.append(Spacer(1, 5*mm))
-    
-    # Client
-    if client_nom:
-        elements.append(Paragraph(f"<b>Client:</b> {client_nom}", styles['Normal']))
-        if client_adresse:
-            elements.append(Paragraph(client_adresse, header_style))
-    elements.append(Spacer(1, 8*mm))
-    
-    # Tableau devis
-    for lot in devis.get("lots", []):
-        elements.append(Paragraph(f"<b>{lot['nom']}</b>", styles['Heading3']))
-        table_data = [["Designation", "Unite", "Qte", "PU HT", "Total HT"]]
-        for p in lot.get("postes", []):
-            table_data.append([
-                p["designation"], p.get("unite", "u"),
-                f"{p['quantite']:.2f}", f"{p['prix_unitaire']:.2f} \u20ac",
-                f"{p['total_ht']:.2f} \u20ac"
-            ])
-        table_data.append(["", "", "", "Sous-total:", f"{lot['sous_total_ht']:.2f} \u20ac"])
-        
-        t = Table(table_data, colWidths=[200, 40, 40, 70, 80])
-        t.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1a5276')),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-            ('FONTSIZE', (0, 0), (-1, -1), 8),
-            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
-            ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#eef2f7')),
-            ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
-        ]))
-        elements.append(t)
-        elements.append(Spacer(1, 5*mm))
-    
-    # Totaux
-    elements.append(Spacer(1, 5*mm))
-    totaux_data = [
-        ["Total HT", f"{devis['total_ht']:.2f} \u20ac"],
-        [f"TVA ({tva_rate}%)", f"{devis['tva_montant']:.2f} \u20ac"],
-        ["TOTAL TTC", f"{devis['total_ttc']:.2f} \u20ac"],
-    ]
-    t_totaux = Table(totaux_data, colWidths=[350, 80])
-    t_totaux.setStyle(TableStyle([
-        ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
-        ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, -1), 10),
-        ('LINEABOVE', (0, -1), (-1, -1), 1.5, colors.HexColor('#1a5276')),
-    ]))
-    elements.append(t_totaux)
-    
-    doc.build(elements)
-    return buffer.getvalue()
+# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
