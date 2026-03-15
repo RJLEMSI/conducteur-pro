@@ -170,13 +170,7 @@ with col_save:
                         famille="Factures",
                         doc_type="Facture PDF",
                     )
-                    db.create_document({
-                        "nom": f"{numero}.pdf",
-                        "type": "Facture",
-                        "famille": "Factures",
-                        "statut": "Generee",
-                        "chantier_id": chantier["id"],
-                    })
+                    # Document auto-classifie par storage.upload_generated_document()
                     st.info("\U0001f4c4 PDF auto-stocke dans les Documents")
                 except Exception as e:
                     st.warning(f"Facture enregistree mais erreur PDF: {e}")
