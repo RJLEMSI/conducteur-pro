@@ -16,20 +16,13 @@ jobs:
           username: ubuntu
           password: ${{ secrets.VPS_PASSWORD }}
           script: |
-            echo "=== Finding app directory ==="
-            find / -name "app.py" -path "*/conducteur*" 2>/dev/null || true
-            find /home -type d -name "conducteur*" 2>/dev/null || true
-            find /opt -type d -name "conducteur*" 2>/dev/null || true
-            find /var -type d -name "conducteur*" 2>/dev/null || true
-            find /srv -type d -name "conducteur*" 2>/dev/null || true
-            echo "=== Home directory contents ==="
-            ls -la /home/ || true
-            ls -la /home/ubuntu/ 2>/dev/null || true
-            echo "=== Streamlit processes ==="
-            ps aux | grep streamlit || true
-            echo "=== Systemd services ==="
-            systemctl list-units --type=service | grep -i stream || true
-            systemctl list-units --type=service | grep -i conduct || true
-            echo "=== Supervisor ==="
-            sudo supervisorctl status 2>/dev/null || true
-            echo "=== Done ==="
+            cd /opt/conducteurpro
+            sudo git fetch origin main
+            sudo git reset --hard origin/main
+            echo "=== Latest commit ==="
+            sudo git log -1 --oneline
+            echo "=== Restarting service ==="
+            sudo systemctl restart conducteurpro
+            sleep 3
+            sudo systemctl status conducteurpro --no-pager
+            echo "=== Deploy complete ==="
