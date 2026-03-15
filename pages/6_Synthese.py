@@ -181,13 +181,7 @@ if chantier:
                             famille="Etude",
                             doc_type="Synthese",
                         )
-                        db.create_document({
-                            "nom": _synth_filename,
-                            "type": "Synthese",
-                            "famille": "Etude",
-                            "statut": "Generee",
-                            "chantier_id": chantier["id"],
-                        })
+                        # Document auto-classifie par storage.upload_generated_document()
                     except Exception:
                         pass
 
