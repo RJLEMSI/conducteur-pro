@@ -364,14 +364,7 @@ if "devis_generated" in st.session_state:
                         famille="Devis",
                         doc_type="Devis PDF",
                     )
-                    db.create_document({
-                        "nom": f"{numero}.pdf",
-                        "type": "Devis",
-                        "famille": "Devis",
-                        "statut": "Genere",
-                        "chantier_id": chantier["id"],
-                        "metadata": json.dumps({"montant_ht": total_ht_global, "montant_ttc": total_ttc}),
-                    })
+                    # Document auto-classifie par storage.upload_generated_document()
                     st.info("\U0001f4c4 PDF auto-stocke dans les Documents du chantier")
                 except Exception as e:
                     st.warning(f"Devis enregistre mais erreur PDF: {e}")
