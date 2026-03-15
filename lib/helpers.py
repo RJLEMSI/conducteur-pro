@@ -14,14 +14,12 @@ def page_setup(title: str = "ConducteurPro", icon: str = "", layout: str = "wide
     init_supabase_session()
 
     if not is_authenticated():
-        st.warning("Veuillez vous connecter pour acceder a cette page.")
-        st.rerun()
+        st.switch_page("pages/00_Connexion.py")
         st.stop()
 
     user_id = get_user_id()
     if not user_id:
-        st.error("Session expiree. Veuillez vous reconnecter.")
-        st.rerun()
+        st.switch_page("pages/00_Connexion.py")
         st.stop()
 
     return user_id
