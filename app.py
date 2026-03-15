@@ -11,8 +11,8 @@ st.set_page_config(
 from lib.supabase_client import init_supabase_session, is_authenticated, save_persistent_session
 init_supabase_session()
 
-# Sauvegarder la session persistante si authentifie mais pas encore de sid
-if is_authenticated() and "sid" not in st.query_params:
+# Sauvegarder la session persistante si authentifie
+if is_authenticated():
     _at = st.session_state.get("supabase_access_token", "")
     _rt = st.session_state.get("supabase_refresh_token", "")
     if _at and _rt:
