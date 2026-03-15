@@ -8,8 +8,22 @@ st.set_page_config(
 )
 
 # --- Initialisation Supabase ---
-from lib.supabase_client import init_supabase_session, is_authenticated
+from lib.supabase_client import init_supabase_session, is_authenticated, save_persistent_session
 init_supabase_session()
+
+# Sauvegarder la session persistante si authentifie mais pas encore de sid
+if is_authenticated() and "sid" not in st.query_params:
+    _at = st.session_state.get("supabase_access_token", "")
+    _rt = st.session_state.get("supabase_refresh_token", "")
+    if _at and _rt:
+        save_persistent_session(
+            user_id=st.session_state.get("user_id", ""),
+            email=st.session_state.get("user_email", ""),
+            access_token=_at,
+            refresh_token=_rt,
+            plan=st.session_state.get("user_plan", "free"),
+        )
+
 
 # --- CSS Global + Responsive ---
 from utils import GLOBAL_CSS
