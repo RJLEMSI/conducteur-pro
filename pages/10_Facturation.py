@@ -9,6 +9,120 @@ from lib.helpers import page_setup, render_saas_sidebar, chantier_selector, requ
 from lib import db, storage
 from utils import GLOBAL_CSS
 
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Fonction generation PDF facture (DOIT etre definie AVANT son utilisation)
+# ═══════════════════════════════════════════════════════════════════════════════
+def _generate_facture_pdf(facture_data, lignes, nom_soc, siret_soc, adresse_soc,
+                          tel_soc, email_soc, tva_intra, client_nom, tva_rate, conditions):
+    """Genere un PDF professionnel pour la facture."""
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib import colors
+    from reportlab.lib.units import mm
+    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4,
+                            topMargin=15*mm, bottomMargin=15*mm,
+                            leftMargin=15*mm, rightMargin=15*mm)
+    styles = getSampleStyleSheet()
+    elements = []
+
+    title_style = ParagraphStyle('FacTitle', parent=styles['Heading1'],
+                                  fontSize=18, textColor=colors.HexColor('#2c3e50'))
+    header_style = ParagraphStyle('Header', parent=styles['Normal'],
+                                   fontSize=9, textColor=colors.HexColor('#555555'))
+
+    # En-tete societe
+    if nom_soc:
+        elements.append(Paragraph(f"<b>{nom_soc}</b>", title_style))
+        parts = []
+        if siret_soc:
+            parts.append(f"SIRET: {siret_soc}")
+        if tva_intra:
+            parts.append(f"TVA: {tva_intra}")
+        if parts:
+            elements.append(Paragraph(" | ".join(parts), header_style))
+        if adresse_soc:
+            elements.append(Paragraph(adresse_soc, header_style))
+        info_parts = []
+        if tel_soc:
+            info_parts.append(f"Tel: {tel_soc}")
+        if email_soc:
+            info_parts.append(f"Email: {email_soc}")
+        if info_parts:
+            elements.append(Paragraph(" | ".join(info_parts), header_style))
+
+    elements.append(Spacer(1, 10*mm))
+
+    # Titre facture
+    numero = facture_data.get("numero", "")
+    elements.append(Paragraph(f"<b>FACTURE N\u00b0 {numero}</b>",
+                              ParagraphStyle('Num', parent=styles['Heading2'], fontSize=14)))
+    elements.append(Paragraph(f"Date: {date.today().strftime('%d/%m/%Y')}", header_style))
+    elements.append(Spacer(1, 5*mm))
+
+    # Client
+    if client_nom:
+        elements.append(Paragraph(f"<b>Client:</b> {client_nom}", styles['Normal']))
+    if facture_data.get("objet"):
+        elements.append(Paragraph(f"<b>Objet:</b> {facture_data['objet']}", styles['Normal']))
+    elements.append(Spacer(1, 8*mm))
+
+    # Tableau lignes
+    if lignes:
+        table_data = [["Designation", "Qte", "PU HT", "Total HT"]]
+        for l in lignes:
+            table_data.append([
+                l.get("designation", ""),
+                f"{l.get('quantite', 0):.2f}",
+                f"{l.get('prix_unitaire', 0):.2f} \u20ac",
+                f"{l.get('total_ht', 0):.2f} \u20ac"
+            ])
+        t = Table(table_data, colWidths=[250, 50, 80, 80])
+        t.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2c3e50')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('FONTSIZE', (0, 0), (-1, -1), 9),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+        ]))
+        elements.append(t)
+
+    # Totaux
+    elements.append(Spacer(1, 8*mm))
+    montant_ht = float(facture_data.get("montant_ht", 0))
+    tva_montant = montant_ht * (tva_rate / 100)
+    montant_ttc = float(facture_data.get("montant_ttc", montant_ht + tva_montant))
+
+    totaux_data = [
+        ["Total HT", f"{montant_ht:.2f} \u20ac"],
+        [f"TVA ({tva_rate}%)", f"{tva_montant:.2f} \u20ac"],
+        ["TOTAL TTC", f"{montant_ttc:.2f} \u20ac"],
+    ]
+    t_tot = Table(totaux_data, colWidths=[350, 80])
+    t_tot.setStyle(TableStyle([
+        ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
+        ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('LINEABOVE', (0, -1), (-1, -1), 1.5, colors.HexColor('#2c3e50')),
+    ]))
+    elements.append(t_tot)
+
+    # Conditions
+    if conditions:
+        elements.append(Spacer(1, 10*mm))
+        elements.append(Paragraph(f"<b>Conditions:</b> {conditions}",
+                                  ParagraphStyle('Cond', parent=styles['Normal'],
+                                                 fontSize=8, textColor=colors.grey)))
+
+    doc.build(elements)
+    return buffer.getvalue()
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Page setup
+# ═══════════════════════════════════════════════════════════════════════════════
 user_id = page_setup(title="Facturation", icon="\U0001f9fe")
 st.markdown(GLOBAL_CSS, unsafe_allow_html=True)
 render_saas_sidebar(user_id)
@@ -63,14 +177,17 @@ montant_ht = 0.0
 
 if "devis existant" in source_facture:
     if devis_non_factures:
-        devis_options = {f"{d.get('numero', '?')} - {d.get('objet', 'Sans objet')} ({float(d.get('montant_ht', 0)):,.2f} \u20ac HT)": d for d in devis_non_factures}
+        devis_options = {
+            f"{d.get('numero', '?')} - {d.get('objet', 'Sans objet')} ({float(d.get('montant_ht', 0)):,.2f} \u20ac HT)": d
+            for d in devis_non_factures
+        }
         selected_devis_label = st.selectbox("Selectionner le devis", list(devis_options.keys()), key="fac_devis_select")
         selected_devis = devis_options[selected_devis_label]
-        
+
         client_nom = selected_devis.get("client_nom", client_nom)
         objet_facture = selected_devis.get("objet", "")
         montant_ht = float(selected_devis.get("montant_ht", 0))
-        
+
         # Charger les lots du devis si disponible
         contenu = selected_devis.get("contenu")
         if contenu:
@@ -82,14 +199,14 @@ if "devis existant" in source_facture:
                         facture_lignes.append(p)
             except Exception:
                 pass
-        
+
         st.info(f"\U0001f4b0 Devis {selected_devis.get('numero')} - Montant HT: {montant_ht:,.2f} \u20ac")
     else:
         st.warning("Aucun devis non facture pour ce chantier. Creez d'abord un devis.")
 else:
     objet_facture = st.text_input("Objet de la facture", key="fac_objet")
     client_nom = st.text_input("Client", value=client_nom, key="fac_client")
-    
+
     nb_lignes = st.number_input("Nombre de lignes", min_value=1, max_value=50, value=3, key="fac_nb_lignes")
     for i in range(int(nb_lignes)):
         cols = st.columns([4, 1, 1, 1])
@@ -104,7 +221,6 @@ else:
             st.text_input("Total", value=f"{total:.2f}", key=f"fac_tot_{i}", disabled=True, label_visibility="collapsed")
         if des:
             facture_lignes.append({"designation": des, "quantite": qte, "prix_unitaire": pu, "total_ht": total})
-    
     montant_ht = sum(l["total_ht"] for l in facture_lignes)
 
 # TVA et totaux
@@ -120,7 +236,9 @@ with col_m2:
 with col_m3:
     st.metric("Total TTC", f"{total_ttc:,.2f} \u20ac")
 
-conditions = st.text_area("Conditions de paiement", value="Paiement a 30 jours date de facture. Penalites de retard: 3x taux legal.", key="fac_conditions")
+conditions = st.text_area("Conditions de paiement",
+                           value="Paiement a 30 jours date de facture. Penalites de retard: 3x taux legal.",
+                           key="fac_conditions")
 
 st.markdown("---")
 
@@ -132,7 +250,7 @@ with col_save:
             # Generer numero
             existing_fac = db.get_factures(chantier_id=chantier["id"])
             numero = f"FAC-{datetime.now().strftime('%Y%m')}-{len(existing_fac)+1:03d}"
-            
+
             facture_data = {
                 "numero": numero,
                 "objet": objet_facture,
@@ -144,8 +262,9 @@ with col_save:
                 "conditions": conditions,
                 "lignes": json.dumps(facture_lignes, default=str),
             }
-            
+
             result = db.save_facture(user_id, chantier["id"], facture_data)
+
             if result:
                 # Marquer le devis comme facture si applicable
                 if "devis existant" in source_facture and devis_non_factures:
@@ -153,14 +272,50 @@ with col_save:
                         db.update_devis(selected_devis["id"], {"statut": "facture"})
                     except Exception:
                         pass
-                
-                st.success(f"Facture {numero} enregistree !")
-                
+
+                st.success(f"\u2705 Facture {numero} enregistree !")
+
+                # ── Reste a payer sur le chantier ──
+                try:
+                    all_factures = db.get_factures(chantier_id=chantier["id"])
+                    total_facture_chantier = sum(float(f.get("montant_ttc", 0) or 0) for f in all_factures)
+                    total_devis_chantier = sum(
+                        float(d.get("montant_ht", 0) or 0) * (1 + tva_rate / 100)
+                        for d in devis_existants
+                    )
+                    budget_chantier = float(chantier.get("budget_ht", 0) or 0) * (1 + tva_rate / 100)
+                    # Utiliser le budget du chantier ou le total des devis comme reference
+                    reference_ttc = total_devis_chantier if total_devis_chantier > 0 else budget_chantier
+                    reste_a_payer = reference_ttc - total_facture_chantier
+
+                    col_r1, col_r2, col_r3 = st.columns(3)
+                    with col_r1:
+                        st.metric("\U0001f4b0 Total facture (TTC)", f"{total_facture_chantier:,.2f} \u20ac")
+                    with col_r2:
+                        st.metric("\U0001f4cb Reference chantier (TTC)", f"{reference_ttc:,.2f} \u20ac")
+                    with col_r3:
+                        delta_color = "normal" if reste_a_payer >= 0 else "inverse"
+                        st.metric(
+                            "\U0001f4b8 Reste a payer",
+                            f"{reste_a_payer:,.2f} \u20ac",
+                            delta=f"{reste_a_payer:,.2f} \u20ac restant",
+                            delta_color=delta_color,
+                        )
+
+                    if reste_a_payer <= 0:
+                        st.success("\U0001f389 Chantier entierement facture !")
+                    elif reste_a_payer > 0:
+                        pct = (total_facture_chantier / reference_ttc * 100) if reference_ttc > 0 else 0
+                        st.progress(min(pct / 100, 1.0), text=f"Avancement facturation: {pct:.1f}%")
+                except Exception:
+                    pass
+
                 # Auto-stockage PDF
                 try:
                     pdf_bytes = _generate_facture_pdf(
                         facture_data, facture_lignes,
-                        nom_societe, siret, adresse_societe, tel_societe, email_societe, tva_intra,
+                        nom_societe, siret, adresse_societe,
+                        tel_societe, email_societe, tva_intra,
                         client_nom, tva_rate, conditions
                     )
                     storage.upload_generated_document(
@@ -170,14 +325,13 @@ with col_save:
                         famille="Factures",
                         doc_type="Facture PDF",
                     )
-                    # Document auto-classifie par storage.upload_generated_document()
                     st.info("\U0001f4c4 PDF auto-stocke dans les Documents")
                 except Exception as e:
                     st.warning(f"Facture enregistree mais erreur PDF: {e}")
-                
+
                 st.rerun()
             else:
-                st.error("Erreur lors de l'enregistrement")
+                st.error("Erreur lors de l'enregistrement de la facture. Verifiez la connexion a la base de donnees.")
         else:
             st.warning("Remplissez au moins l'objet ou ajoutez des lignes")
 
@@ -188,7 +342,8 @@ with col_dl:
                 {"numero": "APERCU", "objet": objet_facture, "client_nom": client_nom,
                  "montant_ht": montant_ht, "montant_ttc": total_ttc},
                 facture_lignes,
-                nom_societe, siret, adresse_societe, tel_societe, email_societe, tva_intra,
+                nom_societe, siret, adresse_societe,
+                tel_societe, email_societe, tva_intra,
                 client_nom, tva_rate, conditions
             )
             st.download_button(
@@ -208,21 +363,49 @@ st.markdown("---")
 # Historique factures
 # ═══════════════════════════════════════════════════════════════════════════════
 st.subheader("\U0001f4cb Historique des factures")
+
 factures = db.get_factures(chantier_id=chantier["id"])
+
 if factures:
-    import pandas as pd
+    # Afficher le reste a payer global du chantier
+    total_fac_ttc = sum(float(f.get("montant_ttc", 0) or 0) for f in factures)
+    total_fac_payees = sum(float(f.get("montant_ttc", 0) or 0) for f in factures if f.get("statut") == "payee")
+    total_devis_ttc = sum(
+        float(d.get("montant_ht", 0) or 0) * 1.2
+        for d in devis_existants
+    )
+    budget_ref = float(chantier.get("budget_ht", 0) or 0) * 1.2
+    ref_ttc = total_devis_ttc if total_devis_ttc > 0 else budget_ref
+    reste = ref_ttc - total_fac_ttc
+
+    if ref_ttc > 0:
+        col_s1, col_s2, col_s3, col_s4 = st.columns(4)
+        with col_s1:
+            st.metric("\U0001f9fe Total facture", f"{total_fac_ttc:,.2f} \u20ac")
+        with col_s2:
+            st.metric("\U0001f7e2 Paye", f"{total_fac_payees:,.2f} \u20ac")
+        with col_s3:
+            st.metric("\U0001f4b8 Reste a facturer", f"{max(reste, 0):,.2f} \u20ac")
+        with col_s4:
+            impaye = total_fac_ttc - total_fac_payees
+            st.metric("\U0001f534 Impaye", f"{impaye:,.2f} \u20ac")
+        st.markdown("---")
+
     for fac in factures:
         col_f1, col_f2, col_f3, col_f4 = st.columns([3, 2, 2, 1])
         with col_f1:
-            st.markdown(f"**{fac.get('numero', '?')}** — {fac.get('objet', 'Sans objet')}")
+            st.markdown(f"**{fac.get('numero', '?')}** \u2014 {fac.get('objet', 'Sans objet')}")
         with col_f2:
             st.markdown(f"{float(fac.get('montant_ttc', 0)):,.2f} \u20ac TTC")
         with col_f3:
             statut = fac.get("statut", "emise")
             color = {"payee": "\U0001f7e2", "emise": "\U0001f7e1", "en_retard": "\U0001f534"}.get(statut, "\u26aa")
-            new_statut = st.selectbox(f"Statut", ["emise", "payee", "en_retard", "annulee"],
-                                      index=["emise", "payee", "en_retard", "annulee"].index(statut) if statut in ["emise", "payee", "en_retard", "annulee"] else 0,
-                                      key=f"fac_stat_{fac['id']}", label_visibility="collapsed")
+            new_statut = st.selectbox(
+                f"Statut", ["emise", "payee", "en_retard", "annulee"],
+                index=["emise", "payee", "en_retard", "annulee"].index(statut) if statut in ["emise", "payee", "en_retard", "annulee"] else 0,
+                key=f"fac_stat_{fac['id']}",
+                label_visibility="collapsed"
+            )
             if new_statut != statut:
                 db.update_facture(fac["id"], {"statut": new_statut})
                 st.rerun()
@@ -230,101 +413,3 @@ if factures:
             st.markdown(f"{color} {statut}")
 else:
     st.info("Aucune facture pour ce chantier.")
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# Fonction generation PDF facture
-# ═══════════════════════════════════════════════════════════════════════════════
-def _generate_facture_pdf(facture_data, lignes, nom_soc, siret_soc, adresse_soc, tel_soc, email_soc, tva_intra,
-                           client_nom, tva_rate, conditions):
-    """Genere un PDF professionnel pour la facture."""
-    from reportlab.lib.pagesizes import A4
-    from reportlab.lib import colors
-    from reportlab.lib.units import mm
-    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
-    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-    
-    buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=15*mm, bottomMargin=15*mm, leftMargin=15*mm, rightMargin=15*mm)
-    styles = getSampleStyleSheet()
-    elements = []
-    
-    title_style = ParagraphStyle('FacTitle', parent=styles['Heading1'], fontSize=18, textColor=colors.HexColor('#2c3e50'))
-    header_style = ParagraphStyle('Header', parent=styles['Normal'], fontSize=9, textColor=colors.HexColor('#555555'))
-    
-    # En-tete societe
-    if nom_soc:
-        elements.append(Paragraph(f"<b>{nom_soc}</b>", title_style))
-        parts = []
-        if siret_soc: parts.append(f"SIRET: {siret_soc}")
-        if tva_intra: parts.append(f"TVA: {tva_intra}")
-        if parts:
-            elements.append(Paragraph(" | ".join(parts), header_style))
-        if adresse_soc:
-            elements.append(Paragraph(adresse_soc, header_style))
-        info_parts = []
-        if tel_soc: info_parts.append(f"Tel: {tel_soc}")
-        if email_soc: info_parts.append(f"Email: {email_soc}")
-        if info_parts:
-            elements.append(Paragraph(" | ".join(info_parts), header_style))
-        elements.append(Spacer(1, 10*mm))
-    
-    # Titre facture
-    numero = facture_data.get("numero", "")
-    elements.append(Paragraph(f"<b>FACTURE N\u00b0 {numero}</b>", ParagraphStyle('Num', parent=styles['Heading2'], fontSize=14)))
-    elements.append(Paragraph(f"Date: {date.today().strftime('%d/%m/%Y')}", header_style))
-    elements.append(Spacer(1, 5*mm))
-    
-    # Client
-    if client_nom:
-        elements.append(Paragraph(f"<b>Client:</b> {client_nom}", styles['Normal']))
-    if facture_data.get("objet"):
-        elements.append(Paragraph(f"<b>Objet:</b> {facture_data['objet']}", styles['Normal']))
-    elements.append(Spacer(1, 8*mm))
-    
-    # Tableau lignes
-    if lignes:
-        table_data = [["Designation", "Qte", "PU HT", "Total HT"]]
-        for l in lignes:
-            table_data.append([
-                l.get("designation", ""),
-                f"{l.get('quantite', 0):.2f}",
-                f"{l.get('prix_unitaire', 0):.2f} \u20ac",
-                f"{l.get('total_ht', 0):.2f} \u20ac"
-            ])
-        t = Table(table_data, colWidths=[250, 50, 80, 80])
-        t.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2c3e50')),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-            ('FONTSIZE', (0, 0), (-1, -1), 9),
-            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
-        ]))
-        elements.append(t)
-    
-    # Totaux
-    elements.append(Spacer(1, 8*mm))
-    montant_ht = float(facture_data.get("montant_ht", 0))
-    tva_montant = montant_ht * (tva_rate / 100)
-    montant_ttc = float(facture_data.get("montant_ttc", montant_ht + tva_montant))
-    
-    totaux_data = [
-        ["Total HT", f"{montant_ht:.2f} \u20ac"],
-        [f"TVA ({tva_rate}%)", f"{tva_montant:.2f} \u20ac"],
-        ["TOTAL TTC", f"{montant_ttc:.2f} \u20ac"],
-    ]
-    t_tot = Table(totaux_data, colWidths=[350, 80])
-    t_tot.setStyle(TableStyle([
-        ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
-        ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, -1), 10),
-        ('LINEABOVE', (0, -1), (-1, -1), 1.5, colors.HexColor('#2c3e50')),
-    ]))
-    elements.append(t_tot)
-    
-    # Conditions
-    if conditions:
-        elements.append(Spacer(1, 10*mm))
-        elements.append(Paragraph(f"<b>Conditions:</b> {conditions}", ParagraphStyle('Cond', parent=styles['Normal'], fontSize=8, textColor=colors.grey)))
-    
-    doc.build(elements)
-    return buffer.getvalue()
