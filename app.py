@@ -1,4 +1,5 @@
 import streamlit as st
+import os
 
 # --- Configuration de la page (AVANT st.navigation) ---
 st.set_page_config(
@@ -13,7 +14,6 @@ from lib.supabase_client import init_supabase_session, is_authenticated, save_pe
 init_supabase_session()
 
 # Sauvegarder la session persistante si authentifie
-# (assure que le fichier est toujours a jour apres chaque rerun)
 if is_authenticated():
     _uid = st.session_state.get("user_id", "")
     _at = st.session_state.get("supabase_access_token", "")
@@ -26,6 +26,28 @@ if is_authenticated():
             refresh_token=_rt,
             plan=st.session_state.get("user_plan", "free"),
         )
+
+# --- DEBUG temporaire: afficher les logs session ---
+_log_file = "/tmp/conducteurpro_session_debug.log"
+_sess_file = "/tmp/conducteurpro_sessions.json"
+_debug_parts = []
+_debug_parts.append(f"auth={is_authenticated()}")
+_debug_parts.append(f"uid={bool(st.session_state.get('user_id'))}")
+_debug_parts.append(f"at={bool(st.session_state.get('supabase_access_token'))}")
+_debug_parts.append(f"rt={bool(st.session_state.get('supabase_refresh_token'))}")
+_debug_parts.append(f"log_exists={os.path.exists(_log_file)}")
+_debug_parts.append(f"sess_exists={os.path.exists(_sess_file)}")
+if os.path.exists(_sess_file):
+    _debug_parts.append(f"sess_size={os.path.getsize(_sess_file)}")
+st.sidebar.caption("[DBG] " + " | ".join(_debug_parts))
+if os.path.exists(_log_file):
+    try:
+        with open(_log_file, "r") as _f:
+            _lines = _f.readlines()
+            _last = _lines[-20:] if len(_lines) > 20 else _lines
+            st.sidebar.code("".join(_last), language="text")
+    except:
+        pass
 
 # --- CSS Global + Responsive ---
 from utils import GLOBAL_CSS
