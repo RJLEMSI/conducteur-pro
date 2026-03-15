@@ -1,78 +1,95 @@
 """
-ConducteurPro — Client Supabase (singleton).
-Initialise la connexion Supabase, gère la session utilisateur,
+ConducteurPro - Client Supabase (singleton).
+Initialise la connexion Supabase, gere la session utilisateur,
 fournit les helpers d'authentification.
-Inclut un store persistant pour survivre aux rechargements de page.
+Inclut un store persistant fichier pour survivre aux rechargements de page.
 """
 import streamlit as st
-import uuid
+import json
+import os
+from datetime import datetime
 from supabase import create_client, Client
 
 
-# ---- Store persistant côté serveur (survit aux refresh de page) ----
-@st.cache_resource
-def _get_persistent_store():
-    """Dict partagé entre toutes les sessions Streamlit. Clé = sid, Valeur = dict de session."""
+# ---- Store persistant fichier (survit aux refresh ET restart service) ----
+SESSION_FILE = "/tmp/conducteurpro_sessions.json"
+
+
+def _load_sessions():
+    """Charge les sessions depuis le fichier."""
+    try:
+        if os.path.exists(SESSION_FILE):
+            with open(SESSION_FILE, "r") as f:
+                return json.load(f)
+    except Exception:
+        pass
     return {}
 
 
+def _save_sessions(data):
+    """Sauvegarde les sessions dans le fichier."""
+    try:
+        os.makedirs(os.path.dirname(SESSION_FILE), exist_ok=True)
+        with open(SESSION_FILE, "w") as f:
+            json.dump(data, f)
+    except Exception:
+        pass
+
+
 def save_persistent_session(user_id, email, access_token, refresh_token, plan="free"):
-    """Sauvegarde la session dans le store persistant et stocke le sid en query_params."""
-    store = _get_persistent_store()
-    sid = str(uuid.uuid4())
-    store[sid] = {
-        "user_id": user_id,
+    """Sauvegarde la session dans le fichier persistant."""
+    sessions = _load_sessions()
+    sessions[user_id] = {
         "email": email,
         "access_token": access_token,
         "refresh_token": refresh_token,
         "plan": plan,
+        "saved_at": datetime.utcnow().isoformat(),
     }
-    st.query_params["sid"] = sid
+    _save_sessions(sessions)
 
 
 def restore_persistent_session():
-    """Tente de restaurer la session depuis le store persistant via query_params['sid'].
-    Retourne True si la session a été restaurée avec succès."""
-    sid = st.query_params.get("sid")
-    if not sid:
+    """Tente de restaurer une session depuis le fichier.
+    Essaie chaque session sauvegardee jusqu'a en trouver une valide."""
+    sessions = _load_sessions()
+    if not sessions:
         return False
 
-    store = _get_persistent_store()
-    data = store.get(sid)
-    if not data:
-        return False
-
-    try:
-        client = get_supabase_client()
-        # Tenter de rafraîchir la session Supabase avec le refresh token
-        result = client.auth.refresh_session(data["refresh_token"])
-        if result and result.user:
-            st.session_state.authenticated = True
-            st.session_state.user_id = result.user.id
-            st.session_state.user_email = result.user.email or data["email"]
-            st.session_state.supabase_access_token = result.session.access_token
-            st.session_state.supabase_refresh_token = result.session.refresh_token
-            st.session_state.user_plan = data.get("plan", "free")
-            # Mettre à jour le store avec les nouveaux tokens
-            store[sid]["access_token"] = result.session.access_token
-            store[sid]["refresh_token"] = result.session.refresh_token
-            return True
-    except Exception:
-        # Token expiré ou invalide — nettoyer
-        store.pop(sid, None)
-        if "sid" in st.query_params:
-            del st.query_params["sid"]
-
+    client = get_supabase_client()
+    for uid, data in list(sessions.items()):
+        rt = data.get("refresh_token", "")
+        if not rt:
+            continue
+        try:
+            result = client.auth.refresh_session(rt)
+            if result and result.user:
+                st.session_state.authenticated = True
+                st.session_state.user_id = result.user.id
+                st.session_state.user_email = result.user.email or data.get("email", "")
+                st.session_state.supabase_access_token = result.session.access_token
+                st.session_state.supabase_refresh_token = result.session.refresh_token
+                st.session_state.user_plan = data.get("plan", "free")
+                # Mettre a jour les tokens dans le fichier
+                sessions[uid]["access_token"] = result.session.access_token
+                sessions[uid]["refresh_token"] = result.session.refresh_token
+                sessions[uid]["saved_at"] = datetime.utcnow().isoformat()
+                _save_sessions(sessions)
+                return True
+        except Exception:
+            # Token invalide, supprimer cette session
+            sessions.pop(uid, None)
+            _save_sessions(sessions)
     return False
 
 
 def clear_persistent_session():
-    """Supprime la session persistante (appelé lors de la déconnexion)."""
-    sid = st.query_params.get("sid")
-    if sid:
-        store = _get_persistent_store()
-        store.pop(sid, None)
-        del st.query_params["sid"]
+    """Supprime la session persistante de l'utilisateur courant."""
+    uid = st.session_state.get("user_id")
+    if uid:
+        sessions = _load_sessions()
+        sessions.pop(uid, None)
+        _save_sessions(sessions)
 
 
 # ---- Client Supabase ----
@@ -83,7 +100,7 @@ def get_supabase_client() -> Client:
         url = st.secrets.get("SUPABASE_URL", "")
         key = st.secrets.get("SUPABASE_KEY", "")
         if not url or not key:
-            st.error("Configuration Supabase manquante. Vérifiez SUPABASE_URL et SUPABASE_KEY dans les secrets.")
+            st.error("Configuration Supabase manquante.")
             st.stop()
         st.session_state.supabase_client = create_client(url, key)
     return st.session_state.supabase_client
@@ -95,14 +112,14 @@ def get_supabase_admin() -> Client:
         url = st.secrets.get("SUPABASE_URL", "")
         key = st.secrets.get("SUPABASE_SERVICE_ROLE_KEY", "")
         if not key:
-            return get_supabase_client()  # fallback to anon client
+            return get_supabase_client()
         st.session_state.supabase_admin = create_client(url, key)
     return st.session_state.supabase_admin
 
 
 def init_supabase_session():
     """Initialise la session Supabase.
-    Tente de restaurer depuis le store persistant si session_state est vide.
+    Tente de restaurer depuis le fichier persistant si session_state est vide.
     """
     if "user_id" not in st.session_state:
         st.session_state.user_id = None
@@ -110,15 +127,15 @@ def init_supabase_session():
         st.session_state.user_plan = "free"
         st.session_state.authenticated = False
 
-    # Si déjà authentifié, rien à faire
+    # Deja authentifie, rien a faire
     if st.session_state.authenticated:
         return
 
-    # Tenter la restauration depuis le store persistant
+    # Tenter la restauration depuis le fichier persistant
     if restore_persistent_session():
         return
 
-    # Tenter de restaurer depuis le token en cache (session_state)
+    # Tenter depuis le token en session_state
     if st.session_state.get("supabase_access_token"):
         try:
             client = get_supabase_client()
@@ -132,24 +149,24 @@ def init_supabase_session():
 
 
 def is_authenticated() -> bool:
-    """Vérifie si l'utilisateur est actuellement authentifié."""
+    """Verifie si l'utilisateur est actuellement authentifie."""
     return st.session_state.get("authenticated", False)
 
 
 def get_user_id() -> str | None:
-    """Retourne l'ID de l'utilisateur connecté ou None."""
+    """Retourne l'ID de l'utilisateur connecte ou None."""
     return st.session_state.get("user_id", None)
 
 
 def get_user_email() -> str | None:
-    """Retourne l'email de l'utilisateur connecté ou None."""
+    """Retourne l'email de l'utilisateur connecte ou None."""
     return st.session_state.get("user_email", None)
 
 
 def check_auth():
-    """Vérifie l'authentification et redirige vers la page de connexion si non connecté."""
+    """Verifie l'authentification et redirige vers la page de connexion si non connecte."""
     init_supabase_session()
     if not is_authenticated():
-        st.warning("Vous devez être connecté pour accéder à cette page.")
+        st.warning("Vous devez etre connecte pour acceder a cette page.")
         st.switch_page("pages/00_Connexion.py")
         st.stop()
