@@ -83,16 +83,7 @@ if uploaded:
                         filename=uploaded.name,
                         chantier_id=chantier["id"],
                         famille="metres")
-                    if path:
-                        db.create_document({
-                            "nom": uploaded.name,
-                            "type": "Plan",
-                            "famille": "Métrés",
-                            "statut": "Analysé",
-                            "storage_path": path,
-                            "chantier_id": chantier["id"],
-                            "is_encrypted": True,
-                        })
+                    # Document auto-classifie par storage.upload_file()
 
 if st.session_state.get("metres_result"):
     st.markdown("---")
