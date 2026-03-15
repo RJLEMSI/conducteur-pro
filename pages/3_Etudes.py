@@ -70,13 +70,7 @@ Structure ton analyse avec: Contexte, Analyse, Recommandations, Conclusion."""}]
                     famille="Etude",
                     doc_type=type_etude,
                 )
-                db.create_document({
-                    "nom": _etude_filename,
-                    "type": type_etude,
-                    "famille": "Etude",
-                    "statut": "Generee",
-                    "chantier_id": chantier["id"],
-                })
+                # Document auto-classifie par storage.upload_generated_document()
             except Exception:
                 pass  # Ne pas bloquer si le stockage echoue
 
