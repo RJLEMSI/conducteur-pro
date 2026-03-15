@@ -14,6 +14,42 @@ from utils import (GLOBAL_CSS, render_sidebar, check_api_key,
                    encode_image_bytes_to_base64, image_file_to_base64,
                    analyze_plan_image, get_client)
 
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Fonction utilitaire : parser le résultat IA en lignes de métré
+# (DOIT être définie AVANT son appel dans le flux Streamlit)
+# ═══════════════════════════════════════════════════════════════════════════
+def _parse_metres_from_result(result_text):
+    """Essaie de parser le résultat IA en lignes structurées."""
+    lines = []
+    for line in result_text.split("\n"):
+        line = line.strip()
+        if not line or line.startswith("#") or line.startswith("---"):
+            continue
+        # Essayer de détecter des lignes type tableau markdown
+        if "|" in line:
+            parts = [p.strip() for p in line.split("|") if p.strip()]
+            if len(parts) >= 2 and not all(c in "-| " for c in line):
+                designation = parts[0] if len(parts) > 0 else ""
+                unite = parts[1] if len(parts) > 1 else ""
+                try:
+                    quantite = float(parts[2].replace(",", ".")) if len(parts) > 2 else 0.0
+                except (ValueError, IndexError):
+                    quantite = 0.0
+                try:
+                    prix_u = float(parts[3].replace(",", ".").replace("\u20ac", "").strip()) if len(parts) > 3 else 0.0
+                except (ValueError, IndexError):
+                    prix_u = 0.0
+                if designation and designation.lower() not in ("désignation", "ouvrage", "description", "poste"):
+                    lines.append({
+                        "designation": designation,
+                        "unite": unite,
+                        "quantite": quantite,
+                        "prix_unitaire": prix_u,
+                    })
+    return lines
+
+
 # ─── Setup ──────────────────────────────────────────────────────────────────
 user_id = page_setup(title="Métrés", icon="\U0001f4d0")
 st.markdown(GLOBAL_CSS, unsafe_allow_html=True)
@@ -70,11 +106,15 @@ if uploaded:
                 except Exception:
                     st.session_state["metres_lines"] = []
 
-                # Sauvegarder dans Supabase
+                # Sauvegarder dans Supabase avec les ouvrages parsés
                 if chantier:
+                    # Sauvegarder les ouvrages parsés directement (pas une liste vide)
+                    ouvrages_json = json.dumps(
+                        st.session_state.get("metres_lines", []), default=str
+                    )
                     metre_data = {
                         "titre": f"Métrés — {uploaded.name}",
-                        "ouvrages": [],
+                        "ouvrages": ouvrages_json,
                         "synthese": result,
                     }
                     saved = db.save_metre(user_id, chantier["id"], metre_data)
@@ -86,7 +126,7 @@ if uploaded:
                         except Exception:
                             pass
 
-                    # Upload du fichier source
+                    # Upload du fichier source dans le cloud
                     uploaded.seek(0)
                     try:
                         storage.upload_file(
@@ -97,39 +137,7 @@ if uploaded:
                     except Exception:
                         pass
 
-
-# ═══════════════════════════════════════════════════════════════════════════
-# Fonction utilitaire : parser le résultat IA en lignes de métré
-# ═══════════════════════════════════════════════════════════════════════════
-def _parse_metres_from_result(result_text):
-    """Essaie de parser le résultat IA en lignes structurées."""
-    lines = []
-    for line in result_text.split("\n"):
-        line = line.strip()
-        if not line or line.startswith("#") or line.startswith("---"):
-            continue
-        # Essayer de détecter des lignes type tableau markdown
-        if "|" in line:
-            parts = [p.strip() for p in line.split("|") if p.strip()]
-            if len(parts) >= 2 and not all(c in "-| " for c in line):
-                designation = parts[0] if len(parts) > 0 else ""
-                unite = parts[1] if len(parts) > 1 else ""
-                try:
-                    quantite = float(parts[2].replace(",", ".")) if len(parts) > 2 else 0.0
-                except (ValueError, IndexError):
-                    quantite = 0.0
-                try:
-                    prix_u = float(parts[3].replace(",", ".").replace("\u20ac", "").strip()) if len(parts) > 3 else 0.0
-                except (ValueError, IndexError):
-                    prix_u = 0.0
-                if designation and designation.lower() not in ("désignation", "ouvrage", "description", "poste"):
-                    lines.append({
-                        "designation": designation,
-                        "unite": unite,
-                        "quantite": quantite,
-                        "prix_unitaire": prix_u,
-                    })
-    return lines
+                st.rerun()
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -150,7 +158,6 @@ if st.session_state.get("metres_result"):
     st.caption("Modifiez les quantités et prix unitaires ci-dessous avant de valider ou générer un devis.")
 
     if not metres_lines:
-        # Permettre l'ajout manuel si le parsing n'a rien donné
         st.info("L'IA n'a pas renvoyé de tableau structuré. Ajoutez des lignes manuellement.")
         metres_lines = []
 
@@ -196,7 +203,6 @@ if st.session_state.get("metres_result"):
             })
             total_ht += line_total
 
-    # En-tête colonnes
     if int(nb_lignes) > 0:
         st.markdown(f"**Total HT : {total_ht:,.2f} \u20ac**")
 
@@ -215,11 +221,10 @@ if st.session_state.get("metres_result"):
                     update_data = {
                         "ouvrages": json.dumps(edited_lines, default=str),
                     }
-                    # Mettre a jour le metre existant
                     from lib.supabase_client import get_supabase_client
-                    client = get_supabase_client()
-                    if client:
-                        client.table("metres").update(update_data).eq(
+                    sup_client = get_supabase_client()
+                    if sup_client:
+                        sup_client.table("metres").update(update_data).eq(
                             "id", st.session_state["metres_saved_id"]).execute()
                         st.success("\u2705 Métrés mis à jour !")
                 except Exception as e:
@@ -230,7 +235,6 @@ if st.session_state.get("metres_result"):
     with col_devis:
         if st.button("\U0001f4cb Générer le devis associé", type="primary", width="stretch"):
             if edited_lines and chantier:
-                # Construire le devis a partir des lignes du metre
                 lots = [{
                     "nom": "Lot 1 — Métrés du plan",
                     "postes": edited_lines
@@ -238,7 +242,11 @@ if st.session_state.get("metres_result"):
                 contenu = json.dumps({"lots": lots}, default=str)
                 montant_ht = total_ht
 
-                devis_numero = f"DEV-{datetime.now().strftime('%Y%m')}-{len(db.get_devis(chantier_id=chantier['id']))+1:03d}"
+                try:
+                    existing_devis = db.get_devis(chantier_id=chantier['id'])
+                    devis_numero = f"DEV-{datetime.now().strftime('%Y%m')}-{len(existing_devis)+1:03d}"
+                except Exception:
+                    devis_numero = f"DEV-{datetime.now().strftime('%Y%m')}-001"
 
                 devis_data = {
                     "numero": devis_numero,
@@ -281,23 +289,48 @@ try:
     from lib.supabase_client import get_supabase_client
     sup = get_supabase_client()
     if sup:
-        metres_list = sup.table("metres").select("*").eq("chantier_id", chantier["id"]).order("created_at", desc=True).execute()
+        metres_list = sup.table("metres").select("*").eq(
+            "chantier_id", chantier["id"]
+        ).order("created_at", desc=True).execute()
         if metres_list.data:
             for m in metres_list.data:
-                with st.expander(f"\U0001f4d0 {m.get('titre', 'Sans titre')} — {m.get('created_at', '')[:10]}"):
+                titre = m.get('titre', 'Sans titre')
+                date_str = m.get('created_at', '')[:10] if m.get('created_at') else ''
+                with st.expander(f"\U0001f4d0 {titre} — {date_str}"):
+                    # Afficher la synthèse IA
                     synthese = m.get("synthese", "")
                     if synthese:
-                        st.markdown(synthese[:500] + ("..." if len(synthese) > 500 else ""))
+                        st.markdown(synthese[:800] + ("..." if len(synthese) > 800 else ""))
+
+                    # Afficher les ouvrages en tableau
                     ouvrages = m.get("ouvrages")
                     if ouvrages:
                         try:
                             ouv_list = json.loads(ouvrages) if isinstance(ouvrages, str) else ouvrages
-                            if ouv_list and isinstance(ouv_list, list):
+                            if ouv_list and isinstance(ouv_list, list) and len(ouv_list) > 0:
                                 df = pd.DataFrame(ouv_list)
                                 st.dataframe(df, use_container_width=True)
+                            else:
+                                st.caption("Aucun ouvrage enregistré pour ce métré.")
                         except Exception:
-                            pass
+                            st.caption("Données ouvrages non lisibles.")
+                    else:
+                        st.caption("Aucun ouvrage enregistré pour ce métré.")
+
+                    # Bouton pour recharger ce métré dans l'éditeur
+                    if st.button(f"\U0001f504 Charger dans l'éditeur", key=f"load_metre_{m.get('id', '')}"):
+                        st.session_state["metres_result"] = synthese
+                        ouv_data = []
+                        if ouvrages:
+                            try:
+                                ouv_data = json.loads(ouvrages) if isinstance(ouvrages, str) else ouvrages
+                            except Exception:
+                                ouv_data = []
+                        st.session_state["metres_lines"] = ouv_data if isinstance(ouv_data, list) else []
+                        st.session_state["metres_saved_id"] = m.get("id", "")
+                        st.session_state["metres_filename"] = titre
+                        st.rerun()
         else:
             st.info("Aucun métré pour ce chantier.")
-except Exception:
-    st.info("Aucun métré pour ce chantier.")
+except Exception as e:
+    st.info(f"Aucun métré pour ce chantier.")
