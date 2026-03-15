@@ -168,6 +168,29 @@ if chantier:
                         db.log_activity("create_synthese", "etude", saved.get("id", ""),
                                         {"chantier": chantier.get("nom")})
 
+
+                    # Auto-classification: stocker dans les documents du chantier
+                    try:
+                        from datetime import datetime as _dt
+                        _synth_filename = f"synthese_{chantier.get('nom', 'chantier').replace(' ', '_').lower()}_{_dt.now().strftime('%Y%m%d_%H%M%S')}.txt"
+                        _synth_bytes = result.encode("utf-8")
+                        storage.upload_generated_document(
+                            file_bytes=_synth_bytes,
+                            filename=_synth_filename,
+                            chantier_id=chantier["id"],
+                            famille="Etude",
+                            doc_type="Synthese",
+                        )
+                        db.create_document({
+                            "nom": _synth_filename,
+                            "type": "Synthese",
+                            "famille": "Etude",
+                            "statut": "Generee",
+                            "chantier_id": chantier["id"],
+                        })
+                    except Exception:
+                        pass
+
                     st.success("✅ Synthèse générée !")
 
         # ─── Résultat ─────────────────────────────────────────────────────────
