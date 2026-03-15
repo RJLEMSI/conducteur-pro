@@ -1,0 +1,21 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: 51.38.185.245
+          username: ubuntu
+          password: ${{ secrets.VPS_PASSWORD }}
+          script: |
+            cd /home/ubuntu/conducteur-pro
+            git pull origin main
+            sudo systemctl restart streamlit || sudo supervisorctl restart conducteurpro || echo "Deploy done"
