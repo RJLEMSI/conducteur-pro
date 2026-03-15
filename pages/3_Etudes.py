@@ -58,7 +58,29 @@ Structure ton analyse avec: Contexte, Analyse, Recommandations, Conclusion."""}]
             st.markdown(result)
             
             db.save_etude(user_id, chantier["id"], type_etude, f"{type_etude} - {sujet[:50]}", result)
-            st.success("Étude sauvegardée.")
+
+            # Auto-classification: stocker le document dans le dossier du chantier
+            try:
+                _etude_filename = f"etude_{type_etude.replace(' ', '_').lower()}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+                _etude_bytes = result.encode("utf-8")
+                storage.upload_generated_document(
+                    file_bytes=_etude_bytes,
+                    filename=_etude_filename,
+                    chantier_id=chantier["id"],
+                    famille="Etude",
+                    doc_type=type_etude,
+                )
+                db.create_document({
+                    "nom": _etude_filename,
+                    "type": type_etude,
+                    "famille": "Etude",
+                    "statut": "Generee",
+                    "chantier_id": chantier["id"],
+                })
+            except Exception:
+                pass  # Ne pas bloquer si le stockage echoue
+
+            st.success("Étude sauvegardée et classée dans les documents du chantier.")
         except Exception as e:
             st.error("Erreur: Veuillez réessayer.")
 
