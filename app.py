@@ -1,6 +1,4 @@
 import streamlit as st
-import os
-import json
 
 # --- Configuration de la page (AVANT st.navigation) ---
 st.set_page_config(
@@ -15,6 +13,7 @@ from lib.supabase_client import init_supabase_session, is_authenticated, save_pe
 init_supabase_session()
 
 # Sauvegarder la session persistante si authentifie
+# (assure que le fichier est toujours a jour apres chaque rerun)
 if is_authenticated():
     _uid = st.session_state.get("user_id", "")
     _at = st.session_state.get("supabase_access_token", "")
@@ -28,27 +27,7 @@ if is_authenticated():
             plan=st.session_state.get("user_plan", "free"),
         )
 
-# --- DEBUG temporaire ---
-_log_file = "/tmp/conducteurpro_session_debug.log"
-_sess_file = "/tmp/conducteurpro_sessions.json"
-_dbg = "auth=" + str(is_authenticated())
-_dbg += " uid=" + str(bool(st.session_state.get("user_id")))
-_dbg += " at=" + str(bool(st.session_state.get("supabase_access_token")))
-_dbg += " rt=" + str(bool(st.session_state.get("supabase_refresh_token")))
-_dbg += " log=" + str(os.path.exists(_log_file))
-_dbg += " sess=" + str(os.path.exists(_sess_file))
-if os.path.exists(_sess_file):
-    _dbg += " sz=" + str(os.path.getsize(_sess_file))
-st.caption(_dbg)
-if os.path.exists(_log_file):
-    try:
-        with open(_log_file, "r") as _f:
-            _log_lines = _f.readlines()[-15:]
-            st.code("".join(_log_lines), language="text")
-    except Exception:
-        pass
-# --- END DEBUG ---
-
+# --- CSS Global + Responsive ---
 from utils import GLOBAL_CSS
 st.markdown(GLOBAL_CSS, unsafe_allow_html=True)
 
@@ -59,6 +38,7 @@ try:
 except Exception:
     pass
 
+# --- Onboarding nouveaux utilisateurs ---
 try:
     from lib.onboarding import should_show_onboarding, render_onboarding
     if is_authenticated() and should_show_onboarding():
@@ -66,6 +46,7 @@ try:
 except Exception:
     pass
 
+# --- Navigation dynamique selon authentification ---
 if is_authenticated():
     pages = {
         "General": [
