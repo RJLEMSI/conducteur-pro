@@ -24,6 +24,16 @@ if is_authenticated():
             plan=st.session_state.get("user_plan", "free"),
         )
 
+# DEBUG temporaire
+import os as _os
+_sf = "/tmp/conducteurpro_sessions.json"
+_exists = _os.path.exists(_sf)
+_size = _os.path.getsize(_sf) if _exists else 0
+_auth = is_authenticated()
+_has_at = bool(st.session_state.get("supabase_access_token"))
+_has_rt = bool(st.session_state.get("supabase_refresh_token"))
+st.sidebar.caption(f"[DBG] auth={_auth} file={_exists}({_size}b) at={_has_at} rt={_has_rt}")
+
 
 # --- CSS Global + Responsive ---
 from utils import GLOBAL_CSS
