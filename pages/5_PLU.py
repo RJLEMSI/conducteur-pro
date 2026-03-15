@@ -64,17 +64,7 @@ if uploaded_plu:
                     chantier_id=chantier["id"],
                     famille="documents_techniques"
                 )
-                if path:
-                    db.create_document({
-                        "nom": uploaded_plu.name,
-                        "type": "Règlement PLU",
-                        "famille": "Documents techniques",
-                        "statut": "Importé",
-                        "storage_path": path,
-                        "file_size_bytes": len(pdf_bytes),
-                        "chantier_id": chantier["id"],
-                        "is_encrypted": True,
-                    })
+                # Document auto-classifie par storage.upload_file()
         else:
             st.error("Impossible d'extraire le texte du PDF.")
 
