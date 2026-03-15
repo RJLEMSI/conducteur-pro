@@ -1,8 +1,8 @@
 """
-storage.py  Gestion du stockage de fichiers dans Supabase Storage.
+storage.py
+Gestion du stockage de fichiers dans Supabase Storage.
 Upload, download, suppression, signed URLs, chiffrement AES-256.
 """
-
 import io
 import hashlib
 import streamlit as st
@@ -10,6 +10,7 @@ from datetime import datetime
 from cryptography.fernet import Fernet
 from lib.supabase_client import get_supabase_client
 from lib.db import create_document, log_activity
+
 
 # Configuration
 BUCKET_NAME = "conducteurpro-files"
@@ -38,7 +39,6 @@ FAMILLE_FOLDERS = {
 
 
 # Chiffrement
-
 def _get_encryption_key() -> bytes:
     key = st.secrets.get("ENCRYPTION_KEY", "")
     if key:
@@ -72,7 +72,6 @@ def decrypt_bytes(data: bytes) -> bytes:
 
 
 # Upload de fichiers
-
 def _build_storage_path(user_id: str, chantier_id: str, famille: str, filename: str) -> str:
     """Construit le chemin de stockage dans le bucket."""
     folder = FAMILLE_FOLDERS.get(famille, "autres")
@@ -96,7 +95,6 @@ def upload_file(
     """
     client = get_supabase_client()
     uid = st.session_state.get("user_id")
-
     if not client or not uid:
         st.error("Non connecte. Impossible d'uploader le fichier.")
         return {}
@@ -198,7 +196,6 @@ def upload_generated_document(
 
 
 # Download / Signed URL
-
 def get_signed_url(storage_path: str, expires_in: int = 900) -> str:
     """Genere une URL signee temporaire pour acceder a un fichier."""
     client = get_supabase_client()
@@ -228,7 +225,6 @@ def download_file(storage_path: str, is_encrypted: bool = False) -> bytes:
 
 
 # Suppression
-
 def delete_file(storage_path: str) -> bool:
     """Supprime un fichier du storage."""
     client = get_supabase_client()
@@ -241,8 +237,37 @@ def delete_file(storage_path: str) -> bool:
         return False
 
 
-# Utilitaires
+# Creation de dossiers pour un chantier
+def create_chantier_folders(chantier_id: str) -> bool:
+    """Cree la structure de dossiers pour un nouveau chantier dans Supabase Storage.
+    Upload un fichier .keep dans chaque sous-dossier pour initialiser la structure.
+    """
+    client = get_supabase_client()
+    uid = st.session_state.get("user_id")
+    if not client or not uid:
+        return False
 
+    folders = ["plans", "devis", "factures", "etudes", "contrats", "pv", "photos",
+               "metres", "dce", "documents_techniques", "autres"]
+
+    keep_content = b"# Dossier cree automatiquement par ConducteurPro\n"
+    success = True
+
+    for folder in folders:
+        path = f"{uid}/chantiers/{chantier_id}/{folder}/.keep"
+        try:
+            client.storage.from_(BUCKET_NAME).upload(
+                path, keep_content,
+                file_options={"content-type": "text/plain"}
+            )
+        except Exception:
+            # Le dossier existe peut-etre deja, on continue
+            pass
+
+    return success
+
+
+# Utilitaires
 def get_storage_usage(user_id: str = None) -> dict:
     """Calcule l'espace de stockage utilise par l'utilisateur."""
     from lib.db import get_documents
