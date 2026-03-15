@@ -7,8 +7,21 @@ Inclut un store persistant fichier pour survivre aux rechargements de page.
 import streamlit as st
 import json
 import os
+import traceback
 from datetime import datetime
 from supabase import create_client, Client
+
+
+# ---- Fichier de log pour debug session ----
+SESSION_LOG = "/tmp/conducteurpro_session_debug.log"
+
+def _log_session(msg):
+    """Log debug info pour diagnostiquer les problemes de session."""
+    try:
+        with open(SESSION_LOG, "a") as f:
+            f.write(f"[{datetime.utcnow().isoformat()}] {msg}\n")
+    except Exception:
+        pass
 
 
 # ---- Store persistant fichier (survit aux refresh ET restart service) ----
@@ -38,6 +51,9 @@ def _save_sessions(data):
 
 def save_persistent_session(user_id, email, access_token, refresh_token, plan="free"):
     """Sauvegarde la session dans le fichier persistant."""
+    if not user_id or not refresh_token:
+        _log_session(f"save_persistent_session SKIP: user_id={bool(user_id)} rt={bool(refresh_token)}")
+        return
     sessions = _load_sessions()
     sessions[user_id] = {
         "email": email,
@@ -47,40 +63,76 @@ def save_persistent_session(user_id, email, access_token, refresh_token, plan="f
         "saved_at": datetime.utcnow().isoformat(),
     }
     _save_sessions(sessions)
+    _log_session(f"save_persistent_session OK: user={user_id[:8]}... rt_len={len(refresh_token)}")
 
 
 def restore_persistent_session():
     """Tente de restaurer une session depuis le fichier.
-    Essaie chaque session sauvegardee jusqu'a en trouver une valide."""
+    Essaie chaque session sauvegardee jusqu'a en trouver une valide.
+    Utilise set_session() (plus fiable) avec fallback sur refresh_session().
+    """
     sessions = _load_sessions()
     if not sessions:
+        _log_session("restore_persistent_session: no sessions in file")
         return False
 
     client = get_supabase_client()
+
     for uid, data in list(sessions.items()):
         rt = data.get("refresh_token", "")
+        at = data.get("access_token", "")
         if not rt:
+            _log_session(f"restore: uid={uid[:8]}... no refresh_token, skip")
             continue
+
+        # Methode 1: set_session (la plus fiable, concue pour restaurer des tokens stockes)
         try:
+            _log_session(f"restore: trying set_session for uid={uid[:8]}... at_len={len(at)} rt_len={len(rt)}")
+            result = client.auth.set_session(at, rt)
+            if result and result.user:
+                _apply_restored_session(result, data, sessions, uid)
+                _log_session(f"restore: set_session SUCCESS for uid={uid[:8]}...")
+                return True
+            else:
+                _log_session(f"restore: set_session returned no user")
+        except Exception as e:
+            _log_session(f"restore: set_session FAILED: {type(e).__name__}: {e}")
+
+        # Methode 2: refresh_session avec le token
+        try:
+            _log_session(f"restore: trying refresh_session for uid={uid[:8]}...")
             result = client.auth.refresh_session(rt)
             if result and result.user:
-                st.session_state.authenticated = True
-                st.session_state.user_id = result.user.id
-                st.session_state.user_email = result.user.email or data.get("email", "")
-                st.session_state.supabase_access_token = result.session.access_token
-                st.session_state.supabase_refresh_token = result.session.refresh_token
-                st.session_state.user_plan = data.get("plan", "free")
-                # Mettre a jour les tokens dans le fichier
-                sessions[uid]["access_token"] = result.session.access_token
-                sessions[uid]["refresh_token"] = result.session.refresh_token
-                sessions[uid]["saved_at"] = datetime.utcnow().isoformat()
-                _save_sessions(sessions)
+                _apply_restored_session(result, data, sessions, uid)
+                _log_session(f"restore: refresh_session SUCCESS for uid={uid[:8]}...")
                 return True
-        except Exception:
-            # Token invalide, supprimer cette session
-            sessions.pop(uid, None)
-            _save_sessions(sessions)
+            else:
+                _log_session(f"restore: refresh_session returned no user")
+        except Exception as e:
+            _log_session(f"restore: refresh_session FAILED: {type(e).__name__}: {e}")
+
+        # Les deux methodes ont echoue, supprimer cette session
+        _log_session(f"restore: REMOVING invalid session for uid={uid[:8]}...")
+        sessions.pop(uid, None)
+        _save_sessions(sessions)
+
     return False
+
+
+def _apply_restored_session(result, data, sessions, uid):
+    """Applique une session restauree a session_state et met a jour le fichier."""
+    st.session_state.authenticated = True
+    st.session_state.user_id = result.user.id
+    st.session_state.user_email = result.user.email or data.get("email", "")
+    st.session_state.supabase_access_token = result.session.access_token
+    st.session_state.supabase_refresh_token = result.session.refresh_token
+    st.session_state.user_plan = data.get("plan", "free")
+
+    # Mettre a jour les tokens dans le fichier
+    sessions[uid]["access_token"] = result.session.access_token
+    sessions[uid]["refresh_token"] = result.session.refresh_token
+    sessions[uid]["saved_at"] = datetime.utcnow().isoformat()
+    _save_sessions(sessions)
 
 
 def clear_persistent_session():
@@ -90,6 +142,7 @@ def clear_persistent_session():
         sessions = _load_sessions()
         sessions.pop(uid, None)
         _save_sessions(sessions)
+        _log_session(f"clear_persistent_session: removed uid={uid[:8]}...")
 
 
 # ---- Client Supabase ----
@@ -131,21 +184,31 @@ def init_supabase_session():
     if st.session_state.authenticated:
         return
 
+    _log_session("init_supabase_session: not authenticated, trying restore...")
+
     # Tenter la restauration depuis le fichier persistant
     if restore_persistent_session():
+        _log_session("init_supabase_session: restored from file OK")
         return
 
-    # Tenter depuis le token en session_state
-    if st.session_state.get("supabase_access_token"):
-        try:
-            client = get_supabase_client()
-            sess = client.auth.get_session()
-            if sess and sess.user:
-                st.session_state.user_id = sess.user.id
-                st.session_state.user_email = sess.user.email
-                st.session_state.authenticated = True
-        except Exception:
-            pass
+    # Tenter depuis le client Supabase (session en memoire du process)
+    try:
+        client = get_supabase_client()
+        sess = client.auth.get_session()
+        if sess and sess.user:
+            st.session_state.user_id = sess.user.id
+            st.session_state.user_email = sess.user.email
+            st.session_state.authenticated = True
+            # IMPORTANT: sauvegarder aussi les tokens pour la persistance
+            if hasattr(sess, 'access_token') and hasattr(sess, 'refresh_token'):
+                st.session_state.supabase_access_token = sess.access_token
+                st.session_state.supabase_refresh_token = sess.refresh_token
+            _log_session(f"init_supabase_session: restored from get_session OK, user={sess.user.id[:8]}...")
+            return
+    except Exception as e:
+        _log_session(f"init_supabase_session: get_session failed: {type(e).__name__}: {e}")
+
+    _log_session("init_supabase_session: no session found, user not authenticated")
 
 
 def is_authenticated() -> bool:
