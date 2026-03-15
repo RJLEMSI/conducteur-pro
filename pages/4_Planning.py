@@ -167,7 +167,9 @@ with tab_general:
                     col_b.date_input("d", value=_dv, key=f"ph_deb_{ch_id}_{_ip}", label_visibility="collapsed")
                     col_c.date_input("f", value=_fv, key=f"ph_fin_{ch_id}_{_ip}", label_visibility="collapsed")
                     statut = ph.get("statut", "a_faire")
-                    col_d.markdown(f"_{STATUT_LABELS.get(statut, statut)}_")
+                    _statut_options = ["a_faire", "en_cours", "termine", "en_retard"]
+                    _statut_idx = _statut_options.index(statut) if statut in _statut_options else 0
+                    col_d.selectbox("s", _statut_options, index=_statut_idx, format_func=lambda x: STATUT_LABELS.get(x, x), key=f"ph_statut_{ch_id}_{_ip}", label_visibility="collapsed")
                     prog = ph.get("progression", 0)
                     col_e.progress(prog / 100 if prog else 0)
 
@@ -176,9 +178,11 @@ with tab_general:
                     for _ip2, ph2 in enumerate(ch_phases):
                         _nd = st.session_state.get(f"ph_deb_{ch_id}_{_ip2}")
                         _nf = st.session_state.get(f"ph_fin_{ch_id}_{_ip2}")
+                        _ns = st.session_state.get(f"ph_statut_{ch_id}_{_ip2}", "a_faire")
                         if _nd and _nf and ph2.get("id"):
                             try:
-                                db.update_phase(ph2["id"], {"date_debut": str(_nd), "date_fin": str(_nf), "duree_jours": (_nf - _nd).days})
+                                _prog = 100 if _ns == "termine" else (50 if _ns == "en_cours" else 0)
+                                db.update_phase(ph2["id"], {"date_debut": str(_nd), "date_fin": str(_nf), "duree_jours": (_nf - _nd).days, "statut": _ns, "progression": _prog})
                             except Exception as _e:
                                 _all_ok = False
                                 st.error(f"Erreur phase {ph2.get('nom')}: {_e}")
@@ -189,9 +193,42 @@ with tab_general:
                         all_fin = [d for d in all_fin if d]
                         if all_deb and all_fin:
                             db.update_chantier(ch_id, {"date_debut": str(min(all_deb)), "date_fin": str(max(all_fin))})
-                        st.success("Dates mises a jour !")
+                        st.success("Modifications enregistrees !")
                         st.rerun()
 
+                # Ajouter une nouvelle tache
+                st.markdown("---")
+                st.markdown("**\u2795 Ajouter une tache**")
+                with st.form(f"add_task_general_{ch_id}"):
+                    _tc1, _tc2 = st.columns(2)
+                    _new_task_nom = _tc1.text_input("Nom de la tache *")
+                    _new_task_duree = _tc2.number_input("Duree (jours)", min_value=1, value=14)
+                    _tc3, _tc4, _tc5 = st.columns(3)
+                    _last_date = max([datetime.strptime(str(p.get("date_fin", date.today())), "%Y-%m-%d").date() for p in ch_phases if p.get("date_fin")], default=date.today())
+                    _new_task_debut = _tc3.date_input("Date de debut", value=_last_date)
+                    _new_task_statut = _tc4.selectbox("Statut", ["a_faire", "en_cours", "termine"], format_func=lambda x: STATUT_LABELS.get(x, x))
+                    _new_task_couleur = _tc5.color_picker("Couleur", "#1B4F8A")
+                    _new_task_notes = st.text_area("Notes (optionnel)")
+
+                    if st.form_submit_button("Ajouter au planning", type="primary") and _new_task_nom:
+                        _new_fin = _new_task_debut + timedelta(days=_new_task_duree)
+                        _result = db.save_phase(user_id, ch_id, {
+                            "nom": _new_task_nom,
+                            "categorie": "personnalisee",
+                            "date_debut": _new_task_debut.isoformat(),
+                            "date_fin": _new_fin.isoformat(),
+                            "duree_jours": _new_task_duree,
+                            "statut": _new_task_statut,
+                            "progression": 100 if _new_task_statut == "termine" else (50 if _new_task_statut == "en_cours" else 0),
+                            "ordre": len(ch_phases) + 1,
+                            "couleur": _new_task_couleur,
+                            "notes": _new_task_notes,
+                        })
+                        if _result:
+                            st.success(f"Tache '{_new_task_nom}' ajoutee !")
+                            st.rerun()
+                        else:
+                            st.error("Erreur lors de l'ajout de la tache.")
                 # Mini Gantt des phases
                 phase_gantt = []
                 for ph in ch_phases:
