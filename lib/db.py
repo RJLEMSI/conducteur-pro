@@ -2,7 +2,6 @@
 ConducteurPro - Module de base de donnees (Supabase PostgreSQL).
 Fournit toutes les operations CRUD pour les tables metier.
 """
-
 import streamlit as st
 from lib.supabase_client import get_supabase_client
 from datetime import datetime
@@ -53,7 +52,17 @@ def create_chantier(user_id: str, data: dict) -> dict | None:
         data["user_id"] = user_id
         data["created_at"] = datetime.utcnow().isoformat()
         r = _client().table("chantiers").insert(data).execute()
-        return r.data[0] if r.data else None
+        chantier = r.data[0] if r.data else None
+
+        # Creer automatiquement les dossiers de stockage pour ce chantier
+        if chantier:
+            try:
+                from lib.storage import create_chantier_folders
+                create_chantier_folders(chantier["id"])
+            except Exception:
+                pass  # Ne pas bloquer la creation du chantier si les dossiers echouent
+
+        return chantier
     except Exception:
         return None
 
@@ -195,7 +204,9 @@ def save_facture(user_id: str, chantier_id: str, data: dict) -> dict | None:
         data["created_at"] = datetime.utcnow().isoformat()
         r = _client().table("factures").insert(data).execute()
         return r.data[0] if r.data else None
-    except Exception:
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
         return None
 
 
@@ -354,11 +365,9 @@ def get_dashboard_stats(user_id: str) -> dict:
         }
     except Exception:
         return {
-            "nb_chantiers": 0, "nb_chantiers_actifs": 0,
-            "nb_devis": 0, "total_devis_ht": 0,
-            "nb_factures": 0, "total_factures_ttc": 0,
-            "total_paye": 0, "taux_recouvrement": 0,
-            "chantiers": [], "devis": [], "factures": [],
+            "nb_chantiers": 0, "nb_chantiers_actifs": 0, "nb_devis": 0,
+            "total_devis_ht": 0, "nb_factures": 0, "total_factures_ttc": 0,
+            "total_paye": 0, "taux_recouvrement": 0, "chantiers": [], "devis": [], "factures": [],
         }
 
 
@@ -490,11 +499,3 @@ def save_phases_batch(user_id: str, chantier_id: str, phases: list) -> bool:
         return True
     except Exception:
         return False
-
-
-def get_étapes(chantier_id: str) -> list:
-    return get_phases(chantier_id)
-
-
-def save_étape(user_id: str, chantier_id: str, data: dict) -> dict | None:
-    return save_phase(user_id, chantier_id, data)
