@@ -9,31 +9,23 @@ st.set_page_config(
 
 # --- Initialisation Supabase ---
 from lib.supabase_client import init_supabase_session, is_authenticated, save_persistent_session
+
 init_supabase_session()
 
 # Sauvegarder la session persistante si authentifie
+# (assure que le fichier est toujours a jour apres chaque rerun)
 if is_authenticated():
+    _uid = st.session_state.get("user_id", "")
     _at = st.session_state.get("supabase_access_token", "")
     _rt = st.session_state.get("supabase_refresh_token", "")
-    if _at and _rt:
+    if _uid and _rt:
         save_persistent_session(
-            user_id=st.session_state.get("user_id", ""),
+            user_id=_uid,
             email=st.session_state.get("user_email", ""),
             access_token=_at,
             refresh_token=_rt,
             plan=st.session_state.get("user_plan", "free"),
         )
-
-# DEBUG temporaire
-import os as _os
-_sf = "/tmp/conducteurpro_sessions.json"
-_exists = _os.path.exists(_sf)
-_size = _os.path.getsize(_sf) if _exists else 0
-_auth = is_authenticated()
-_has_at = bool(st.session_state.get("supabase_access_token"))
-_has_rt = bool(st.session_state.get("supabase_refresh_token"))
-st.sidebar.caption(f"[DBG] auth={_auth} file={_exists}({_size}b) at={_has_at} rt={_has_rt}")
-
 
 # --- CSS Global + Responsive ---
 from utils import GLOBAL_CSS
@@ -53,7 +45,6 @@ try:
         render_onboarding()
 except Exception:
     pass
-
 
 # --- Navigation dynamique selon authentification ---
 if is_authenticated():
