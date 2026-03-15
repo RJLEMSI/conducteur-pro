@@ -4,7 +4,7 @@ Login, register, logout, verification email, reset password, feature gating.
 """
 import streamlit as st
 from datetime import datetime
-from lib.supabase_client import get_supabase_client, init_supabase_session
+from lib.supabase_client import get_supabase_client, init_supabase_session, save_persistent_session, clear_persistent_session
 
 
 # --- Inscription ---
@@ -87,6 +87,15 @@ def login_user(email: str, password: str) -> dict:
         st.session_state.supabase_access_token = result.session.access_token
         st.session_state.supabase_refresh_token = result.session.refresh_token
 
+        # Sauvegarder la session persistante (survit aux refresh)
+        save_persistent_session(
+            user_id=user_id,
+            email=email,
+            access_token=result.session.access_token,
+            refresh_token=result.session.refresh_token,
+            plan=st.session_state.get("user_plan", "free"),
+        )
+
         # Charger le profil utilisateur
         _load_user_profile(client, user_id, email)
 
@@ -140,6 +149,9 @@ def _load_user_profile(client, user_id: str, email: str):
 # --- Déconnexion ---
 def logout_user():
     """Deconnecté l'utilisateur."""
+    # Nettoyer la session persistante
+    clear_persistent_session()
+
     client = get_supabase_client()
     if client:
         try:
