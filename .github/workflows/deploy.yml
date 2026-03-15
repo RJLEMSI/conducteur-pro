@@ -17,5 +17,14 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           script: |
             cd /home/ubuntu/conducteur-pro
-            git pull origin main
-            sudo systemctl restart streamlit || sudo supervisorctl restart conducteurpro || echo "Deploy done"
+            git fetch origin main
+            git reset --hard origin/main
+            echo "=== Latest commit ==="
+            git log -1 --oneline
+            echo "=== Restarting Streamlit ==="
+            pkill -f streamlit || true
+            sleep 2
+            cd /home/ubuntu/conducteur-pro
+            nohup streamlit run app.py --server.port 8501 --server.address 0.0.0.0 > /tmp/streamlit.log 2>&1 &
+            sleep 3
+            pgrep -f streamlit && echo "Streamlit restarted OK" || echo "ERROR: Streamlit not running"
