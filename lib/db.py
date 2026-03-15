@@ -159,8 +159,10 @@ def save_devis(user_id: str, chantier_id: str, data: dict) -> dict | None:
         data["created_at"] = datetime.utcnow().isoformat()
         r = _client().table("devis").insert(data).execute()
         return r.data[0] if r.data else None
-    except Exception:
-        return None
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise e
 
 
 def update_devis(devis_id: str, data: dict) -> bool:
