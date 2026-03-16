@@ -319,6 +319,43 @@ def delete_document(document_id: str) -> bool:
         return False
 
 
+
+def delete_devis(devis_id: str) -> bool:
+    """Supprime un devis."""
+    client = _client()
+    if not client:
+        return False
+    try:
+        client.table("devis").delete().eq("id", devis_id).execute()
+        return True
+    except Exception:
+        return False
+
+
+def delete_facture(facture_id: str) -> bool:
+    """Supprime une facture."""
+    client = _client()
+    if not client:
+        return False
+    try:
+        client.table("factures").delete().eq("id", facture_id).execute()
+        return True
+    except Exception:
+        return False
+
+
+def delete_metre(metre_id: str) -> bool:
+    """Supprime un metre."""
+    client = _client()
+    if not client:
+        return False
+    try:
+        client.table("metres").delete().eq("id", metre_id).execute()
+        return True
+    except Exception:
+        return False
+
+
 # --- Abonnements ---
 
 def get_subscription(user_id: str) -> dict | None:
