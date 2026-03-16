@@ -404,16 +404,29 @@ st.markdown("---")
 st.subheader("\U0001f4cb Historique des devis")
 devis_list = db.get_devis(chantier_id=chantier["id"])
 if devis_list:
-    import pandas as pd
-    df = pd.DataFrame(devis_list)
-    cols_show = [c for c in ["numero", "objet", "client_nom", "montant_ht", "montant_ttc", "statut", "created_at"] if c in df.columns]
-    if cols_show:
-        df_show = df[cols_show].copy()
-        if "montant_ht" in df_show.columns:
-            df_show["montant_ht"] = df_show["montant_ht"].apply(lambda x: f"{float(x or 0):,.2f} \u20ac")
-        if "montant_ttc" in df_show.columns:
-            df_show["montant_ttc"] = df_show["montant_ttc"].apply(lambda x: f"{float(x or 0):,.2f} \u20ac")
-        st.dataframe(df_show, width="stretch", hide_index=True)
+    for dv in devis_list:
+        dv_id = dv.get("id", "")
+        dv_num = dv.get("numero", "?")
+        dv_objet = dv.get("objet", "Sans objet")
+        dv_ht = float(dv.get("montant_ht", 0) or 0)
+        dv_statut = dv.get("statut", "brouillon")
+
+        col_d1, col_d2, col_d3, col_d4 = st.columns([3, 2, 2, 1])
+        with col_d1:
+            st.markdown(f"**{dv_num}** \u2014 {dv_objet}")
+        with col_d2:
+            st.markdown(f"{dv_ht:,.2f} \u20ac HT")
+        with col_d3:
+            color_map = {"brouillon": "\U0001f7e1", "envoye": "\U0001f535", "accepte": "\U0001f7e2", "refuse": "\U0001f534"}
+            st.markdown(f"{color_map.get(dv_statut, '\u26aa')} {dv_statut}")
+        with col_d4:
+            if st.button("\U0001f5d1\ufe0f", key=f"del_devis_{dv_id}", help="Supprimer ce devis"):
+                try:
+                    db.delete_devis(dv_id)
+                    st.success(f"Devis {dv_num} supprime !")
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Erreur suppression : {e}")
 else:
     st.info("Aucun devis pour ce chantier.")
 
