@@ -297,10 +297,28 @@ if "devis_generated" in st.session_state:
                     "quantite": qte, "prix_unitaire": pu, "total_ht": total_p
                 })
             
+            # Bouton ajouter un poste dans ce lot
+            if st.button("\u2795 Ajouter un poste", key=f"add_poste_{lot_idx}"):
+                devis_data["lots"][lot_idx]["postes"].append({
+                    "designation": "", "unite": "u", "quantite": 0, "prix_unitaire": 0
+                })
+                st.session_state["devis_generated"] = devis_data
+                st.rerun()
+
             sous_total = sum(p["total_ht"] for p in postes_edites)
             total_ht_global += sous_total
             edited_lots.append({"nom": lot["nom"], "postes": postes_edites, "sous_total_ht": sous_total})
     
+    # Bouton ajouter un nouveau lot
+    if st.button("\u2795 Ajouter un lot", key="add_lot_devis"):
+        devis_data["lots"].append({
+            "nom": f"Lot {len(devis_data['lots']) + 1}",
+            "postes": [{"designation": "", "unite": "u", "quantite": 0, "prix_unitaire": 0}],
+            "sous_total_ht": 0
+        })
+        st.session_state["devis_generated"] = devis_data
+        st.rerun()
+
     # Recalcul totaux
     tva_montant = total_ht_global * (tva_rate / 100)
     total_ttc = total_ht_global + tva_montant
