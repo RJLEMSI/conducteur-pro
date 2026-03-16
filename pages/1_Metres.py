@@ -251,8 +251,12 @@ if st.session_state.get("metres_result"):
         st.info("L'IA n'a pas renvoy\u00e9 de tableau structur\u00e9. Ajoutez des lignes manuellement.")
         metres_lines = []
 
-    nb_lignes = st.number_input("Nombre de lignes", min_value=1, max_value=100,
-                                 value=max(len(metres_lines), 3), key="metres_nb_lignes")
+    # Nombre de lignes (avec bouton pour ajouter)
+    if "metres_nb_extra" not in st.session_state:
+        st.session_state["metres_nb_extra"] = 0
+
+    nb_base = max(len(metres_lines), 3)
+    nb_lignes = nb_base + st.session_state["metres_nb_extra"]
 
     while len(metres_lines) < int(nb_lignes):
         metres_lines.append({"designation": "", "unite": "m\u00b2", "quantite": 0.0, "prix_unitaire": 0.0})
@@ -302,6 +306,10 @@ if st.session_state.get("metres_result"):
         st.markdown(f"**Total HT : {total_ht:,.2f} \u20ac**")
 
     st.session_state["metres_lines"] = edited_lines
+
+    if st.button("\u2795 Ajouter une ligne au m\u00e9tr\u00e9", key="add_metre_line"):
+        st.session_state["metres_nb_extra"] = st.session_state.get("metres_nb_extra", 0) + 1
+        st.rerun()
 
     st.markdown("---")
 
