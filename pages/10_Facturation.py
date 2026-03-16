@@ -392,7 +392,8 @@ if factures:
         st.markdown("---")
 
     for fac in factures:
-        col_f1, col_f2, col_f3, col_f4 = st.columns([3, 2, 2, 1])
+        fac_id = fac.get("id", "")
+        col_f1, col_f2, col_f3, col_f4, col_f5 = st.columns([3, 2, 2, 1, 1])
         with col_f1:
             st.markdown(f"**{fac.get('numero', '?')}** \u2014 {fac.get('objet', 'Sans objet')}")
         with col_f2:
@@ -403,13 +404,21 @@ if factures:
             new_statut = st.selectbox(
                 f"Statut", ["emise", "payee", "en_retard", "annulee"],
                 index=["emise", "payee", "en_retard", "annulee"].index(statut) if statut in ["emise", "payee", "en_retard", "annulee"] else 0,
-                key=f"fac_stat_{fac['id']}",
+                key=f"fac_stat_{fac_id}",
                 label_visibility="collapsed"
             )
             if new_statut != statut:
-                db.update_facture(fac["id"], {"statut": new_statut})
+                db.update_facture(fac_id, {"statut": new_statut})
                 st.rerun()
         with col_f4:
             st.markdown(f"{color} {statut}")
+        with col_f5:
+            if st.button("\U0001f5d1\ufe0f", key=f"del_fac_{fac_id}", help="Supprimer cette facture"):
+                try:
+                    db.delete_facture(fac_id)
+                    st.success(f"Facture {fac.get('numero', '?')} supprimee !")
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Erreur suppression : {e}")
 else:
     st.info("Aucune facture pour ce chantier.")
