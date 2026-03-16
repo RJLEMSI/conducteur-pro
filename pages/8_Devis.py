@@ -187,6 +187,13 @@ with col_info2:
 # âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 st.subheader("\U0001f916 Generer un devis")
 
+# Titre/objet editable du devis
+devis_titre = st.text_input("\U0001f4dd Titre / objet du devis",
+                            value=st.session_state.get("devis_titre", f"Devis travaux - {chantier.get('nom', '')}"),
+                            key="devis_titre_input",
+                            placeholder="Ex: Devis construction maison individuelle + piscine")
+
+
 desc_travaux = st.text_area(
     "Description des travaux",
     value=st.session_state.get("devis_desc_travaux", ""),
@@ -353,8 +360,11 @@ if "devis_generated" in st.session_state:
                 "client_nom": client_nom,
                 "description": desc_travaux,
             }
-            existing = db.get_devis(user_id=user_id)
-            numero = f"DEV-{datetime.now().strftime('%Y%m')}-{len(existing)+1:03d}"
+            existing = db.get_devis(chantier_id=chantier["id"])
+            # Numerotation structuree par mois
+            _prefix = f"DEV-{datetime.now().strftime('%Y%m')}"
+            _nums = [int(x.get('numero','').split('-')[-1]) for x in existing if x.get('numero','').startswith(_prefix)]
+            numero = f"{_prefix}-{max(_nums, default=0)+1:03d}"
             
             result = db.save_devis(user_id, chantier["id"], {
                 "numero": numero,
@@ -363,6 +373,7 @@ if "devis_generated" in st.session_state:
                 "montant_ht": total_ht_global,
                 "montant_ttc": total_ttc,
                 "statut": "brouillon",
+                "contenu": json.dumps(devis_final, default=str),
             })
             if result:
                 st.success(f"Devis {numero} enregistre !")
@@ -427,28 +438,73 @@ if devis_list:
         dv_num = dv.get("numero", "?")
         dv_objet = dv.get("objet", "Sans objet")
         dv_ht = float(dv.get("montant_ht", 0) or 0)
+        dv_ttc = float(dv.get("montant_ttc", 0) or 0)
         dv_statut = dv.get("statut", "brouillon")
+        dv_date = dv.get("created_at", "")[:10] if dv.get("created_at") else ""
+        color_map = {"brouillon": "\U0001f7e1", "envoye": "\U0001f535", "accepte": "\U0001f7e2", "refuse": "\U0001f534"}
+        default_color = "\u26aa"
+        status_color = color_map.get(dv_statut, default_color)
 
-        col_d1, col_d2, col_d3, col_d4 = st.columns([3, 2, 2, 1])
-        with col_d1:
-            st.markdown(f"**{dv_num}** \u2014 {dv_objet}")
-        with col_d2:
-            st.markdown(f"{dv_ht:,.2f} \u20ac HT")
-        with col_d3:
-            color_map = {"brouillon": "\U0001f7e1", "envoye": "\U0001f535", "accepte": "\U0001f7e2", "refuse": "\U0001f534"}
-            st.markdown(f"{color_map.get(dv_statut, '\u26aa')} {dv_statut}")
-        with col_d4:
-            if st.button("\U0001f5d1\ufe0f", key=f"del_devis_{dv_id}", help="Supprimer ce devis"):
+        with st.expander(f"{status_color} **{dv_num}** \u2014 {dv_objet} \u2014 {dv_ht:,.2f} \u20ac HT \u2014 {dv_statut} \u2014 {dv_date}"):
+            col_i1, col_i2, col_i3 = st.columns(3)
+            with col_i1:
+                st.markdown(f"**Client :** {dv.get('client_nom', 'N/A')}")
+                st.markdown(f"**HT :** {dv_ht:,.2f} \u20ac")
+            with col_i2:
+                st.markdown(f"**TTC :** {dv_ttc:,.2f} \u20ac")
+                st.markdown(f"**Statut :** {dv_statut}")
+            with col_i3:
+                st.markdown(f"**Date :** {dv_date}")
+                st.markdown(f"**Numero :** {dv_num}")
+
+            # Contenu detaille
+            contenu_raw = dv.get("contenu", "")
+            if contenu_raw:
                 try:
-                    db.delete_devis(dv_id)
-                    st.success(f"Devis {dv_num} supprime !")
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"Erreur suppression : {e}")
+                    contenu = json.loads(contenu_raw) if isinstance(contenu_raw, str) else contenu_raw
+                    if "lots" in contenu:
+                        for lot in contenu["lots"]:
+                            st.markdown(f"**{lot.get('nom', 'Lot')}** \u2014 {lot.get('sous_total_ht', 0):,.2f} \u20ac HT")
+                            for p in lot.get("postes", []):
+                                _t = float(p.get('quantite', 0)) * float(p.get('prix_unitaire', 0))
+                                st.markdown(f"\u00a0\u00a0\u00a0\u00a0\u2022 {p.get('designation', '')} | {p.get('quantite', 0)} {p.get('unite', '')} x {p.get('prix_unitaire', 0):.2f} \u20ac = {_t:.2f} \u20ac")
+                except Exception:
+                    pass
+
+            col_a1, col_a2, col_a3 = st.columns(3)
+            with col_a1:
+                # Re-generer PDF
+                try:
+                    _c = json.loads(dv.get("contenu", "{}")) if isinstance(dv.get("contenu"), str) else dv.get("contenu", {})
+                    if _c and "lots" in _c:
+                        _pdf = _generate_devis_pdf(
+                            _c, dv_num,
+                            nom_societe, siret, adresse_societe, tel_societe, email_societe,
+                            client_nom, client_adresse, tva_rate, date_validite,
+                            logo_bytes=logo_bytes, cgv_text=cgv_text
+                        )
+                        st.download_button("\U0001f4e5 Telecharger PDF", data=_pdf, file_name=f"{dv_num}.pdf", mime="application/pdf", key=f"dl_pdf_{dv_id}")
+                    else:
+                        st.caption("Contenu non disponible pour PDF")
+                except Exception:
+                    st.caption("PDF non disponible")
+            with col_a2:
+                if st.button("\U0001f504 Recharger dans editeur", key=f"reload_{dv_id}"):
+                    try:
+                        _c = json.loads(dv.get("contenu", "{}")) if isinstance(dv.get("contenu"), str) else dv.get("contenu", {})
+                        if _c and "lots" in _c:
+                            st.session_state["devis_generated"] = _c
+                            st.session_state["devis_titre"] = dv_objet
+                            st.rerun()
+                    except Exception:
+                        st.error("Impossible de recharger ce devis")
+            with col_a3:
+                if st.button("\U0001f5d1\ufe0f Supprimer", key=f"del_devis_{dv_id}", type="secondary"):
+                    try:
+                        db.delete_devis(dv_id)
+                        st.success(f"Devis {dv_num} supprime !")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Erreur suppression : {e}")
 else:
     st.info("Aucun devis pour ce chantier.")
-
-
-# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
-# Fonction generation PDF
-# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
