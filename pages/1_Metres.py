@@ -15,114 +15,171 @@ from utils import (GLOBAL_CSS, render_sidebar, check_api_key,
                    analyze_plan_image, get_client)
 
 
-# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
-# Fonction utilitaire : parser le rÃ©sultat IA en lignes de mÃ©trÃ©
-# (DOIT Ãªtre dÃ©finie AVANT son appel dans le flux Streamlit)
-# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+# ======================================================================
+# Fonction utilitaire : parser le resultat IA en lignes de metre
+# (DOIT etre definie AVANT son appel dans le flux Streamlit)
+# ======================================================================
+VALID_UNITS = {"m2", "ml", "m3", "u", "kg", "forfait", "ens", "l", "t", "pm", "m\u00b2", "m\u00b3"}
+
 def _parse_metres_from_result(result_text):
-    """Parse le résultat IA en lignes structurées.
-    Gère deux formats de tableau markdown :
-    - 4 colonnes : | Désignation | Unité | Quantité | Prix unitaire |
-    - 6 colonnes : | N° | Ouvrage | Description | Unité | Quantité | Observations |
+    """Parse le resultat IA en lignes structurees.
+    Detecte le header du tableau markdown puis parse les lignes de donnees.
     """
     lines = []
-    col_count = 0
+    in_table = False
+    col_indices = {}  # mapping: role -> column index
 
-    for line in result_text.split("\n"):
-        line = line.strip()
-        if not line or line.startswith("#") or line.startswith("---"):
-            continue
-        if "|" not in line:
-            continue
-        parts = [p.strip() for p in line.split("|") if p.strip()]
-        if len(parts) < 2:
-            continue
-        if all(c in "-| :" for c in line):
+    for raw_line in result_text.split("\n"):
+        raw_line = raw_line.strip()
+        if not raw_line:
+            if in_table:
+                in_table = False  # sortie du tableau
             continue
 
-        lower_parts = [p.lower() for p in parts]
-        is_header = any(h in " ".join(lower_parts) for h in [
-            "désignation", "ouvrage", "description", "unité", "unite",
-            "quantité", "quantite", "prix", "n°"
-        ])
+        if "|" not in raw_line:
+            if in_table and not raw_line.startswith("#"):
+                continue
+            in_table = False
+            continue
+
+        parts = [p.strip() for p in raw_line.split("|")]
+        # Enlever les elements vides au debut et fin (split sur | produit des vides)
+        if parts and parts[0] == "":
+            parts = parts[1:]
+        if parts and parts[-1] == "":
+            parts = parts[:-1]
+
+        if len(parts) < 3:
+            continue
+
+        # Ignorer les lignes de separation (---|---|---)
+        if all(c in "-: " for c in "".join(parts)):
+            continue
+
+        # Detection du header
+        lower_joined = " ".join(p.lower() for p in parts)
+        header_keywords = ["ouvrage", "designation", "description", "unite",
+                           "quantite", "prix", "n\u00b0", "numero"]
+        is_header = sum(1 for kw in header_keywords if kw in lower_joined) >= 2
+
         if is_header:
-            col_count = len(parts)
+            in_table = True
+            col_indices = {}
+            for i, p in enumerate(parts):
+                pl = p.lower().strip()
+                if any(w in pl for w in ["ouvrage", "designation", "poste"]):
+                    col_indices["ouvrage"] = i
+                elif "description" in pl:
+                    col_indices["description"] = i
+                elif any(w in pl for w in ["unite", "unit"]):
+                    col_indices["unite"] = i
+                elif any(w in pl for w in ["quantite", "qte", "qty"]):
+                    col_indices["quantite"] = i
+                elif any(w in pl for w in ["prix", "pu", "cout"]):
+                    col_indices["prix"] = i
+                elif "observation" in pl or "remarque" in pl or "note" in pl:
+                    col_indices["observations"] = i
+                elif pl in ["n\u00b0", "no", "num", "numero", "n"]:
+                    col_indices["numero"] = i
             continue
 
+        if not in_table:
+            continue
+
+        # On est dans le tableau, parser la ligne de donnees
         designation = ""
         unite = ""
         quantite = 0.0
         prix_u = 0.0
 
-        if col_count >= 6:
-            designation = parts[1] if len(parts) > 1 else ""
-            desc = parts[2] if len(parts) > 2 else ""
-            if desc and desc != designation:
-                designation += " - " + desc
-            unite = parts[3] if len(parts) > 3 else ""
+        # Recuperer l'ouvrage/designation
+        if "ouvrage" in col_indices and col_indices["ouvrage"] < len(parts):
+            designation = parts[col_indices["ouvrage"]].strip()
+        # Ajouter la description si elle existe
+        if "description" in col_indices and col_indices["description"] < len(parts):
+            desc = parts[col_indices["description"]].strip()
+            if desc:
+                if designation:
+                    designation += " - " + desc
+                else:
+                    designation = desc
+
+        # Si pas d'ouvrage ni description, essayer la premiere colonne non-numero
+        if not designation:
+            for i, p in enumerate(parts):
+                if i != col_indices.get("numero", -1) and p.strip() and not p.strip().replace(".", "").isdigit():
+                    designation = p.strip()
+                    break
+
+        # Unite
+        if "unite" in col_indices and col_indices["unite"] < len(parts):
+            unite = parts[col_indices["unite"]].strip()
+        # Valider l'unite
+        if unite.lower() not in VALID_UNITS and unite:
+            unite = "u"  # unite par defaut si non reconnue
+
+        # Quantite
+        if "quantite" in col_indices and col_indices["quantite"] < len(parts):
+            raw_q = parts[col_indices["quantite"]].replace(",", ".").replace(" ", "").strip()
+            # Enlever les caracteres non numeriques sauf le point
+            clean_q = ""
+            for c in raw_q:
+                if c.isdigit() or c == ".":
+                    clean_q += c
             try:
-                quantite = float(parts[4].replace(",", ".").replace(" ", "")) if len(parts) > 4 else 0.0
-            except (ValueError, IndexError):
+                quantite = float(clean_q) if clean_q else 0.0
+            except ValueError:
                 quantite = 0.0
-            prix_u = 0.0
-        elif col_count == 5:
-            designation = parts[1] if len(parts) > 1 else ""
-            unite = parts[2] if len(parts) > 2 else ""
+
+        # Prix unitaire
+        if "prix" in col_indices and col_indices["prix"] < len(parts):
+            raw_p = parts[col_indices["prix"]].replace(",", ".").replace(" ", "").replace("\u20ac", "").strip()
+            clean_p = ""
+            for c in raw_p:
+                if c.isdigit() or c == ".":
+                    clean_p += c
             try:
-                quantite = float(parts[3].replace(",", ".").replace(" ", "")) if len(parts) > 3 else 0.0
-            except (ValueError, IndexError):
-                quantite = 0.0
-            try:
-                prix_u = float(parts[4].replace(",", ".").replace("€", "").replace(" ", "")) if len(parts) > 4 else 0.0
-            except (ValueError, IndexError):
-                prix_u = 0.0
-        else:
-            designation = parts[0] if len(parts) > 0 else ""
-            unite = parts[1] if len(parts) > 1 else ""
-            try:
-                quantite = float(parts[2].replace(",", ".").replace(" ", "")) if len(parts) > 2 else 0.0
-            except (ValueError, IndexError):
-                quantite = 0.0
-            try:
-                prix_u = float(parts[3].replace(",", ".").replace("€", "").replace(" ", "")) if len(parts) > 3 else 0.0
-            except (ValueError, IndexError):
+                prix_u = float(clean_p) if clean_p else 0.0
+            except ValueError:
                 prix_u = 0.0
 
-        skip_words = ["désignation", "ouvrage", "description", "poste",
-                      "n°", "numéro", "unité", "unite", "quantité", "prix"]
-        if designation and designation.lower() not in skip_words:
+        # Ne garder que les lignes avec une designation valide
+        if designation and len(designation) > 1:
             lines.append({
                 "designation": designation,
-                "unite": unite,
+                "unite": unite if unite else "u",
                 "quantite": quantite,
                 "prix_unitaire": prix_u,
             })
+
     return lines
 
-# âââ Setup ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
-user_id = page_setup(title="MÃ©trÃ©s", icon="\U0001f4d0")
-st.markdown(GLOBAL_CSS, unsafe_allow_html=True)
+
+# --- Setup ---
+user_id = page_setup(title="M\u00e9tr\u00e9s", icon="\U0001f4d0")
+if not user_id:
+    st.stop()
 render_saas_sidebar(user_id)
 
-st.markdown("## \U0001f4d0 MÃ©trÃ©s automatiques")
-st.caption("Uploadez un plan (PDF ou image), l'IA extrait les ouvrages mesurables.")
+st.title("\U0001f4d0 M\u00e9tr\u00e9s automatiques")
+st.caption("T\u00e9l\u00e9chargez un plan (PDF ou image), l'IA extrait les ouvrages mesurables.")
 
-# VÃ©rifier la clÃ© API
+# Verifier la cle API
 if not check_api_key():
-    st.warning("\u2699\ufe0f Configurez votre clÃ© API Anthropic depuis la page ParamÃ¨tres.")
+    st.warning("\u2699\ufe0f Configurez votre cl\u00e9 API Anthropic depuis la page Param\u00e8tres.")
     st.stop()
 
 chantier = chantier_selector(key="metres_chantier")
 if not chantier:
     st.stop()
 
-# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+# ======================================================================
 # Upload et analyse
-# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+# ======================================================================
 uploaded = st.file_uploader("Plan (PDF ou image)", type=["pdf", "png", "jpg", "jpeg"],
                             key="metres_upload")
-extra_info = st.text_area("Informations complÃ©mentaires (optionnel)",
-                          placeholder="Ex: BÃ¢timent R+2, Ã©chelle 1/100...",
+extra_info = st.text_area("Informations compl\u00e9mentaires (optionnel)",
+                          placeholder="Ex: B\u00e2timent R+2, \u00e9chelle 1/100...",
                           key="metres_extra")
 
 if uploaded:
@@ -130,16 +187,16 @@ if uploaded:
     if uploaded.type == "application/pdf":
         preview_bytes = pdf_first_page_to_image(uploaded)
         if preview_bytes:
-            st.image(preview_bytes, caption="PremiÃ¨re page du plan", width=600)
+            st.image(preview_bytes, caption="Premi\u00e8re page du plan", width=600)
             image_b64, media_type = encode_image_bytes_to_base64(preview_bytes)
         else:
             st.warning("Impossible de convertir le PDF en image.")
             st.stop()
     else:
-        st.image(uploaded, caption="Plan chargÃ©", use_container_width=True)
+        st.image(uploaded, caption="Plan charg\u00e9", use_container_width=True)
         image_b64, media_type = image_file_to_base64(uploaded)
 
-    if st.button("\U0001f680 Analyser le plan et extraire les mÃ©trÃ©s", width="stretch"):
+    if st.button("\U0001f680 Analyser le plan et extraire les m\u00e9tr\u00e9s", use_container_width=True):
         with st.spinner("\U0001f50d Analyse en cours par l'IA Claude..."):
             client = get_client()
             result = analyze_plan_image(image_b64, media_type, client, extra_info)
@@ -148,21 +205,19 @@ if uploaded:
                 st.session_state["metres_result"] = result
                 st.session_state["metres_filename"] = uploaded.name
 
-                # ââ Parser le resultat IA en lignes editables ââ
+                # Parser le resultat IA en lignes editables
                 try:
                     parsed_lines = _parse_metres_from_result(result)
                     st.session_state["metres_lines"] = parsed_lines
                 except Exception:
                     st.session_state["metres_lines"] = []
 
-                # Sauvegarder dans Supabase avec les ouvrages parsÃ©s
+                # Sauvegarder dans Supabase avec les ouvrages parses
                 if chantier:
-                    # Sauvegarder les ouvrages parsÃ©s directement (pas une liste vide)
                     ouvrages_json = json.dumps(
-                        st.session_state.get("metres_lines", []), default=str
-                    )
+                        st.session_state.get("metres_lines", []), default=str)
                     metre_data = {
-                        "titre": f"MÃ©trÃ©s â {uploaded.name}",
+                        "titre": f"M\u00e9tr\u00e9s \u2014 {uploaded.name}",
                         "ouvrages": ouvrages_json,
                         "synthese": result,
                     }
@@ -189,51 +244,58 @@ if uploaded:
                 st.rerun()
 
 
-# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
-# Affichage des rÃ©sultats + tableau Ã©ditable
-# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+# ======================================================================
+# Affichage des resultats + tableau editable
+# ======================================================================
 if st.session_state.get("metres_result"):
     st.markdown("---")
-    st.markdown("### \U0001f4ca RÃ©sultats des mÃ©trÃ©s")
+    st.markdown("### \U0001f4ca R\u00e9sultats des m\u00e9tr\u00e9s")
 
     # Afficher le brut IA dans un expander
-    with st.expander("\U0001f4dd RÃ©sultat brut de l'IA", expanded=False):
+    with st.expander("\U0001f4dd R\u00e9sultat brut de l'IA", expanded=False):
         st.markdown(st.session_state["metres_result"])
 
-    # ââ Tableau Ã©ditable ââ
+    # --- Tableau editable ---
     metres_lines = st.session_state.get("metres_lines", [])
 
-    st.markdown("### \u270f\ufe0f MÃ©trÃ©s Ã©ditables")
-    st.caption("Modifiez les quantitÃ©s et prix unitaires ci-dessous avant de valider ou gÃ©nÃ©rer un devis.")
+    st.markdown("### \u270f\ufe0f M\u00e9tr\u00e9s \u00e9ditables")
+    st.caption("Modifiez les quantit\u00e9s et prix unitaires ci-dessous avant de valider ou g\u00e9n\u00e9rer un devis.")
 
     if not metres_lines:
-        st.info("L'IA n'a pas renvoyÃ© de tableau structurÃ©. Ajoutez des lignes manuellement.")
+        st.info("L'IA n'a pas renvoy\u00e9 de tableau structur\u00e9. Ajoutez des lignes manuellement.")
         metres_lines = []
 
     nb_lignes = st.number_input("Nombre de lignes", min_value=1, max_value=100,
-                                 value=max(len(metres_lines), 3), key="metres_nb_lines")
+                                 value=max(len(metres_lines), 3), key="metres_nb_lignes")
 
     # S'assurer qu'on a assez de lignes
     while len(metres_lines) < int(nb_lignes):
-        metres_lines.append({"designation": "", "unite": "mÂ²", "quantite": 0.0, "prix_unitaire": 0.0})
+        metres_lines.append({"designation": "", "unite": "m\u00b2", "quantite": 0.0, "prix_unitaire": 0.0})
 
     edited_lines = []
     total_ht = 0.0
+
+    unite_options = ["m\u00b2", "ml", "m\u00b3", "u", "kg", "forfait"]
 
     for i in range(int(nb_lignes)):
         default = metres_lines[i] if i < len(metres_lines) else {}
         cols = st.columns([4, 1, 1, 1, 1])
         with cols[0]:
-            des = st.text_input(f"DÃ©signation", value=default.get("designation", ""),
+            des = st.text_input("D\u00e9signation", value=default.get("designation", ""),
                                 key=f"met_des_{i}", label_visibility="collapsed",
-                                placeholder="DÃ©signation de l'ouvrage")
+                                placeholder="D\u00e9signation de l'ouvrage")
         with cols[1]:
-            unite = st.selectbox("UnitÃ©", ["mÂ²", "ml", "mÂ³", "u", "kg", "forfait"],
-                                  index=["mÂ²", "ml", "mÂ³", "u", "kg", "forfait"].index(
-                                      default.get("unite", "mÂ²")) if default.get("unite", "mÂ²") in ["mÂ²", "ml", "mÂ³", "u", "kg", "forfait"] else 0,
+            # Trouver l'index de l'unite dans la liste
+            stored_unite = default.get("unite", "m\u00b2")
+            if stored_unite in unite_options:
+                unite_idx = unite_options.index(stored_unite)
+            else:
+                unite_idx = 0
+            unite = st.selectbox("Unit\u00e9", unite_options,
+                                  index=unite_idx,
                                   key=f"met_unit_{i}", label_visibility="collapsed")
         with cols[2]:
-            qte = st.number_input("QtÃ©", value=float(default.get("quantite", 0)),
+            qte = st.number_input("Qt\u00e9", value=float(default.get("quantite", 0)),
                                    key=f"met_qte_{i}", label_visibility="collapsed",
                                    min_value=0.0, step=0.1, format="%.2f")
         with cols[3]:
@@ -260,11 +322,11 @@ if st.session_state.get("metres_result"):
 
     st.markdown("---")
 
-    # ââ Actions ââ
+    # --- Actions ---
     col_save, col_devis, col_csv = st.columns(3)
 
     with col_save:
-        if st.button("\U0001f4be Sauvegarder les modifications", width="stretch"):
+        if st.button("\U0001f4be Sauvegarder les modifications", use_container_width=True):
             if chantier and st.session_state.get("metres_saved_id"):
                 try:
                     update_data = {
@@ -275,17 +337,17 @@ if st.session_state.get("metres_result"):
                     if sup_client:
                         sup_client.table("metres").update(update_data).eq(
                             "id", st.session_state["metres_saved_id"]).execute()
-                        st.success("\u2705 MÃ©trÃ©s mis Ã  jour !")
+                        st.success("\u2705 M\u00e9tr\u00e9s mis \u00e0 jour !")
                 except Exception as e:
                     st.error(f"Erreur lors de la sauvegarde : {e}")
             else:
-                st.warning("Aucun mÃ©trÃ© enregistrÃ© Ã  mettre Ã  jour.")
+                st.warning("Aucun m\u00e9tr\u00e9 enregistr\u00e9 \u00e0 mettre \u00e0 jour.")
 
     with col_devis:
-        if st.button("\U0001f4cb GÃ©nÃ©rer le devis associÃ©", type="primary", width="stretch"):
+        if st.button("\U0001f4cb G\u00e9n\u00e9rer le devis associ\u00e9", type="primary", use_container_width=True):
             if edited_lines and chantier:
                 lots = [{
-                    "nom": "Lot 1 â MÃ©trÃ©s du plan",
+                    "nom": "Lot 1 \u2014 M\u00e9tr\u00e9s du plan",
                     "postes": edited_lines
                 }]
                 contenu = json.dumps({"lots": lots}, default=str)
@@ -299,7 +361,7 @@ if st.session_state.get("metres_result"):
 
                 devis_data = {
                     "numero": devis_numero,
-                    "objet": f"Devis mÃ©trÃ©s â {st.session_state.get('metres_filename', 'Plan')}",
+                    "objet": f"Devis m\u00e9tr\u00e9s \u2014 {st.session_state.get('metres_filename', 'Plan')}",
                     "client_nom": chantier.get("client_nom", ""),
                     "montant_ht": montant_ht,
                     "statut": "brouillon",
@@ -309,14 +371,14 @@ if st.session_state.get("metres_result"):
                 try:
                     result_devis = db.save_devis(user_id, chantier["id"], devis_data)
                     if result_devis:
-                        st.success(f"\u2705 Devis {devis_numero} crÃ©Ã© ! Montant HT : {montant_ht:,.2f} \u20ac")
-                        st.info("\U0001f449 Retrouvez-le dans la page **Devis** pour le finaliser et gÃ©nÃ©rer le PDF.")
+                        st.success(f"\u2705 Devis {devis_numero} cr\u00e9\u00e9 ! Montant HT : {montant_ht:,.2f} \u20ac")
+                        st.info("\U0001f449 Retrouvez-le dans la page **Devis** pour le finaliser et g\u00e9n\u00e9rer le PDF.")
                     else:
-                        st.error("Erreur lors de la crÃ©ation du devis.")
+                        st.error("Erreur lors de la cr\u00e9ation du devis.")
                 except Exception as e:
                     st.error(f"Erreur : {e}")
             else:
-                st.warning("Ajoutez des lignes au mÃ©trÃ© avant de gÃ©nÃ©rer un devis.")
+                st.warning("Ajoutez des lignes au m\u00e9tr\u00e9 avant de g\u00e9n\u00e9rer un devis.")
 
     with col_csv:
         if edited_lines:
@@ -325,14 +387,14 @@ if st.session_state.get("metres_result"):
             df.to_csv(csv_buf, index=False, sep=";")
             st.download_button("\U0001f4e5 Exporter CSV", csv_buf.getvalue(),
                                file_name=f"metres_{datetime.now().strftime('%Y%m%d')}.csv",
-                               mime="text/csv", width="stretch")
+                               mime="text/csv", use_container_width=True)
 
 
-# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
-# Historique des mÃ©trÃ©s
-# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+# ======================================================================
+# Historique des metres
+# ======================================================================
 st.markdown("---")
-st.subheader("\U0001f4cb Historique des mÃ©trÃ©s")
+st.subheader("\U0001f4cb Historique des m\u00e9tr\u00e9s")
 
 try:
     from lib.supabase_client import get_supabase_client
@@ -345,8 +407,8 @@ try:
             for m in metres_list.data:
                 titre = m.get('titre', 'Sans titre')
                 date_str = m.get('created_at', '')[:10] if m.get('created_at') else ''
-                with st.expander(f"\U0001f4d0 {titre} â {date_str}"):
-                    # Afficher la synthÃ¨se IA
+                with st.expander(f"\U0001f4d0 {titre} \u2014 {date_str}"):
+                    # Afficher la synthese IA
                     synthese = m.get("synthese", "")
                     if synthese:
                         st.markdown(synthese[:800] + ("..." if len(synthese) > 800 else ""))
@@ -360,14 +422,14 @@ try:
                                 df = pd.DataFrame(ouv_list)
                                 st.dataframe(df, use_container_width=True)
                             else:
-                                st.caption("Aucun ouvrage enregistrÃ© pour ce mÃ©trÃ©.")
+                                st.caption("Aucun ouvrage enregistr\u00e9 pour ce m\u00e9tr\u00e9.")
                         except Exception:
-                            st.caption("DonnÃ©es ouvrages non lisibles.")
+                            st.caption("Donn\u00e9es ouvrages non lisibles.")
                     else:
-                        st.caption("Aucun ouvrage enregistrÃ© pour ce mÃ©trÃ©.")
+                        st.caption("Aucun ouvrage enregistr\u00e9 pour ce m\u00e9tr\u00e9.")
 
-                    # Bouton pour recharger ce mÃ©trÃ© dans l'Ã©diteur
-                    if st.button(f"\U0001f504 Charger dans l'Ã©diteur", key=f"load_metre_{m.get('id', '')}"):
+                    # Bouton pour recharger ce metre dans l'editeur
+                    if st.button(f"\U0001f504 Charger dans l'\u00e9diteur", key=f"load_metre_{m.get('id', '')}"):
                         st.session_state["metres_result"] = synthese
                         ouv_data = []
                         if ouvrages:
@@ -380,6 +442,6 @@ try:
                         st.session_state["metres_filename"] = titre
                         st.rerun()
         else:
-            st.info("Aucun mÃ©trÃ© pour ce chantier.")
+            st.info("Aucun m\u00e9tr\u00e9 pour ce chantier.")
 except Exception as e:
-    st.info(f"Aucun mÃ©trÃ© pour ce chantier.")
+    st.info("Aucun m\u00e9tr\u00e9 pour ce chantier.")
