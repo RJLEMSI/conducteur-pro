@@ -128,9 +128,9 @@ def _generate_facture_pdf(facture_data, lignes, nom_soc, siret_soc, adresse_soc,
 # ===============================================================================
 # Page principale
 # ===============================================================================
-page_setup("Facturation", icon="\U0001f9fe")
+user_id = page_setup("Facturation", icon="\U0001f9fe")
 st.markdown(GLOBAL_CSS, unsafe_allow_html=True)
-render_saas_sidebar()
+render_saas_sidebar(user_id)
 
 require_feature("facturation")
 
