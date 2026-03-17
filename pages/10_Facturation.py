@@ -132,12 +132,7 @@ user_id = page_setup("Facturation", icon="\U0001f9fe")
 st.markdown(GLOBAL_CSS, unsafe_allow_html=True)
 render_saas_sidebar(user_id)
 
-require_feature("facturation")
-
-user_id = st.session_state.get("user_id")
-if not user_id:
-    st.warning("Connectez-vous pour acceder a la facturation.")
-    st.stop()
+require_feature(user_id, "facturation")
 
 chantier = chantier_selector()
 if not chantier:
