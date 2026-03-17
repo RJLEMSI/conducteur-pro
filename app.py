@@ -66,6 +66,14 @@ if is_authenticated():
             st.Page("pages/11_Documents.py", title="Documents", icon="\U0001f4c2"),
             st.Page("pages/14_Reunions.py", title="Reunions", icon="\U0001f4dd"),
         ],
+        "ERP": [
+            st.Page("pages/15_Achats.py", title="Achats", icon="U0001f6d2"),
+            st.Page("pages/16_Sous_Traitants.py", title="Sous-Traitants", icon="U0001f477"),
+            st.Page("pages/17_Pointage.py", title="Pointage", icon="⏰"),
+            st.Page("pages/18_Stocks.py", title="Stocks", icon="U0001f4e6"),
+            st.Page("pages/19_CRM.py", title="CRM", icon="U0001f4bc"),
+            st.Page("pages/20_Suivi_Financier.py", title="Suivi Financier", icon="U0001f4b9"),
+        ],
         "Compte": [
             st.Page("pages/9_Abonnement.py", title="Abonnement", icon="\u2b50"),
             st.Page("pages/13_Mon_Compte.py", title="Mon Compte", icon="\U0001f464"),
