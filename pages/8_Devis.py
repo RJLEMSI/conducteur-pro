@@ -498,7 +498,7 @@ if devis_list:
                     try:
                         _raw = dv.get("contenu")
                         if _raw is None or _raw == "" or _raw == "{}":
-                            st.warning("Ce devis n'a pas de contenu detaille enregistre.")
+                            st.toast("Ce devis n'a pas de contenu detaille enregistre.", icon="\u26a0\ufe0f")
                         else:
                             _c = json.loads(_raw) if isinstance(_raw, str) else _raw
                             # Double-encodage possible (JSONB)
@@ -509,9 +509,9 @@ if devis_list:
                                 st.session_state["devis_titre"] = dv_objet
                                 st.rerun()
                             else:
-                                st.warning("Format de contenu incompatible (pas de lots). Rechargement impossible.")
+                                st.toast("Format de contenu incompatible. Rechargement impossible.", icon="\u26a0\ufe0f")
                     except Exception as e:
-                        st.error(f"Impossible de recharger ce devis: {e}")
+                        st.toast(f"Impossible de recharger ce devis: {e}", icon="\u274c")
             with col_a3:
                 if st.button("\U0001f5d1\ufe0f Supprimer", key=f"del_devis_{dv_id}", type="secondary"):
                     try:
