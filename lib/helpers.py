@@ -82,9 +82,9 @@ def chantier_selector(key: str = "chantier_select"):
         ville = c.get("ville", "")
         label = c["nom"]
         if client_nom:
-            label += f" — {client_nom}"
+            label += f" â {client_nom}"
         elif ville:
-            label += f" — {ville}"
+            label += f" â {ville}"
         options[label] = c
 
     selected_label = st.selectbox(
@@ -105,9 +105,9 @@ def require_feature(user_id: str, feature: str):
     plan = profile.get("subscription_plan", "free") if profile else "free"
 
     feature_access = {
-        "free": ["ai_analysis"],
-        "pro": ["ai_analysis", "import_data", "export_pdf", "advanced_planning", "priority_support"],
-        "team": ["ai_analysis", "import_data", "export_pdf", "advanced_planning", "multi_user", "priority_support"],
+        "free": ["ai_analysis", "achats", "sous_traitants", "pointage", "stocks", "crm", "suivi_financier"],
+        "pro": ["ai_analysis", "import_data", "export_pdf", "advanced_planning", "priority_support", "achats", "sous_traitants", "pointage", "stocks", "crm", "suivi_financier"],
+        "team": ["ai_analysis", "import_data", "export_pdf", "advanced_planning", "multi_user", "priority_support", "achats", "sous_traitants", "pointage", "stocks", "crm", "suivi_financier"],
     }
 
     allowed = feature_access.get(plan, [])
