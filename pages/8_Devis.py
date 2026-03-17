@@ -475,8 +475,13 @@ if devis_list:
             with col_a1:
                 # Re-generer PDF
                 try:
-                    _c = json.loads(dv.get("contenu", "{}")) if isinstance(dv.get("contenu"), str) else dv.get("contenu", {})
-                    if _c and "lots" in _c:
+                    _raw_pdf = dv.get("contenu")
+                    _c = None
+                    if _raw_pdf:
+                        _c = json.loads(_raw_pdf) if isinstance(_raw_pdf, str) else _raw_pdf
+                        if isinstance(_c, str):
+                            _c = json.loads(_c)
+                    if _c and isinstance(_c, dict) and "lots" in _c:
                         _pdf = _generate_devis_pdf(
                             _c, dv_num,
                             nom_societe, siret, adresse_societe, tel_societe, email_societe,
@@ -491,13 +496,22 @@ if devis_list:
             with col_a2:
                 if st.button("\U0001f504 Recharger dans editeur", key=f"reload_{dv_id}"):
                     try:
-                        _c = json.loads(dv.get("contenu", "{}")) if isinstance(dv.get("contenu"), str) else dv.get("contenu", {})
-                        if _c and "lots" in _c:
-                            st.session_state["devis_generated"] = _c
-                            st.session_state["devis_titre"] = dv_objet
-                            st.rerun()
-                    except Exception:
-                        st.error("Impossible de recharger ce devis")
+                        _raw = dv.get("contenu")
+                        if _raw is None or _raw == "" or _raw == "{}":
+                            st.warning("Ce devis n'a pas de contenu detaille enregistre.")
+                        else:
+                            _c = json.loads(_raw) if isinstance(_raw, str) else _raw
+                            # Double-encodage possible (JSONB)
+                            if isinstance(_c, str):
+                                _c = json.loads(_c)
+                            if _c and isinstance(_c, dict) and "lots" in _c:
+                                st.session_state["devis_generated"] = _c
+                                st.session_state["devis_titre"] = dv_objet
+                                st.rerun()
+                            else:
+                                st.warning("Format de contenu incompatible (pas de lots). Rechargement impossible.")
+                    except Exception as e:
+                        st.error(f"Impossible de recharger ce devis: {e}")
             with col_a3:
                 if st.button("\U0001f5d1\ufe0f Supprimer", key=f"del_devis_{dv_id}", type="secondary"):
                     try:
