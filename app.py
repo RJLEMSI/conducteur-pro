@@ -2,7 +2,8 @@ import streamlit as st
 
 # --- Configuration de la page (AVANT st.navigation) ---
 st.set_page_config(
-    page_title="ConducteurPro",
+    page_title="ConducteurPro BTP",
+    page_icon="🏗️",
     layout="wide",
     initial_sidebar_state="expanded"
 )
