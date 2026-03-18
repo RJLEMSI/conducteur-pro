@@ -116,7 +116,7 @@ plans = [
         ]
     },
     {
-        "key": "enterprise", "name": "\u00c9quipe Premium", "icon": "\U0001f451", "price": "349", "period": "/mois",
+        "key": "enterprise", "name": "\u00c9quipe Premium", "icon": "\U0001f451", "price": "279", "period": "/mois",
         "popular": False, "enterprise": True, "subtitle": "Pour les grandes entreprises BTP",
         "features": [
             ("\u2713", True, "Chantiers illimit\u00e9s"),
@@ -219,7 +219,7 @@ with col3:
 
 with col4:
     if current_plan != "enterprise":
-        if st.button("\U0001f451 Premium — 349\u20ac/mois", use_container_width=True):
+        if st.button("\U0001f451 Premium — 279\u20ac/mois", use_container_width=True):
             if stripe_key and price_ent:
                 try:
                     import stripe
