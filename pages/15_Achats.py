@@ -2,427 +2,415 @@ import sys, os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 import streamlit as st
 import json
-from datetime import datetime, date, timedelta
-from lib.helpers import page_setup, render_saas_sidebar, chantier_selector, require_feature
-from lib import db
-from utils import GLOBAL_CSS
-from lib.supabase_client import get_client
+import re
+from datetime import datetime, date
 import pandas as pd
+from lib.helpers import page_setup, render_saas_sidebar, chantier_selector, require_feature
+from lib.supabase_client import get_supabase_client, is_authenticated
+from utils import GLOBAL_CSS
 
-user_id = page_setup("Achats & Fournisseurs", icon="🛒")
+user_id = page_setup("Achats", icon="🛒")
 st.markdown(GLOBAL_CSS, unsafe_allow_html=True)
 render_saas_sidebar(user_id)
 require_feature(user_id, "achats")
 
-sb = get_client()
+sb = get_supabase_client()
 
-# ==================== STYLES ====================
-CATEGORY_COLORS = {
-    "materiaux": "#1f77b4",      # Blue
-    "location": "#ff7f0e",        # Orange
-    "sous-traitance": "#9467bd",  # Purple
-    "services": "#2ca02c"         # Green
-}
-
-def format_currency(value):
-    """Format number as French currency."""
+def fmt(val):
     try:
-        if value is None:
-            return "0,00 €"
-        return f"{value:,.2f}".replace(",", "X").replace(".", ",").replace("X", " ") + " €"
+        return f"{float(val or 0):,.2f} €".replace(",", " ")
     except:
         return "0,00 €"
 
-def get_status_badge(status):
-    """Return colored status badge."""
-    badges = {
-        "brouillon": "🟡 Brouillon",
-        "commandé": "🟢 Commandé",
-        "livré": "✅ Livré",
-        "annulé": "🔴 Annulé"
-    }
-    return badges.get(status, status)
+# ─── Load fournisseurs ────────────────────────────────────────────
+try:
+    resp_f = sb.table("fournisseurs").select("*").eq("user_id", user_id).eq("actif", True).execute()
+    fournisseurs = resp_f.data or []
+except Exception as e:
+    st.error(f"Erreur fournisseurs: {e}")
+    fournisseurs = []
 
-def get_category_badge(category):
-    """Return colored category badge."""
-    color = CATEGORY_COLORS.get(category, "#808080")
-    return f":{color}[{category}]"
+fourn_map = {f["nom"]: f["id"] for f in fournisseurs}
+fourn_by_id = {f["id"]: f for f in fournisseurs}
 
-# ==================== TAB 1: FOURNISSEURS ====================
-def tab_fournisseurs():
-    st.subheader("📋 Répertoire des Fournisseurs")
+st.title("🛒 Achats & Fournisseurs")
 
-    col1, col2 = st.columns([3, 1])
-    search_term = col1.text_input("🔍 Chercher un fournisseur", "")
-    category_filter = col2.selectbox("Catégorie", ["Tous", "materiaux", "location", "sous-traitance", "services"], key="filter_cat")
+tab1, tab2, tab3, tab4 = st.tabs([
+    "🏭 Fournisseurs",
+    "📋 Bons de Commande",
+    "📄 Documents Fournisseurs",
+    "📊 Suivi"
+])
 
-    try:
-        response = sb.table("fournisseurs").select("*").eq("user_id", user_id).order("created_at", desc=True).execute()
-        suppliers = response.data if response.data else []
+# ══════════════════════════════════════════════════════════
+# TAB 1 — FOURNISSEURS
+# ══════════════════════════════════════════════════════════
+with tab1:
+    st.subheader("Répertoire Fournisseurs")
 
-        # Filter
-        if search_term:
-            suppliers = [s for s in suppliers if search_term.lower() in s.get("bom", "").lower()]
-        if category_filter != "Tous":
-            suppliers = [s for s in suppliers if s.get("categorie") == category_filter]
+    col_list, col_form = st.columns([1, 1])
 
-        # Display as cards
-        if suppliers:
-            for supplier in suppliers:
-                with st.expander(f"**{supplier['nom']}** {get_category_badge(supplier.get('categorie', 'N/A'))}"):
-                    col1, col2 = st.columns(2)
-                    with col1:
-                        st.write(f"**Contact:** {supplier.get('contact_nom', 'N/A')}")
-                        st.write(f"**Email:** {supplier.get('email', 'N/A')}")
-                        st.write(f"**Téléphone:** {supplier.get('telephone', 'N/A')}")
-                    with col2:
-                        st.write(f"**Adresse:** {supplier.get('adresse', 'N/A')}")
-                        st.write(f"**SIRET:** {supplier.get('siret', 'N/A')}")
-                        st.write(f"**Notes:** {supplier.get('notes', '')}")
-
-                    col_edit, col_del = st.columns(2)
-                    if col_edit.button("✏️ Modifier", key=f"edit_{supplier['id']}"):
-                        st.session_state[f"edit_supplier_{supplier['id']}"] = True
-
-                    if col_del.button("🗑️ Supprimer", key=f"del_{supplier['id']}"):
-                        try:
-                            sb.table("fournisseurs").delete().eq("id", supplier['id']).execute()
-                            st.success("Fournisseur supprimé")
-                            st.rerun()
-                        except Exception as e:
-                            st.error(f"Erreur: {str(e)}")
+    with col_list:
+        if fournisseurs:
+            for f in fournisseurs:
+                with st.expander(f"🏭 {f['nom']} — {f.get('categorie','').upper()}"):
+                    st.write(f"📞 {f.get('telephone','')}")
+                    st.write(f"📧 {f.get('email','')}")
+                    st.write(f"📍 {f.get('adresse','')}")
+                    if f.get('siret'):
+                        st.write(f"🏢 SIRET: {f['siret']}")
+                    if f.get('notes'):
+                        st.write(f"📝 {f['notes']}")
         else:
-            st.info("Aucun fournisseur trouvé")
+            st.info("Aucun fournisseur. Ajoutez-en un ci-contre.")
 
-    except Exception as e:
-        st.error(f"Erreur chargement fournisseurs: {str(e)}")
+    with col_form:
+        st.markdown("### ➕ Nouveau Fournisseur")
+        with st.form("form_fourn", clear_on_submit=True):
+            nom = st.text_input("Nom *")
+            categorie = st.selectbox("Catégorie *", ["materiaux", "location", "sous-traitance", "services"])
+            contact = st.text_input("Contact")
+            email_f = st.text_input("Email")
+            tel_f = st.text_input("Téléphone")
+            adresse_f = st.text_area("Adresse", height=60)
+            siret_f = st.text_input("SIRET (14 chiffres)")
+            notes_f = st.text_area("Notes", height=60)
+            if st.form_submit_button("💾 Enregistrer"):
+                if not nom:
+                    st.error("Le nom est obligatoire.")
+                else:
+                    try:
+                        sb.table("fournisseurs").insert({
+                            "user_id": user_id,
+                            "nom": nom,
+                            "categorie": categorie,
+                            "contact_nom": contact,
+                            "email": email_f,
+                            "telephone": tel_f,
+                            "adresse": adresse_f,
+                            "siret": siret_f or None,
+                            "notes": notes_f,
+                            "actif": True,
+                        }).execute()
+                        st.success(f"Fournisseur '{nom}' ajouté ✅")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Erreur: {e}")
 
-    st.divider()
+# ══════════════════════════════════════════════════════════
+# TAB 2 — BONS DE COMMANDE
+# ══════════════════════════════════════════════════════════
+with tab2:
+    st.subheader("Bons de Commande")
 
-    # Add supplier form
-    st.subheader("➕ Ajouter un Fournisseur")
-    with st.form("new_supplier", border=True):
-        col1, col2 = st.columns(2)
-        with col1:
-            nom = st.text_input("Nom du fournisseur*")
-            contact_nom = st.text_input("Nom du contact")
-            email = st.text_input("Email")
-        with col2:
-            telephone = st.text_input("Téléphone")
-            siret = st.text_input("SIRET")
-            categorie = st.selectbox("Catégorie*", ["materiaux", "location", "sous-traitance", "services"])
-
-        adresse = st.text_area("Adresse")
-        notes = st.text_area("Notes")
-
-        submitted = st.form_submit_button("✅ Enregistrer", use_container_width=True)
-
-        if submitted:
-            if not nom or not categorie:
-                st.error("Veuillez remplir nom et catégorie")
-            else:
-                try:
-                    data = {
-                        "user_id": user_id,
-                        "nom": nom,
-                        "contact_nom": contact_nom,
-                        "email": email,
-                        "telephone": telephone,
-                        "siret": siret,
-                        "categorie": categorie,
-                        "adresse": adresse,
-                        "notes": notes,
-                        "created_at": datetime.now().isoformat()
-                    }
-                    sb.table("fournisseurs").insert(data).execute()
-                    st.success("✅ Fournisseur enregistré")
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"Erreur: {str(e)}")
-
-# ==================== TAB 2: BONS DE COMMANDE ====================
-def tab_bons_commande():
-    st.subheader("📦 Bons de Commande")
-
-    chantier_id = chantier_selector(key="achats_chantier")
+    # chantier_selector returns a DICT — extract id safely
+    chantier_obj = chantier_selector(key="achats_chantier")
+    chantier_id = chantier_obj["id"] if isinstance(chantier_obj, dict) else chantier_obj
 
     if not chantier_id:
-        st.warning("Veuillez sélectionner un chantier")
-        return
+        st.info("Sélectionnez un chantier pour voir les commandes.")
+        st.stop()
 
-    # Load purchase orders
+    # Load commandes
     try:
-        response = sb.table("achats").select("*").eq("chantier_id", chantier_id).eq("user_id", user_id).order("created_at", desc=True).execute()
-        orders = response.data if response.data else []
+        resp_c = sb.table("achats").select("*, fournisseurs(nom)").eq("user_id", user_id).eq("chantier_id", chantier_id).order("created_at", desc=True).execute()
+        commandes = resp_c.data or []
     except Exception as e:
-        st.error(f"Erreur chargement commandes: {str(e)}")
-        orders = []
+        st.error(f"Erreur chargement commandes: {e}")
+        commandes = []
 
-    # Display existing orders
-    if orders:
-        st.write(f"**{len(orders)} bon(s) de commande(s)**")
-        for order in orders:
-            status_badge = get_status_badge(order.get("statut", "brouillon"))
-            numero = order.get("numero", "N/A")
-            fournisseur = order.get("fournisseur_nom", "N/A")
-            montant_ttc = order.get("montant_ttc", 0)
+    col_cmds, col_new = st.columns([3, 2])
 
-            with st.expander(f"{numero} | {fournisseur} | {status_badge} | {format_currency(montant_ttc)}"):
-                col1, col2, col3 = st.columns(3)
-                with col1:
-                    st.write(f"**Objet:** {order.get('objet', '')}")
-                    st.write(f"**Commandé le:** {order.get('date_commande', '')}")
-                with col2:
-                    st.write(f"**Livraison prévue:** {order.get('date_livraison_prevue', '')}")
-                    st.write(f"**Fournisseur ID:** {order.get('fournisseur_id', '')}")
-                with col3:
-                    st.write(f"**Montant HT:** {format_currency(order.get('montant_ht', 0))}")
-                    st.write(f"**TVA:** {format_currency(order.get('montant_tva', 0))}")
-                    st.write(f"**TTC:** {format_currency(montant_ttc)}")
-              # Line items
-               try:
-                    items_resp = sb.table("achats_lignes").select("*").eq("achat_id", order["id"]).execute()
-                    if items_resp.data:
-                        st.write("**Détail des lignes:**")
-                        items_df = pd.DataFrame(items_resp.data)
-                        st.dataframe(items_df[["designation", "quantite", "unite", "prix_unitaire", "montant"]], use_container_width=True)
-                except Exception as e:
-                    st.warning(f"Erreur chargement lignes: {'str(e)}")
+    with col_cmds:
+        st.markdown(f"**{len(commandes)} commande(s)**")
+        if commandes:
+            statut_filtre = st.selectbox("Filtrer par statut", ["Tous", "brouillon", "commandé", "livré", "annulé"], key="filtre_cmd")
+            filtered = commandes if statut_filtre == "Tous" else [c for c in commandes if c.get("statut") == statut_filtre]
+            rows = []
+            for c in filtered:
+                fourn_nom = ""
+                if isinstance(c.get("fournisseurs"), dict):
+                    fourn_nom = c["fournisseurs"].get("nom", "")
+                rows.append({
+                    "N°": c.get("numero", ""),
+                    "Fournisseur": fourn_nom,
+                    "Objet": c.get("objet", "")[:40],
+                    "Montant TTC": fmt(c.get("montant_ttc") or c.get("montant_ht") or 0),
+                    "Statut": c.get("statut", ""),
+                    "Date": str(c.get("date_commande", ""))[:10],
+                })
+            st.dataframe(pd.DataFrame(rows), use_container_width=True)
+            total = sum(float(c.get("montant_ttc") or c.get("montant_ht") or 0) for c in filtered)
+            st.metric("Total commandes", fmt(total))
+        else:
+            st.info("Aucune commande pour ce chantier.")
 
-                # Status change buttons
-                st.write("**Changer le statut:**")
-                col1, col2, col3 = st.columns(3)
-                with col1:
-                    if order.get("statut") == "brouillon" and st.button("→ Commandé", key=f"cmd_{order['id']}"):
+    with col_new:
+        st.markdown("### ➕ Nouvelle Commande")
+        if not fournisseurs:
+            st.warning("Ajoutez d'abord un fournisseur dans l'onglet Fournisseurs.")
+        else:
+            with st.form("form_commande", clear_on_submit=True):
+                fourn_sel = st.selectbox("Fournisseur *", list(fourn_map.keys()))
+                numero = st.text_input("N° Commande *", value=f"BC-{datetime.now().strftime('%Y%m%d-%H%M')}")
+                objet = st.text_area("Objet *", height=60)
+                date_cmd = st.date_input("Date commande", value=date.today())
+                date_liv = st.date_input("Date livraison prévue")
+                montant_ht = st.number_input("Montant HT (€)", min_value=0.0, step=100.0)
+                tva = st.number_input("TVA (%)", value=20.0, step=0.5)
+                montant_ttc = montant_ht * (1 + tva / 100)
+                st.info(f"Montant TTC: {fmt(montant_ttc)}")
+                statut_cmd = st.selectbox("Statut", ["brouillon", "commandé", "livré_partiel", "livré", "annulé"])
+                notes_cmd = st.text_area("Notes", height=50)
+
+                if st.form_submit_button("💾 Enregistrer"):
+                    if not objet or not fourn_sel:
+                        st.error("Fournisseur et objet sont obligatoires.")
+                    else:
                         try:
-                            sb.table("achats").update({"statut": "commandé"}).eq("id", order["id"]).execute()
-                            st.success("Statut mis à jour")
+                            sb.table("achats").insert({
+                                "user_id": user_id,
+                                "chantier_id": chantier_id,
+                                "fournisseur_id": fourn_map[fourn_sel],
+                                "numero": numero,
+                                "objet": objet,
+                                "date_commande": str(date_cmd),
+                                "date_livraison_prevue": str(date_liv),
+                                "montant_ht": montant_ht,
+                                "tva_pct": tva,
+                                "montant_ttc": montant_ttc,
+                                "statut": statut_cmd,
+                                "notes": notes_cmd,
+                                "lignes": [],
+                            }).execute()
+                            st.success("Commande enregistrée ✅")
                             st.rerun()
                         except Exception as e:
-                            st.error(f"Erreur: {str(e)}")
-                with col2:
-                    if order.get("statut") == "commandé" and st.button("→ Livré", key=f"liv_{order['id']}"):
-                        try:
-                            sb.table("achats").update({"statut": "livré"}).eq("id", order["id"]).execute()
-                            st.success("Commande livrée")
-                            st.rerun()
-                        except Exception as e:
-                            st.error(f"Erreur: {str(e)}")
-                with col3:
-                    if st.button("🗑️ Supprimer", key=f"delete_{order['id']}"):
-                        try:
-                            sb.table("achats_lignes").delete().eq("achat_id", order["id"]).execute()
-                            sb.table("achats").delete().eq("id", order["id"]).execute()
-                            st.success("Commande supprimée")
-                            st.rerun()
-                        except Exception as e:
-                            st.error(f"Erreur: {str(e)}")
-    else:
-        st.info("Aucune commande pour ce chantier")
+                            st.error(f"Erreur: {e}")
 
-    st.divider()
-
-    # New purchase order form
-    st.subheader("➕ Nouveau Bon de Commande")
-
-    try:
-        fournisseurs_resp = sb.table("fournisseurs").select("id, nom").eq("user_id", user_id).execute()
-        fournisseurs = {f["nom"]: f["id"] for f in (fournisseurs_resp.data or [])}
-    except Exception as e:
-        st.error(f"Erreur chargement fournisseurs: {str(e)}")
-        fournisseurs = {}
+# ══════════════════════════════════════════════════════════
+# TAB 3 — DOCUMENTS FOURNISSEURS + IA
+# ══════════════════════════════════════════════════════════
+with tab3:
+    st.subheader("📄 Documents Fournisseurs — Extraction IA des Prix")
+    st.markdown("""
+    Déposez un **devis PDF**, **tarif Excel** ou **catalogue** d'un fournisseur.
+    L'IA analyse le document et extrait automatiquement les **prix unitaires** pour les intégrer
+    dans vos calculs de rentabilité et métrés.
+    """)
 
     if not fournisseurs:
-        st.warning("Créez d'abord un fournisseur dans l'onglet 'Fournisseurs'")
-        return
+        st.warning("Ajoutez d'abord un fournisseur dans l'onglet Fournisseurs.")
+    else:
+        col_upload, col_result = st.columns([1, 1])
 
-    with st.form("new_order", border=True):
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            fournisseur_nom = st.selectbox("Fournisseur*", list(fournisseurs.keys()))
-            fournisseur_id = fournisseurs[fournisseur_nom]
-        with col2:
-            date_commande = st.date_input("Date de commande*", value=date.today())
-        with col3:
-            date_livraison = st.date_input("Date livraison prévue*", value=date.today() + timedelta(days=7))
+        with col_upload:
+            fourn_doc = st.selectbox("Fournisseur concerné", list(fourn_map.keys()), key="fourn_doc")
+            doc_type = st.selectbox("Type de document", ["Devis / Offre de prix", "Tarif général", "Catalogue", "Facture", "Autre"])
+            uploaded_file = st.file_uploader(
+                "Déposer le document (PDF, Excel, CSV, image)",
+                type=["pdf", "xlsx", "xls", "csv", "png", "jpg", "jpeg", "txt"],
+                key="doc_fourn"
+            )
 
-        objet = st.text_input("Objet de la commande*")
+            if uploaded_file and st.button("🤖 Analyser avec l'IA", type="primary"):
+                with st.spinner("Analyse IA en cours..."):
+                    try:
+                        import anthropic
 
-        st.write("**Lignes de commande:**")
-        num_lines = st.number_input("Nombre de lignes", min_value=1, max_value=10, value=1)
+                        # Read file content
+                        file_bytes = uploaded_file.read()
+                        file_name = uploaded_file.name
+                        file_ext = file_name.rsplit(".", 1)[-1].lower()
 
-        lines = []
-        for i in range(int(num_lines)):
-            col1, col2, col3, col4 = st.columns(4)
-            with col1:
-                designation = st.text_input("Désignation", key=f"des_{i}")
-            with col2:
-                quantite = st.number_input("Quantité", min_value=0.0, value=1.0, key=f"qty_{i}")
-            with col3:
-                unite = st.text_input("Unité (m, l, pc...)", value="pc", key=f"unit_{i}")
-            with col4:
-                prix_unitaire = st.number_input("Prix unitaire", min_value=0.0, key=f"price_{i}")
+                        # Prepare content for Claude
+                        if file_ext == "csv":
+                            text_content = file_bytes.decode("utf-8", errors="ignore")
+                            prompt_content = f"Voici le contenu CSV du document fournisseur:\n\n{text_content[:8000]}"
+                        elif file_ext in ["xlsx", "xls"]:
+                            try:
+                                import io
+                                df_doc = pd.read_excel(io.BytesIO(file_bytes))
+                                text_content = df_doc.to_string(index=False)
+                                prompt_content = f"Voici les données Excel du document fournisseur:\n\n{text_content[:8000]}"
+                            except Exception:
+                                prompt_content = f"Document Excel: {file_name} (contenu non lisible directement)"
+                        elif file_ext == "txt":
+                            text_content = file_bytes.decode("utf-8", errors="ignore")
+                            prompt_content = f"Voici le contenu texte du document:\n\n{text_content[:8000]}"
+                        else:
+                            # PDF or image — encode as base64
+                            import base64
+                            b64 = base64.standard_b64encode(file_bytes).decode()
+                            if file_ext == "pdf":
+                                prompt_content = None
+                                media_type = "application/pdf"
+                            else:
+                                prompt_content = None
+                                media_type = f"image/{file_ext}"
 
-            montant = quantite * prix_unitaire
-            st.caption(f"Montant ligne: {format_currency(montant)}")
+                        # Build Claude request
+                        client = anthropic.Anthropic(
+                            api_key=st.secrets.get("ANTHROPIC_API_KEY", "")
+                        )
 
-            if designation:
-                lines.append({
-                    "designation": designation,
-                    "quantite": quantite,
-                    "unite": unite,
-                    "prix_unitaire": prix_unitaire,
-                    "montant": montant
-                })
+                        fourn_info = fourn_by_id.get(fourn_map[fourn_doc], {})
 
-        # Calculate totals
-        total_ht = sum(line["montant"] for line in lines)
-        tva = total_ht * 0.20
-        total_ttc = total_ht + tva
+                        system_prompt = f"""Tu es un assistant ERP spécialisé BTP. Analyse ce document fournisseur et extrait TOUS les prix.
 
-        col1, col2, col3 = st.columns(3)
-        col1.metric("Total HT", format_currency(total_ht))
-        col2.metric("TVA (20%)", format_currency(tva))
-        col3.metric("Total TTC", format_currency(total_ttc))
+Fournisseur: {fourn_info.get('nom', fourn_doc)}
+Type: {doc_type}
 
-        submitted = st.form_submit_button("✅ Créer la commande", use_container_width=True)
+Retourne un JSON structuré avec:
+{{
+  "fournisseur": "nom",
+  "date_document": "YYYY-MM-DD ou null",
+  "devise": "EUR",
+  "articles": [
+    {{
+      "designation": "description précise",
+      "reference": "ref ou null",
+      "unite": "m2/ml/m3/u/kg/t/h...",
+      "prix_unitaire_ht": 0.00,
+      "categorie": "materiaux/main_oeuvre/location/transport/autre"
+    }}
+  ],
+  "resume": "résumé en 2 phrases de ce que propose ce fournisseur"
+}}
 
-        if submitted:
-            if not objet or not lines:
-                st.error("Veuillez remplir objet et au moins une ligne")
+Sois précis sur les unités et prix. Si une info manque, mets null."""
+
+                        if prompt_content:
+                            # Text-based document
+                            response = client.messages.create(
+                                model="claude-opus-4-6",
+                                max_tokens=4096,
+                                system=system_prompt,
+                                messages=[{"role": "user", "content": prompt_content}]
+                            )
+                        else:
+                            # PDF or image
+                            response = client.messages.create(
+                                model="claude-opus-4-6",
+                                max_tokens=4096,
+                                system=system_prompt,
+                                messages=[{
+                                    "role": "user",
+                                    "content": [{
+                                        "type": "document" if file_ext == "pdf" else "image",
+                                        "source": {
+                                            "type": "base64",
+                                            "media_type": media_type,
+                                            "data": b64,
+                                        }
+                                    }, {
+                                        "type": "text",
+                                        "text": "Analyse ce document et extrait tous les prix selon le format JSON demandé."
+                                    }]
+                                }]
+                            )
+
+                        raw = response.content[0].text
+                        # Extract JSON from response
+                        json_match = re.search(r'\{[\s\S]*\}', raw)
+                        if json_match:
+                            extracted = json.loads(json_match.group())
+                            st.session_state["extracted_prices"] = extracted
+                            st.session_state["extracted_fourn"] = fourn_doc
+                            st.success("✅ Extraction réussie !")
+                        else:
+                            st.session_state["extracted_prices"] = {"resume": raw, "articles": []}
+                            st.warning("Extraction partielle — voir résultat.")
+
+                    except ImportError:
+                        st.error("Module 'anthropic' non installé. Lancez: pip install anthropic")
+                    except Exception as e:
+                        st.error(f"Erreur IA: {e}")
+
+        with col_result:
+            extracted = st.session_state.get("extracted_prices")
+            if extracted:
+                st.markdown(f"### 📊 Résultat — {st.session_state.get('extracted_fourn','')}")
+                if extracted.get("resume"):
+                    st.info(extracted["resume"])
+
+                articles = extracted.get("articles", [])
+                if articles:
+                    df_prix = pd.DataFrame(articles)
+                    st.dataframe(df_prix, use_container_width=True)
+
+                    # Export button
+                    csv = df_prix.to_csv(index=False).encode("utf-8")
+                    st.download_button(
+                        "📥 Télécharger les prix (CSV)",
+                        data=csv,
+                        file_name=f"prix_{st.session_state.get('extracted_fourn','fourn')}.csv",
+                        mime="text/csv"
+                    )
+
+                    # Save to session for reuse in other modules
+                    if st.button("💾 Sauvegarder dans le catalogue de prix"):
+                        st.session_state["catalogue_prix"] = articles
+                        fourn_id = fourn_map.get(st.session_state.get("extracted_fourn", ""), "")
+                        if fourn_id:
+                            try:
+                                # Update fournisseur notes with price summary
+                                prix_note = f"[Catalogue IA - {datetime.now().strftime('%d/%m/%Y')}]\n"
+                                for a in articles[:10]:
+                                    prix_note += f"- {a.get('designation','')}: {a.get('prix_unitaire_ht',0)} €/{a.get('unite','')}\n"
+                                existing = fourn_by_id.get(fourn_id, {})
+                                new_notes = (existing.get("notes") or "") + "\n" + prix_note
+                                sb.table("fournisseurs").update({"notes": new_notes}).eq("id", fourn_id).execute()
+                                st.success("✅ Catalogue sauvegardé sur le fournisseur !")
+                            except Exception as e:
+                                st.error(f"Erreur sauvegarde: {e}")
+                        else:
+                            st.info("Catalogue disponible en session.")
             else:
-                try:
-                    # Generate numero BC-YYYYMM-NNN
-                    now = datetime.now()
-                    count_resp = sb.table("achats").select("id").eq("user_id", user_id).execute()
-                    numero = f"BC-{now.strftime('%Y%m')}-{len(count_resp.data or []) + 1:03d}"
+                st.info("Déposez un document et cliquez sur 'Analyser' pour extraire les prix.")
 
-                    achat_data = {
-                        "user_id": user_id,
-                        "chantier_id": chantier_id,
-                        "numero": numero,
-                        "fournisseur_id": fournisseur_id,
-                        "fournisseur_nom": fournisseur_nom,
-                        "objet": objet,
-                        "date_commande": date_commande.isoformat(),
-                        "date_livraison_prevue": date_livraison.isoformat(),
-                        "montant_ht": total_ht,
-                        "montant_tva": tva,
-                        "montant_ttc": total_ttc,
-                        "statut": "brouillon",
-                        "created_at": datetime.now().isoformat()
-                    }
-
-                    result = sb.table("achats").insert(achat_data).execute()
-                    achat_id = result.data[0]["id"] if result.data else None
-
-                    # Insert line items
-                    if achat_id:
-                        for idx, line in enumerate(lines):
-                            ligne_data = {
-                                "achat_id": achat_id,
-                                "designation": line["designation"],
-                                "quantite": line["quantite"],
-                                "unite": line["unite"],
-                                "prix_unitaire": line["prix_unitaire"],
-                                "montant": line["montant"],
-                                "order_index": idx
-                            }
-                            sb.table("achats_lignes").insert(ligne_data).execute()
-
-                    st.success(f"✅ Commande créée: {numero}")
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"Erreur: {str(e)}")
-
-# ==================== TAB 3: SUIVI ====================
-def tab_suivi():
-    st.subheader("📊 Suivi & Analytique")
+# ══════════════════════════════════════════════════════════
+# TAB 4 — SUIVI GLOBAL
+# ══════════════════════════════════════════════════════════
+with tab4:
+    st.subheader("📊 Suivi Global des Achats")
 
     try:
-        # Get all orders for user
-        orders_resp = sb.table("achats").select("*").eq("user_id", user_id).execute()
-        orders = orders_resp.data if orders_resp.data else []
-
-        # KPIs
-        col1, col2, col3, col4 = st.columns(4)
-
-        total_commande = sum(o.get("montant_ttc", 0) for o in orders)
-        total_livre = sum(o.get("montant_ttc", 0) for o in orders if o.get("statut") == "livré")
-        total_en_attente = sum(o.get("montant_ttc", 0) for o in orders if o.get("statut") in ["brouillon", "commandé"])
-        nb_commandes = len(orders)
-
-        col1.metric("📦 Total commandé", format_currency(total_commande))
-        col2.metric("✅ Total livré", format_currency(total_livre))
-        col3.metric("⏳ En attente", format_currency(total_en_attente))
-        col4.metric("🔢 Commandes", str(nb_commandes))
-
-        st.divider()
-
-        # Charts by chantier
-        if orders:
-            st.write("**Achats par chantier (TTC):**")
-            try:
-                chantiers_resp = sb.table("chantiers").select("id, nom").eq("user_id", user_id).execute()
-                chantiers_dict = {c["id"]: c["nom"] for c in (chantiers_resp.data or [])}
-
-                by_chantier = {}
-                for order in orders:
-                    chantier_id = order.get("chantier_id")
-                    chantier_nom = chantiers_dict.get(chantier_id, "N/A")
-                    by_chantier[chantier_nom] = by_chantier.get(chantier_nom, 0) + order.get("montant_ttc", 0)
-
-                if by_chantier:
-                    df = pd.DataFrame(list(by_chantier.items()), columns=["Chantier", "Montant TTC"])
-                    st.bar_chart(df.set_index("Chantier"))
-            except Exception as e:
-                st.warning(f"Erreur graphique chantiers: {str(e)}")
-
-        st.divider()
-
-        # Top fournisseurs
-        st.write("**Top 5 Fournisseurs par montant:**")
-        by_fournisseur = {}
-        for order in orders:
-            fournisseur = order.get("fournisseur_nom", "N/A")
-            by_fournisseur[fournisseur] = by_fournisseur.get(fournisseur, 0) + order.get("montant_ttc", 0)
-
-        if by_fournisseur:
-            top_5 = sorted(by_fournisseur.items(), key=lambda x: x[1], reverse=True)[:5]
-            df_top = pd.DataFrame(top_5, columns=["Fournisseur", "Montant TTC"])
-            st.dataframe(df_top, use_container_width=True)
-
-        st.divider()
-
-        # Pending deliveries
-        st.write("**Commandes en attente de livraison:**")
-        pending = [o for o in orders if o.get("statut") in ["brouillon", "commandé"]]
-        if pending:
-            pending_df = pd.DataFrame([
-                {
-                    "Numéro": o.get("numero"),
-                    "Fournisseur": o.get("fournisseur_nom"),
-                    "Statut": get_status_badge(o.get("statut")),
-                    "Montant": format_currency(o.get("montant_ttc", 0)),
-                    "Livraison prévue": o.get("date_livraison_prevue")
-                }
-                for o in pending
-            ])
-            st.dataframe(pending_df, use_container_width=True)
-        else:
-            st.success("✅ Aucune commande en attente!")
-
+        resp_all = sb.table("achats").select("*, fournisseurs(nom), chantiers(nom)").eq("user_id", user_id).order("created_at", desc=True).execute()
+        all_achats = resp_all.data or []
     except Exception as e:
-        st.error(f"Erreur suivi: {str(e)}")
+        st.error(f"Erreur: {e}")
+        all_achats = []
 
-# ==================== MAIN LAYOUT ====================
-tab1, tab2, tab3 = st.tabs(["Fournisseurs", "Bons de Commande", "Suivi"])
+    if all_achats:
+        total_ht = sum(float(a.get("montant_ht") or 0) for a in all_achats)
+        total_ttc = sum(float(a.get("montant_ttc") or 0) for a in all_achats)
+        nb_commandes = len(all_achats)
+        nb_livres = sum(1 for a in all_achats if a.get("statut") == "livré")
 
-with tab1:
-    tab_fournisseurs()
+        col1, col2, col3, col4 = st.columns(4)
+        with col1: st.metric("🛒 Commandes", nb_commandes)
+        with col2: st.metric("✅ Livrées", nb_livres)
+        with col3: st.metric("💰 Total HT", fmt(total_ht))
+        with col4: st.metric("💶 Total TTC", fmt(total_ttc))
 
-with tab2:
-    tab_bons_commande()
-
-with tab3:
-    tab_suivi()
+        rows_all = []
+        for a in all_achats:
+            fourn_nom = ""
+            if isinstance(a.get("fournisseurs"), dict):
+                fourn_nom = a["fournisseurs"].get("nom", "")
+            chant_nom = ""
+            if isinstance(a.get("chantiers"), dict):
+                chant_nom = a["chantiers"].get("nom", "")
+            rows_all.append({
+                "N°": a.get("numero", ""),
+                "Chantier": chant_nom,
+                "Fournisseur": fourn_nom,
+                "Objet": a.get("objet", "")[:35],
+                "Montant TTC": fmt(a.get("montant_ttc") or a.get("montant_ht") or 0),
+                "Statut": a.get("statut", ""),
+                "Date": str(a.get("date_commande", ""))[:10],
+            })
+        st.dataframe(pd.DataFrame(rows_all), use_container_width=True)
+    else:
+        st.info("Aucune commande enregistrée.")
