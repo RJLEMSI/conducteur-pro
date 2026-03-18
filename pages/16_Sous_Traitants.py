@@ -5,7 +5,7 @@ import json
 from datetime import datetime, date
 import pandas as pd
 from lib.helpers import page_setup, render_saas_sidebar, chantier_selector, require_feature
-from lib.supabase_client import get_client
+from lib.supabase_client import get_supabase_client
 from utils import GLOBAL_CSS
 
 user_id = page_setup("Sous-Traitants", icon="🏗️")
@@ -25,7 +25,7 @@ def format_currency(val):
 def get_fournisseurs_sous_traitance(user_id):
     """Fetch subcontractor vendors."""
     try:
-        sb = get_client()
+        sb = get_supabase_client()
         result = sb.table("fournisseurs").select("id, nom").eq("user_id", user_id).eq("categorie", "sous-traitance").execute()
         return result.data if result.data else []
     except Exception as e:
@@ -35,7 +35,7 @@ def get_fournisseurs_sous_traitance(user_id):
 def get_sous_traitants(user_id, chantier_id):
     """Fetch subcontractors for a project."""
     try:
-        sb = get_client()
+        sb = get_supabase_client()
         result = sb.table("sous_traitants").select("*").eq("user_id", user_id).eq("chantier_id", chantier_id).execute()
         return result.data if result.data else []
     except Exception as e:
@@ -45,7 +45,7 @@ def get_sous_traitants(user_id, chantier_id):
 def get_factures_sous_traitants(user_id, chantier_id):
     """Fetch invoices from subcontractors."""
     try:
-        sb = get_client()
+        sb = get_supabase_client()
         result = sb.table("factures_sous_traitants").select("*").eq("user_id", user_id).eq("chantier_id", chantier_id).execute()
         return result.data if result.data else []
     except Exception as e:
@@ -67,7 +67,8 @@ def render_status_badge(status):
 
 st.title("Gestion des Sous-Traitants")
 
-chantier_id = chantier_selector(key="st_chantier")
+chantier_obj = chantier_selector(key="st_chantier")
+chantier_id = chantier_obj["id"] if isinstance(chantier_obj, dict) else chantier_obj
 if not chantier_id:
     st.info("Veuillez sélectionner un chantier")
     st.stop()
@@ -122,7 +123,7 @@ with tab1:
                 with col2:
                     if st.button("🗑️ Supprimer", key=f"del_{st_item.get('id')}"):
                         try:
-                            sb = get_client()
+                            sb = get_supabase_client()
                             sb.table("sous_traitants").delete().eq("id", st_item.get("id")).execute()
                             st.success("Sous-traitant supprimé")
                             st.rerun()
@@ -164,7 +165,7 @@ with tab1:
                 st.error("Veuillez remplir tous les champs obligatoires")
             else:
                 try:
-                    sb = get_client()
+                    sb = get_supabase_client()
                     sb.table("sous_traitants").insert({
                         "user_id": user_id,
                         "chantier_id": chantier_id,
@@ -225,7 +226,7 @@ with tab2:
                     next_status = statuses[(statuses.index(current) + 1) % len(statuses)]
 
                     try:
-                        sb = get_client()
+                        sb = get_supabase_client()
                         sb.table("factures_sous_traitants").update({"statut": next_status}).eq("id", facture.get("id")).execute()
                         st.success(f"Facture passée en '{next_status}'")
                         st.rerun()
@@ -272,7 +273,7 @@ with tab2:
                     st.error("Veuillez remplir tous les champs obligatoires")
                 else:
                     try:
-                        sb = get_client()
+                        sb = get_supabase_client()
                         sb.table("factures_sous_traitants").insert({
                             "user_id": user_id,
                             "chantier_id": chantier_id,
