@@ -112,7 +112,7 @@ with tab1:
                 st.metric("Retenue de Garantie", f"{format_currency(retenue)} €")
 
                 st.markdown(f"**DC4 Référence:** {st_item.get('dc4_reference', 'N/A')}")
-                st.markdown(f"**Contrat Signé:** {✄ Oui' if st_item.get('contrat_signe') else 'z❌ Non'}")
+                st.markdown(f"**Contrat Signé:** {'✅ Oui' if st_item.get('contrat_signe') else '❌ Non'}")
                 st.markdown(f"**Statut:** {render_status_badge(st_item.get('statut', 'actif'))}", unsafe_allow_html=True)
 
                 col1, col2 = st.columns(2)
