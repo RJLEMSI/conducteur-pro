@@ -5,7 +5,7 @@ import json
 import pandas as pd
 from datetime import datetime, date, timedelta
 from lib.helpers import page_setup, render_saas_sidebar, chantier_selector, require_feature
-from lib.supabase_client import get_client
+from lib.supabase_client import get_supabase_client
 from utils import GLOBAL_CSS
 
 user_id = page_setup("Stocks", icon="📦")
@@ -13,7 +13,7 @@ st.markdown(GLOBAL_CSS, unsafe_allow_html=True)
 render_saas_sidebar(user_id)
 require_feature(user_id, "stocks")
 
-sb = get_client()
+sb = get_supabase_client()
 
 
 def get_stocks():
@@ -27,7 +27,7 @@ def get_stocks():
 
 def get_mouvements():
     try:
-        response = sb.table("mouvements_stock").select("*").order("date", desc=True).execute()
+        response = sb.table("mouvements_stock").select("*").order("date_mouvement", desc=True).execute()
         return response.data if response.data else []
     except Exception as e:
         st.error(f"Erreur chargement mouvements: {e}")
@@ -87,7 +87,7 @@ def add_mouvement(stock_id, quantite, type_mouvement, chantier_id, motif, mouvem
             "quantite": quantite,
             "chantier_id": chantier_id if type_mouvement == "sortie" else None,
             "motif": motif,
-            "date": mouvement_date,
+            "date_mouvement": mouvement_date,
             "created_at": datetime.now().isoformat()
         }).execute()
 
@@ -278,9 +278,9 @@ with tab2:
     df_mouvements = pd.DataFrame(mouvements) if mouvements else pd.DataFrame()
 
     if not df_mouvements.empty:
-        df_mouvements["date"] = pd.to_datetime(df_mouvements["date"]).dt.date
+        df_mouvements["date_mouvement"] = pd.to_datetime(df_mouvements["date_mouvement"]).dt.date
 
-        mask = (df_mouvements["date"] >= date_debut) & (df_mouvements["date"] <= date_fin)
+        mask = (df_mouvements["date_mouvement"] >= date_debut) & (df_mouvements["date_mouvement"] <= date_fin)
         df_mouvements = df_mouvements[mask]
 
         if type_filter != "Tous":
@@ -289,7 +289,7 @@ with tab2:
         stocks_dict = {s["id"]: s["designation"] for s in stocks}
         df_mouvements["article"] = df_mouvements["stock_id"].map(stocks_dict)
 
-        df_display = df_mouvements[["date", "type", "article", "quantite", "motif"]].copy()
+        df_display = df_mouvements[["date_mouvement", "type", "article", "quantite", "motif"]].copy()
         df_display["type"] = df_display["type"].apply(lambda x: f"📥 Entrée" if x == "entree" else "📤 Sortie")
 
         st.dataframe(df_display, use_container_width=True, hide_index=True)
