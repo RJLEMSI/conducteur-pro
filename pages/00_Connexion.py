@@ -178,7 +178,7 @@ def _send_otp(to_email, code):
 init_supabase_session()
 
 # Si déjà connect, rediriger vers le tableau de bord
-if is_authenticated():
+if is_authenticated() and not st.session_state.get("pending_2fa"):
     st.switch_page("pages/0_Tableau_de_bord.py")
 
 
