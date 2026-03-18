@@ -4,496 +4,321 @@ import streamlit as st
 import json
 from datetime import datetime, date
 from lib.helpers import page_setup, render_saas_sidebar, chantier_selector, require_feature
-from lib.supabase_client import get_client
+from lib.supabase_client import get_supabase_client, is_authenticated
 from utils import GLOBAL_CSS
 import pandas as pd
 import plotly.graph_objects as go
 from collections import defaultdict
 
 # Page setup
-user_id = page_setup("Suivi Financier", icon="📊")
+user_id = page_setup("Suivi Financier", icon="📈")
 st.markdown(GLOBAL_CSS, unsafe_allow_html=True)
 render_saas_sidebar(user_id)
 require_feature(user_id, "suivi_financier")
 
 # Initialize Supabase client
-sb = get_client()
+sb = get_supabase_client()
 
-# Formatting helper
+# Formatting helpers
 def fmt(val):
-    """Format value as French currency"""
-    if val is None:
-        val = 0
-    return f"{val:,.2f}".replace(",", " ").replace(".", ",") + " €"
+    try:
+        return f"{float(val or 0):,.0f} €".replace(",", " ")
+    except (ValueError, TypeError):
+        return "0 €"
 
-def fmt_percent(val):
-    """Format percentage"""
-    if val is None:
-        val = 0
-    return f"{val:.1f}".replace(".", ",") + " %"
+def fmt_pct(val):
+    try:
+        return f"{float(val or 0):.1f}%"
+    except (ValueError, TypeError):
+        return "0.0%"
 
-# ============================================================================
-# SECTION 1: CHANTIER SELECTION & OVERVIEW
-# ============================================================================
-st.markdown("## 📍 Sélection du Chantier")
+st.title("📈 Suivi Financier")
+st.markdown("Vue consolidée des finances par chantier et globale.")
 
-chantier_id = chantier_selector(user_id)
-
-if not chantier_id:
-    st.warning("Sélectionnez un chantier pour accéder au suivi financier")
-    st.stop()
-
+# Load chantiers
 try:
-    # Get chantier details
-    chantier_resp = sb.table("chantiers").select("*").eq("id", chantier_id).single().execute()
-    chantier = chantier_resp.data
-    chantier_name = chantier.get("nom", "N/A")
-
-    st.markdown(f"### {chantier_name}")
-
+    resp = sb.table("chantiers").select("*").eq("user_id", user_id).execute()
+    chantiers = resp.data or []
 except Exception as e:
-    st.error(f"Erreur chargement chantier: {str(e)}")
+    st.error(f"Erreur chargement chantiers: {e}")
+    chantiers = []
+
+if not chantiers:
+    st.info("Aucun chantier trouvé. Créez d'abord des chantiers dans le module Chantiers.")
     st.stop()
 
-# ============================================================================
-# DATA AGGREGATION FUNCTIONS
-# ============================================================================
+tab1, tab2, tab3, tab4 = st.tabs([
+    "📊 Vue Globale",
+    "🏗️ Par Chantier",
+    "📋 Factures & Devis",
+    "📈 Graphiques"
+])
 
-def get_budget_data(chantier_id):
-    """Get budget for the project"""
-    try:
-        resp = sb.table("budgets_chantier").select("*").eq("chantier_id", chantier_id).execute()
-        if resp.data:
-            return resp.data[0]
-        return None
-    except Exception as e:
-        st.error(f"Erreur budget: {str(e)}")
-        return None
+# ─── TAB 1: Vue Globale ──────────────────────────────────────────
+with tab1:
+    st.subheader("Vue Globale — Tous Chantiers")
 
-def get_achats(chantier_id):
-    """Get all purchases (achats) for the project"""
-    try:
-        resp = sb.table("achats").select("*").eq("chantier_id", chantier_id).execute()
-        return resp.data if resp.data else []
-    except Exception as e:
-        st.error(f"Erreur achats: {str(e)}")
-        return []
+    total_budget = sum(float(c.get("budget_ht") or 0) for c in chantiers)
+    total_facture = sum(float(c.get("facture_ht") or 0) for c in chantiers)
+    total_encaisse = sum(float(c.get("encaisse_ht") or 0) for c in chantiers)
+    nb_chantiers = len(chantiers)
+    nb_actifs = sum(1 for c in chantiers if c.get("statut") == "En cours")
+    nb_termines = sum(1 for c in chantiers if c.get("statut") == "Terminé")
 
-def get_sous_traitants(chantier_id):
-    """Get all subcontractor expenses"""
-    try:
-        resp = sb.table("sous_traitants").select("*").eq("chantier_id", chantier_id).execute()
-        return resp.data if resp.data else []
-    except Exception as e:
-        st.error(f"Erreur sous-traitants: {str(e)}")
-        return []
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric("💰 Budget Total", fmt(total_budget))
+    with col2:
+        st.metric("📄 Facturé Total", fmt(total_facture))
+    with col3:
+        st.metric("✅ Encaissé Total", fmt(total_encaisse))
+    with col4:
+        reste = total_facture - total_encaisse
+        st.metric("⏳ Reste à Encaisser", fmt(reste))
 
-def get_pointages(chantier_id):
-    """Get all labor timesheets"""
-    try:
-        resp = sb.table("pointages").select("*").eq("chantier_id", chantier_id).execute()
-        return resp.data if resp.data else []
-    except Exception as e:
-        st.error(f"Erreur pointages: {str(e)}")
-        return []
+    col5, col6, col7 = st.columns(3)
+    with col5:
+        st.metric("🏗️ Chantiers Totaux", nb_chantiers)
+    with col6:
+        st.metric("🔄 En Cours", nb_actifs)
+    with col7:
+        st.metric("✅ Terminés", nb_termines)
 
-def get_factures(chantier_id):
-    """Get all invoices (revenue)"""
-    try:
-        resp = sb.table("factures").select("*").eq("chantier_id", chantier_id).execute()
-        return resp.data if resp.data else []
-    except Exception as e:
-        st.error(f"Erreur factures: {str(e)}")
-        return []
+    if total_budget > 0:
+        taux_fact = (total_facture / total_budget) * 100
+        st.progress(min(taux_fact / 100, 1.0), text=f"Taux de facturation global: {taux_fact:.1f}%")
 
-def get_employes_taux():
-    """Get employee hourly rates"""
-    try:
-        resp = sb.table("employees").select("id,nom,taux_horaire").execute()
-        return {emp["id"]: emp.get("taux_horaire", 0) for emp in resp.data}
-    except Exception as e:
-        st.error(f"Erreur employes: {str(e)}")
-        return {}
-
-def calculate_labor_cost(pointages, employes_taux):
-    """Calculate total labor cost from timesheets"""
-    total = 0
-    for pointage in pointages:
-        emp_id = pointage.get("employee_id")
-        heures = pointage.get("jeures", 0)
-        taux = employees_taux.get(emp_id, 0)
-        total += heures * taux
-    return total
-
-def calculate_financial_data(chantier_id):
-    """Aggregate all financial data for the project"""
-    budget = get_budget_data(chantier_id)
-    achats = get_achats(chantier_id)
-    sous_traitants = get_sous_traitants(chantier_id)
-    pointages = get_pointages(chantier_id)
-    factures = get_factures(chantier_id)
-    employes_taux = get_employes_taux()
-
-    # Budget
-    budget_total = 0
-    budget_lots = {}
-    if budget:
-        budget_total = budget.get("montant_total_ht", 0)
-        lots_data = budget.get("lots", [])
-        if isinstance(lots_data, str):
-            try:
-                lots_data = json.loads(lots_data)
-            except:
-                lots_data = []
-        for lot in lots_data:
-            budget_lots[lot.get("nom", "N/A")] = lot.get("prevu_ht", 0)
-
-    # Expenses
-    achats_total = sum(a.get("montant_ht", 0) for a in achats)
-    sous_traitants_data = []
-    sous_traitants_engages = 0
-    sous_traitants_factures = 0
-    for st in sous_traitants:
-        marche = st.get("montant_marche_ht", 0)
-        facture = st.get("montant_facture_ht", 0)
-        sous_traitants_engages += marche
-        sous_traitants_factures += facture
-        sous_traitants_data.append({
-            "nom": st.get("nom", "N/A"),
-            "marche": marche,
-            "facture": facture
+    st.subheader("Détail par Chantier")
+    rows = []
+    for c in chantiers:
+        budget = float(c.get("budget_ht") or 0)
+        facture = float(c.get("facture_ht") or 0)
+        encaisse = float(c.get("encaisse_ht") or 0)
+        reste_c = facture - encaisse
+        taux = (facture / budget * 100) if budget > 0 else 0
+        rows.append({
+            "Chantier": c.get("nom", ""),
+            "Client": c.get("client_nom", ""),
+            "Statut": c.get("statut", ""),
+            "Budget HT": fmt(budget),
+            "Facturé HT": fmt(facture),
+            "Encaissé HT": fmt(encaisse),
+            "Reste à Enc.": fmt(reste_c),
+            "Taux Fact.": fmt_pct(taux),
         })
+    if rows:
+        st.dataframe(pd.DataFrame(rows), use_container_width=True)
 
-    labor_total = calculate_labor_cost(pointages, employes_taux)
+# ─── TAB 2: Par Chantier ─────────────────────────────────────────
+with tab2:
+    st.subheader("Analyse par Chantier")
 
-    # Revenue
-    factures_data = []
-    factures_total_ht = 0
-    factures_payees = 0
-    for fac in factures:
-        montant = fac.get("montant_ht", 0)
-        statut = fac.get("statut", "brouillon")
-        factures_total_ht += montant
-        if statut == "payee":
-            factures_payees += montant
-        factures_data.append({
-            "numero": fac.get("numero", "N/A"),
-            "date": fac.get("date", "N/A"),
-            "montant": montant,
-            "statut": statut
-        })
+    # Build name -> id mapping to avoid passing dict to Supabase
+    chantier_options = {c["nom"]: c["id"] for c in chantiers}
+    selected_nom = st.selectbox("Sélectionner un chantier", list(chantier_options.keys()))
+    selected_id = chantier_options[selected_nom]  # Always a clean UUID string
 
-    # Calculations
-    total_expenses = achats_total + sous_traitants_engages + labor_total
-    marge_brute = factures_total_ht - total_expenses
-    marge_percent = (marge_brute / factures_total_ht * 100) if factures_total_ht > 0 else 0
+    chantier_data = next((c for c in chantiers if c["id"] == selected_id), {})
+    budget = float(chantier_data.get("budget_ht") or 0)
+    facture = float(chantier_data.get("facture_ht") or 0)
+    encaisse = float(chantier_data.get("encaisse_ht") or 0)
+    avancement = float(chantier_data.get("avancement_pct") or 0)
 
-    return {
-        "budget_total": budget_total,
-        "budget_lots": budget_lots,
-        "achats_total": achats_total,
-        "achats_list": achats,
-        "sous_traitants_engages": sous_traitants_engages,
-        "sous_traitants_factures": sous_traitants_factures,
-        "sous_traitants_data": sous_traitants_data,
-        "labor_total": labor_total,
-        "pointages": pointages,
-        "factures_total_ht": factures_total_ht,
-        "factures_payees": factures_payees,
-        "factures_data": factures_data,
-        "total_expenses": total_expenses,
-        "marge_brute": marge_brute,
-        "marge_percent": marge_percent,
-        "budget_obj": budget
-    }
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric("💰 Budget HT", fmt(budget))
+    with col2:
+        st.metric("📄 Facturé HT", fmt(facture))
+    with col3:
+        st.metric("✅ Encaissé HT", fmt(encaisse))
+    with col4:
+        marge = budget - facture
+        delta_val = f"{(marge/budget*100):.1f}%" if budget > 0 else "N/A"
+        st.metric("📊 Marge Restante", fmt(marge), delta=delta_val)
 
-# Calculate financial data
-fin_data = calculate_financial_data(chantier_id)
+    st.markdown(f"**Avancement physique:** {fmt_pct(avancement)}")
+    st.progress(min(avancement / 100, 1.0))
 
-# Display KPIs
-st.markdown("### 📈 Indicateurs Clés")
-col1, col2, col3, col4, col5 = st.columns(5)
+    try:
+        resp_f = sb.table("factures").select("*").eq("user_id", user_id).eq("chantier_id", selected_id).execute()
+        factures = resp_f.data or []
+    except Exception as e:
+        st.warning(f"Erreur factures: {e}")
+        factures = []
 
-with col1:
-    st.metric("Budget Global", fmt(fin_data["budget_total"]))
+    try:
+        resp_d = sb.table("devis").select("*").eq("user_id", user_id).eq("chantier_id", selected_id).execute()
+        devis_list = resp_d.data or []
+    except Exception as e:
+        st.warning(f"Erreur devis: {e}")
+        devis_list = []
 
-with col2:
-    st.metric("CA Facturé", fmt(fin_data["factures_total_ht"]))
-
-with col3:
-    st.metric("Dépenses", fmt(fin_data["total_expenses"]))
-
-with col4:
-    st.metric("Marge Brute", fmt(fin_data["marge_brute"]))
-
-with col5:
-    marge_pct = fin_data["marge_percent"]
-    if marge_pct > 10:
-        color = "green"
-    elif marge_pct > 0:
-        color = "orange"
-    else:
-        color = "red"
-
-    st.metric("Marge %", fmt_percent(marge_pct))
-
-# ============================================================================
-# SECTION 2: BUDGET PAR LOT
-# ============================================================================
-st.markdown("---")
-st.markdown("## 💰 Budget par Lot")
-
-budget_lots = fin_data["budget_lots"]
-if budget_lots and fin_data["budget_obj"]:
-    st.markdown("### Suivi des Lots")
-
-    lot_data = []
-    for lot_name, prevu_ht in budget_lots.items():
-        # Estimate engagé from achats with lot reference (if available)
-        # Simplified: pro-rata based on achats total vs budget
-        if fin_data["budget_total"] > 0:
-            ratio = prevu_ht / fin_data["budget_total"]
-            engages = fin_data["achats_total"] * ratio
+    col_f, col_d = st.columns(2)
+    with col_f:
+        st.subheader(f"📄 Factures ({len(factures)})")
+        if factures:
+            rows_f = []
+            for f in factures:
+                rows_f.append({
+                    "N°": f.get("numero", ""),
+                    "Montant TTC": fmt(f.get("montant_ttc") or f.get("montant_ht") or 0),
+                    "Statut": f.get("statut", ""),
+                    "Date": str(f.get("date_emission", ""))[:10],
+                })
+            st.dataframe(pd.DataFrame(rows_f), use_container_width=True)
         else:
-            engages = 0
+            st.info("Aucune facture pour ce chantier.")
 
-        factures_lot = 0  # Would need facture.lot field
-        ecart = prevu_ht - engages
-        ecart_pct = (ecart / prevu_ht * 100) if prevu_ht > 0 else 0
-
-        lot_data.append({
-            "Lot": lot_name,
-            "Prévu HT": fmt(prevu_ht),
-            "Engagé HT": fmt(engages),
-            "Facturé HT": fmt(factures_lot),
-            "Écart HT": fmt(ecart),
-            "Écart %": fmt_percent(ecart_pct)
-        })
-
-    if lot_data:
-        df_lots = pd.DataFrame(lot_data)
-        st.dataframe(df_lots, use_container_width=True, hide_index=True)
-
-    # Visualize budget vs engaged
-    fig = go.Figure()
-    lots = list(budget_lots.keys())
-    prevus = list(budget_lots.values())
-    engages = []
-    for lot_name, prevu_ht in budget_lots.items():
-        if fin_data["budget_total"] > 0:
-            ratio = prevu_ht / fin_data["budget_total"]
-            engages.append(fin_data["achats_total"] * ratio)
+    with col_d:
+        st.subheader(f"📋 Devis ({len(devis_list)})")
+        if devis_list:
+            rows_d = []
+            for d in devis_list:
+                rows_d.append({
+                    "N°": d.get("numero", ""),
+                    "Montant TTC": fmt(d.get("montant_ttc") or d.get("montant_ht") or 0),
+                    "Statut": d.get("statut", "Brouillon"),
+                    "Date": str(d.get("date_creation", ""))[:10],
+                })
+            st.dataframe(pd.DataFrame(rows_d), use_container_width=True)
         else:
-            engages.append(0)
+            st.info("Aucun devis pour ce chantier.")
 
-    fig.add_trace(go.Bar(x=lots, y=prevus, name="Prévu HT", marker_color="lightblue"))
-    fig.add_trace(go.Bar(x=lots, y=engages, name="Engagé HT", marker_color="orange"))
-    fig.update_layout(title="Comparaison Prévu vs Engagé par Lot", barmode="group", height=400)
-    st.plotly_chart(fig, use_container_width=True)
+    try:
+        resp_a = sb.table("achats").select("*, fournisseurs(nom)").eq("user_id", user_id).eq("chantier_id", selected_id).execute()
+        achats = resp_a.data or []
+    except Exception:
+        achats = []
 
-else:
-    st.info("Aucun budget défini pour ce chantier.")
+    if achats:
+        st.subheader(f"🛒 Achats ({len(achats)})")
+        total_achats = sum(float(a.get("montant_ttc") or a.get("montant_ht") or 0) for a in achats)
+        st.metric("Total Achats TTC", fmt(total_achats))
+        rows_a = []
+        for a in achats:
+            fourn_nom = ""
+            if isinstance(a.get("fournisseurs"), dict):
+                fourn_nom = a["fournisseurs"].get("nom", "")
+            rows_a.append({
+                "Référence": a.get("reference", ""),
+                "Fournisseur": fourn_nom,
+                "Montant TTC": fmt(a.get("montant_ttc") or a.get("montant_ht") or 0),
+                "Statut": a.get("statut", ""),
+            })
+        st.dataframe(pd.DataFrame(rows_a), use_container_width=True)
 
-# Budget definition form
-st.markdown("### Définir/Modifier le Budget")
-with st.form("budget_form"):
-    num_lots = st.number_input("Nombre de lots", min_value=1, max_value=10, value=len(budget_lots) if budget_lots else 1)
+# ─── TAB 3: Factures & Devis ─────────────────────────────────────
+with tab3:
+    st.subheader("Toutes Factures & Devis")
 
-    lot_inputs = []
-    for i in range(num_lots):
-        col1, col2 = st.columns(2)
-        with col1:
-            lot_name = st.text_input(f"Nom Lot {i+1}", value=list(budget_lots.keys())[i] if i < len(budget_lots) else "")
-        with col2:
-            lot_prevu = st.number_input(f"Prévu HT Lot {i+1}", min_value=0.0, value=float(list(budget_lots.values())[i]) if i < len(budget_lots) else 0.0)
+    col_gauche, col_droite = st.columns(2)
 
-        if lot_name:
-            lot_inputs.append({"nom": lot_name, "prevu_ht": lot_prevu})
-
-    budget_total = st.number_input("Budget Total HT", min_value=0.0, value=fin_data["budget_total"])
-
-    if st.form_submit_button("Enregistrer le Budget"):
+    with col_gauche:
+        st.markdown("### 📄 Factures")
         try:
-            budget_payload = {
-                "montant_total_ht": budget_total,
-                "lots": lot_inputs,
-                "date_maj": datetime.now().isoformat()
-            }
-
-            if fin_data["budget_obj"]:
-                # Update
-                sb.table("budgets_chantier").update(budget_payload).eq("chantier_id", chantier_id).execute()
-                st.success("Budget mis à jour ✓")
-            else:
-                # Insert
-                budget_payload["chantier_id"] = chantier_id
-                sb.table("budgets_chantier").insert(budget_payload).execute()
-                st.success("Budget créé ✓")
-
-            st.rerun()
+            resp_all_f = sb.table("factures").select("*, chantiers(nom)").eq("user_id", user_id).order("created_at", desc=True).execute()
+            all_factures = resp_all_f.data or []
         except Exception as e:
-            st.error(f"Erreur enregistrement: {str(e)}")
+            st.warning(f"Erreur: {e}")
+            all_factures = []
 
-# ============================================================================
-# SECTION 3: DÉTAIL DES DÉPENSES
-# ============================================================================
-st.markdown("---")
-st.markdown("## 💸 Détail des Dépenses")
+        if all_factures:
+            statuts_f = ["Tous"] + list(set(f.get("statut", "") for f in all_factures if f.get("statut")))
+            filtre_statut_f = st.selectbox("Statut facture", statuts_f, key="filtre_f")
+            if filtre_statut_f != "Tous":
+                all_factures = [f for f in all_factures if f.get("statut") == filtre_statut_f]
+            rows_af = []
+            for f in all_factures:
+                chantier_nom = ""
+                if isinstance(f.get("chantiers"), dict):
+                    chantier_nom = f["chantiers"].get("nom", "")
+                rows_af.append({
+                    "N°": f.get("numero", ""),
+                    "Chantier": chantier_nom,
+                    "Montant TTC": fmt(f.get("montant_ttc") or f.get("montant_ht") or 0),
+                    "Statut": f.get("statut", ""),
+                    "Date": str(f.get("date_emission", ""))[:10],
+                })
+            st.dataframe(pd.DataFrame(rows_af), use_container_width=True)
+            total_f = sum(float(f.get("montant_ttc") or f.get("montant_ht") or 0) for f in all_factures)
+            st.metric("Total affiché", fmt(total_f))
+        else:
+            st.info("Aucune facture.")
 
-col1, col2, col3 = st.columns(3)
+    with col_droite:
+        st.markdown("### 📋 Devis")
+        try:
+            resp_all_d = sb.table("devis").select("*, chantiers(nom)").eq("user_id", user_id).order("created_at", desc=True).execute()
+            all_devis = resp_all_d.data or []
+        except Exception as e:
+            st.warning(f"Erreur: {e}")
+            all_devis = []
 
-with col1:
-    st.markdown("### Achats Fournisseurs")
-    achats_total = fin_data["achats_total"]
-    st.metric("Total Achats", fmt(achats_total))
+        if all_devis:
+            rows_ad = []
+            for d in all_devis:
+                chantier_nom = ""
+                if isinstance(d.get("chantiers"), dict):
+                    chantier_nom = d["chantiers"].get("nom", "")
+                rows_ad.append({
+                    "N°": d.get("numero", ""),
+                    "Chantier": chantier_nom,
+                    "Montant TTC": fmt(d.get("montant_ttc") or d.get("montant_ht") or 0),
+                    "Statut": d.get("statut", "Brouillon"),
+                    "Date": str(d.get("date_creation", ""))[:10],
+                })
+            st.dataframe(pd.DataFrame(rows_ad), use_container_width=True)
+            total_d = sum(float(d.get("montant_ttc") or d.get("montant_ht") or 0) for d in all_devis)
+            st.metric("Total affiché", fmt(total_d))
+        else:
+            st.info("Aucun devis.")
 
-    achats_list = fin_data["achats_list"]
-    if achats_list:
-        achats_df_data = []
-        for achat in achats_list:
-            achats_df_data.append({
-                "Fournisseur": achat.get("fournisseur", "N/A"),
-                "Montant HT": fmt(achat.get("montant_ht", 0)),
-                "Date": achat.get("date", "N/A")
-            })
-        achats_df = pd.DataFrame(achats_df_data)
-        st.dataframe(achats_df, use_container_width=True, hide_index=True, height=300)
-    else:
-        st.write("Aucun achat enregistré")
+# ─── TAB 4: Graphiques ───────────────────────────────────────────
+with tab4:
+    st.subheader("Graphiques Financiers")
 
-with col2:
-    st.markdown("### Sous-traitance")
-    st.metric("Engagements ST", fmt(fin_data["sous_traitants_engages"]))
-    st.metric("Facturé ST", fmt(fin_data["sous_traitants_factures"]))
+    if chantiers:
+        noms = [c.get("nom", "")[:20] for c in chantiers]
+        budgets_v = [float(c.get("budget_ht") or 0) for c in chantiers]
+        factures_v = [float(c.get("facture_ht") or 0) for c in chantiers]
+        encaisses_v = [float(c.get("encaisse_ht") or 0) for c in chantiers]
 
-    st_data = fin_data["sous_traitants_data"]
-    if st_data:
-        st_df_data = []
-        for st in st_data:
-            st_df_data.append({
-                "Sous-traitant": st.get("nom", "N/A"),
-                "Marché HT": fmt(st.get("marche", 0)),
-                "Facturé HT": fmt(st.get("facture", 0))
-            })
-        st_df = pd.DataFrame(st_df_data)
-        st.dataframe(st_df, use_container_width=True, hide_index=True, height=300)
-    else:
-        st.write("Aucun sous-traitant")
-
-with col3:
-    st.markdown("### Main d'Œuvre")
-    labor_total = fin_data["labor_total"]
-    st.metric("Total MO", fmt(labor_total))
-
-    pointages = fin_data["pointages"]
-    if pointages:
-        employees_taux = get_employes_taux()
-        mo_df_data = []
-        for pointage in pointages:
-            emp_id = pointage.get("employee_id")
-            heures = pointage.get("jeures", 0)
-            taux = employees_taux.get(emp_id, 0)
-            cout = heures * taux
-
-            # Get employee name
-            try:
-                emp_resp = sb.table("employees").select("nom").eq("id", emp_id).single().execute()
-                emp_name = emp_resp.data.get("nom", "N/A") if emp_resp.data else "N/A"
-            except:
-                emp_name = "N/A"
-
-            mo_df_data.append({
-                "Employmé": emp_name,
-                "Jej Heures": f"{heures:.1f}".replace(".", ","),
-                "Coût": fmt(cout)
-            })
-        mo_df = pd.DataFrame(mo_df_data)
-        st.dataframe(mo_df, use_container_width=True, hide_index=True, height=300)
-    else:
-        st.write("Aucun pointage")
-
-# ============================================================================
-# SECTION 4: FACTURATION (RECETTES)
-# ============================================================================
-st.markdown("---")
-st.markdown("## 📋 Facturation (Recettes)")
-
-col1, col2 = st.columns(2)
-with col1:
-    st.metric("Total Facturé HT", fmt(fin_data["factures_total_ht"]))
-with col2:
-    st.metric("Total Encaissé", fmt(fin_data["factures_payees"]))
-
-st.markdown("### Liste des Factures")
-factures_data = fin_data["factures_data"]
-if factures_data:
-    fac_df_data = []
-    for fac in factures_data:
-        fac_df_data.append({
-            "N° Facture": fac.get("numero", "N/A"),
-            "Date": fac.get("date", "N/A"),
-            "Montant HT": fmt(fac.get("montant", 0)),
-            "Statut": fac.get("statut", "brouillon")
-        })
-    fac_df = pd.DataFrame(fac_df_data)
-    st.dataframe(fac_df, use_container_width=True, hide_index=True)
-else:
-    st.write("Aucune facture")
-
-# ============================================================================
-# SECTION 5: COURBE DE RENTABILITÉ
-# ============================================================================
-st.markdown("---")
-st.markdown("## 📈 Courbe de Rentabilité")
-
-try:
-    # Aggregate factures and expenses by month
-    monthly_data = defaultdict(lambda: {"factures": 0, "depenses": 0})
-
-    # Add factures by month
-    for fac in fin_data["factures_data"]:
-        date_str = fac.get("date", "")
-        if date_str:
-            try:
-                fac_date = datetime.fromisoformat(date_str) if isinstance(date_str, str) else fac_date
-                month_key = fac_date.strftime("%Y-%m")
-                monthly_data[month_key]["factures"] += fac.get("montant", 0)
-            except:
-                pass
-
-    # Add expenses by month (simplified: spread evenly or by achat date)
-    for achat in fin_data["achats_list"]:
-        date_str = achat.get("date", "")
-        if date_str:
-            try:
-                achat_date = datetime.fromisoformat(date_str) if isinstance(date_str, str) else achat_date
-                month_key = achat_date.strftime("%Y-%m")
-                monthly_data[month_key]["depenses"] += achat.get("montant_ht", 0)
-            except:
-                pass
-
-    if monthly_data:
-        months = sorted(monthly_data.keys())
-        cumul_factures = []
-        cumul_depenses = []
-        cumul_fac = 0
-        cumul_dep = 0
-
-        for month in months:
-            cumul_fac += monthly_data[month]["factures"]
-            cumul_dep += monthly_data[month]["depenses"]
-            cumul_factures.append(cumul_fac)
-            cumul_depenses.append(cumul_dep)
-
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(x=months, y=cumul_factures, mode="lines+markers", name="Cumul Facturé", line=dict(color="green")))
-        fig.add_trace(go.Scatter(x=months, y=cumul_depenses, mode="lines+markers", name="Cumul Dépenses", line=dict(color="red")))
-        fig.update_layout(title="Courbe de Rentabilité", xaxis_title="Mois", yaxis_title="Montant (€)", height=400)
+        fig = go.Figure(data=[
+            go.Bar(name="Budget HT", x=noms, y=budgets_v, marker_color="#1f77b4"),
+            go.Bar(name="Facturé HT", x=noms, y=factures_v, marker_color="#ff7f0e"),
+            go.Bar(name="Encaissé HT", x=noms, y=encaisses_v, marker_color="#2ca02c"),
+        ])
+        fig.update_layout(
+            title="Budget vs Facturé vs Encaissé par Chantier",
+            barmode="group",
+            height=400,
+            template="plotly_white",
+        )
         st.plotly_chart(fig, use_container_width=True)
-    else:
-        st.info("Pas assez de données pour afficher la courbe")
-except Exception as e:
-    st.warning(f"Erreur courbe: {str(e)}")
 
-st.markdown("---")
-st.markdown("*Dernière mise à jour: " + datetime.now().strftime("%d/%m/%Y %H:%M") + "*")
+        statuts_count = defaultdict(int)
+        for c in chantiers:
+            statuts_count[c.get("statut", "Inconnu")] += 1
+
+        if statuts_count:
+            fig2 = go.Figure(data=[go.Pie(
+                labels=list(statuts_count.keys()),
+                values=list(statuts_count.values()),
+                hole=0.4,
+            )])
+            fig2.update_layout(title="Répartition des Chantiers par Statut", height=350)
+            st.plotly_chart(fig2, use_container_width=True)
+
+        with_avancement = [c for c in chantiers if c.get("avancement_pct")]
+        if with_avancement:
+            st.subheader("Avancement des Chantiers")
+            rows_av = []
+            for c in with_avancement:
+                rows_av.append({
+                    "Chantier": c.get("nom", "")[:25],
+                    "Avancement (%)": float(c.get("avancement_pct") or 0),
+                })
+            df_av = pd.DataFrame(rows_av)
+            st.bar_chart(df_av.set_index("Chantier")["Avancement (%)"])
+    else:
+        st.info("Aucune donnée à afficher.")
