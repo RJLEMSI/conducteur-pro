@@ -43,7 +43,7 @@ def render_saas_sidebar(user_id: str):
         profile = db.get_profile(user_id)
         if profile:
             plan = profile.get("subscription_plan", "free")
-            plan_labels = {"free": "\U0001f7e2 Gratuit", "pro": "\U0001f535 Pro", "team": "\U0001f7e3 Equipe"}
+            plan_labels = {"free": "\U0001f7e2 Gratuit", "pro": "\U0001f535 Pro", "team": "\U0001f7e3 Equipe", "enterprise": "\U0001f451 Premium"}
             st.markdown(f"**Utilisateur:** {profile.get('display_name', 'N/A')}")
             st.markdown(f"**Plan:** {plan_labels.get(plan, plan)}")
             st.markdown(f"**Email:** {profile.get('email', 'N/A')}")
@@ -105,9 +105,10 @@ def require_feature(user_id: str, feature: str):
     plan = profile.get("subscription_plan", "free") if profile else "free"
 
     feature_access = {
-        "free": ["ai_analysis", "achats", "sous_traitants", "pointage", "stocks", "crm", "suivi_financier"],
-        "pro": ["ai_analysis", "import_data", "export_pdf", "advanced_planning", "priority_support", "achats", "sous_traitants", "pointage", "stocks", "crm", "suivi_financier"],
-        "team": ["ai_analysis", "import_data", "export_pdf", "advanced_planning", "multi_user", "priority_support", "achats", "sous_traitants", "pointage", "stocks", "crm", "suivi_financier"],
+        "free": ["ai_analysis"],
+        "enterprise": ["ai_analysis", "import_data", "export_pdf", "advanced_planning", "multi_user", "priority_support", "achats", "sous_traitants", "pointage", "stocks", "crm", "suivi_financier", "agent_erp"],
+        "pro": ["ai_analysis", "import_data", "export_pdf", "advanced_planning", "priority_support", "achats", "sous_traitants", "pointage", "stocks", "crm", "suivi_financier", "agent_erp"],
+        "team": ["ai_analysis", "import_data", "export_pdf", "advanced_planning", "multi_user", "priority_support", "achats", "sous_traitants", "pointage", "stocks", "crm", "suivi_financier", "agent_erp"],
     }
 
     allowed = feature_access.get(plan, [])
